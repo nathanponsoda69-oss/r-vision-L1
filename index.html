@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R·Vision — L1 Droit & Économie</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#07070f;--bg2:#0d0d1f;--surface:rgba(255,255,255,.04);
+  --border:rgba(255,255,255,.07);--bh:rgba(255,255,255,.16);
+  --t:#f0f0ff;--t2:rgba(240,240,255,.55);--t3:rgba(240,240,255,.25);
+  --acc:#6c63ff;--acc2:#a89cff;--ag:rgba(108,99,255,.4);
+  --dc:#4f9eff;--h1:#ff8c5a;--h2:#ffaa72;--h3:#ffc890;--mk:#52d68a;
+  --r:20px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--t);overflow-x:hidden;cursor:none;}
+
+/* Cursor */
+#cd,#cr{position:fixed;top:0;left:0;border-radius:50%;pointer-events:none;z-index:9999;mix-blend-mode:difference;will-change:transform;}
+#cd{width:6px;height:6px;background:#fff;margin:-3px 0 0 -3px;}
+#cr{width:34px;height:34px;border:1.5px solid rgba(255,255,255,.45);margin:-17px 0 0 -17px;transition:width .2s,height .2s,margin .2s,border-color .2s;}
+.hovering #cr{width:50px;height:50px;margin:-25px 0 0 -25px;border-color:var(--acc);}
+
+/* Noise */
+body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.025'/%3E%3C/svg%3E");opacity:.7;}
+
+/* Blobs */
+.blob{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;animation:blobF 14s ease-in-out infinite;}
+.b1{width:600px;height:600px;background:var(--acc);top:-200px;right:-150px;opacity:.11;animation-delay:0s;}
+.b2{width:400px;height:400px;background:#ff5f9e;bottom:5%;left:-100px;opacity:.09;animation-delay:-5s;}
+.b3{width:300px;height:300px;background:#52d68a;bottom:25%;right:5%;opacity:.09;animation-delay:-9s;}
+@keyframes blobF{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(25px,-35px) scale(1.06);}66%{transform:translate(-18px,25px) scale(.96);}}
+
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 clamp(20px,4vw,60px);transition:background .3s;}
+nav.scrolled{background:rgba(7,7,15,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-in{max-width:1200px;margin:0 auto;height:68px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:1.3rem;font-weight:900;letter-spacing:-.03em;text-decoration:none;color:var(--t);}
+.logo span{color:var(--acc);}
+.np{display:flex;gap:6px;}
+.np a{font-size:.7rem;font-weight:500;padding:6px 14px;border-radius:100px;border:1px solid var(--border);color:var(--t2);text-decoration:none;transition:all .2s;letter-spacing:.04em;}
+.np a:hover{border-color:var(--bh);color:var(--t);background:var(--surface);}
+.nav-xp{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--acc2);}
+
+/* Particles canvas MUST be fixed — not in document flow */
+#particles-canvas{position:fixed;top:0;left:0;pointer-events:none;z-index:1;}
+.hero-inner{max-width:1200px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;padding:88px clamp(20px,4vw,60px) 80px;}
+.hero-text{display:flex;flex-direction:column;}
+.hero-illo{display:flex;align-items:center;justify-content:center;}
+.hero-illo svg{border-radius:20px;border:1px solid var(--border);}
+@media(max-width:860px){.hero-inner{grid-template-columns:1fr;}.hero-illo{margin-top:32px;}}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--acc2);padding:6px 14px;border-radius:100px;border:1px solid rgba(108,99,255,.3);background:rgba(108,99,255,.08);margin-bottom:28px;}
+.tdot{width:5px;height:5px;border-radius:50%;background:var(--acc);animation:p 1s ease-in-out infinite;}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.2}}
+h1{font-size:clamp(3rem,7vw,7rem);font-weight:900;line-height:.95;letter-spacing:-.04em;}
+h1 .ghost{display:block;color:transparent;-webkit-text-stroke:1px rgba(240,240,255,.18);}
+h1 .gr{background:linear-gradient(135deg,var(--acc) 0%,var(--acc2) 50%,#ff79c6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hsub{margin-top:24px;max-width:420px;font-size:clamp(.88rem,1.4vw,1rem);color:var(--t2);line-height:1.75;}
+.hkpis{display:flex;gap:0;flex-wrap:wrap;margin-top:48px;}
+.kpi{padding:16px 32px 16px 0;border-right:1px solid var(--border);margin-right:32px;}
+.kpi:last-child{border-right:none;}
+.kv{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:900;line-height:1;color:var(--acc2);}
+.kl{font-size:.62rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-top:3px;}
+.scta{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--t3);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;}
+.sl{width:1px;height:40px;background:linear-gradient(to bottom,transparent,var(--t3));animation:sl 1.5s ease-in-out infinite;}
+@keyframes sl{0%,100%{transform:scaleY(1);opacity:1}50%{transform:scaleY(.55);opacity:.3}}
+
+@keyframes rUp{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* Reveal */
+.rv{opacity:0;transform:translateY(20px);transition:opacity .65s cubic-bezier(.16,1,.3,1),transform .65s cubic-bezier(.16,1,.3,1);}
+.rv.on{opacity:1;transform:translateY(0);}
+
+/* Mat section */
+/* ── Book banner — standalone strip before each section ── */
+.book-banner{position:relative;z-index:2;width:100%;padding:0 clamp(20px,4vw,60px);overflow:visible;}
+.book-banner-in{max-width:760px;margin:0 auto;position:relative;}
+/* Colored top border line */
+.book-banner::before{content:'';display:block;height:1px;background:linear-gradient(90deg,transparent,var(--bclr,rgba(255,255,255,.12)),transparent);margin-bottom:0;}
+/* Floating label inside banner */
+.book-label{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:3;font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--bclr2,rgba(255,255,255,.3));background:var(--bg);border:1px solid var(--bclr3,rgba(255,255,255,.08));padding:4px 14px;border-radius:100px;white-space:nowrap;pointer-events:none;}
+.book-banner.dc{--bclr:rgba(79,158,255,.3);--bclr2:rgba(79,158,255,.7);--bclr3:rgba(79,158,255,.2);}
+.book-banner.hi{--bclr:rgba(255,140,90,.3);--bclr2:rgba(255,140,90,.7);--bclr3:rgba(255,140,90,.2);}
+.book-banner.ec{--bclr:rgba(82,214,138,.3);--bclr2:rgba(82,214,138,.7);--bclr3:rgba(82,214,138,.2);}
+/* Gradient bg strip */
+.book-banner-bg{position:absolute;inset:0;pointer-events:none;z-index:0;}
+.book-banner.dc .book-banner-bg{background:radial-gradient(ellipse 80% 100% at 50% 60%,rgba(79,158,255,.07) 0%,transparent 70%);}
+.book-banner.hi .book-banner-bg{background:radial-gradient(ellipse 80% 100% at 50% 60%,rgba(255,140,90,.07) 0%,transparent 70%);}
+.book-banner.ec .book-banner-bg{background:radial-gradient(ellipse 80% 100% at 50% 60%,rgba(82,214,138,.07) 0%,transparent 70%);}
+
+/* Content section — no book inside anymore */
+.ms{padding:40px clamp(20px,4vw,60px) 80px;position:relative;z-index:2;overflow:hidden;}
+.ms::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.04;}
+.ms.dc::before{background:radial-gradient(ellipse 70% 60% at 50% 0%,var(--dc),transparent);}
+.ms.hi::before{background:radial-gradient(ellipse 70% 60% at 50% 0%,var(--h1),transparent);}
+.ms.ec::before{background:radial-gradient(ellipse 70% 60% at 50% 0%,var(--mk),transparent);}
+.ms-in{max-width:900px;margin:0 auto;}
+.content-col{width:100%;}
+
+/* Book canvas wrapper — inside banner */
+.book-wrap{overflow:visible;height:460px;position:relative;width:100%;z-index:1;}
+.book-wrap canvas{display:block;position:absolute;top:0;left:0;width:100%;height:100%;}
+/* Neon glow per matiere */
+.book-wrap.dc-glow{filter:drop-shadow(0 0 22px rgba(79,158,255,.65)) drop-shadow(0 0 60px rgba(79,158,255,.28));}
+.book-wrap.hi-glow{filter:drop-shadow(0 0 22px rgba(255,140,90,.65)) drop-shadow(0 0 60px rgba(255,140,90,.28));}
+.book-wrap.ec-glow{filter:drop-shadow(0 0 22px rgba(82,214,138,.65)) drop-shadow(0 0 60px rgba(82,214,138,.28));}
+
+.chip{display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:100px;border:1px solid;font-weight:700;margin-bottom:16px;}
+.chip.dc{color:var(--dc);border-color:rgba(79,158,255,.3);background:rgba(79,158,255,.07);}
+.chip.hi{color:var(--h1);border-color:rgba(255,140,90,.3);background:rgba(255,140,90,.07);}
+.chip.ec{color:var(--mk);border-color:rgba(82,214,138,.3);background:rgba(82,214,138,.07);}
+.mt{font-size:clamp(2rem,4vw,3.2rem);font-weight:900;letter-spacing:-.04em;line-height:1.05;margin-bottom:12px;}
+.md{font-size:.88rem;color:var(--t2);line-height:1.75;margin-bottom:24px;}
+
+/* Book canvas wrapper — full width, taller for vertical layout */
+.book-wrap{border-radius:24px;overflow:visible;height:420px;position:relative;width:100%;}
+.book-wrap canvas{display:block;position:absolute;top:0;left:0;width:100%;height:100%;border-radius:24px;}
+/* Neon glow per matiere */
+.book-wrap.dc-glow{filter:drop-shadow(0 0 18px rgba(79,158,255,.55)) drop-shadow(0 0 48px rgba(79,158,255,.25));}
+.book-wrap.hi-glow{filter:drop-shadow(0 0 18px rgba(255,140,90,.55)) drop-shadow(0 0 48px rgba(255,140,90,.25));}
+.book-wrap.ec-glow{filter:drop-shadow(0 0 18px rgba(82,214,138,.55)) drop-shadow(0 0 48px rgba(82,214,138,.25));}
+
+/* Cards */
+.cl{display:flex;flex-direction:column;gap:10px;}
+.card{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;text-decoration:none;color:var(--t);display:flex;align-items:center;gap:14px;transition:border-color .3s,transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .35s;}
+.card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at var(--mx,50%) var(--my,50%),var(--cg,rgba(108,99,255,.1)),transparent 70%);opacity:0;transition:opacity .4s;pointer-events:none;}
+.card:hover{border-color:var(--bh);transform:translateX(6px);box-shadow:0 10px 36px rgba(0,0,0,.4);}
+.card:hover::before{opacity:1;}
+.card.dc{--cg:rgba(79,158,255,.12);}
+.card.hi{--cg:rgba(255,140,90,.12);}
+.card.ec{--cg:rgba(82,214,138,.12);}
+.ci{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
+.card:hover .ci{transform:scale(1.15) rotate(-8deg);}
+.card.dc .ci{background:rgba(79,158,255,.1);}
+.card.hi .ci{background:rgba(255,140,90,.1);}
+.card.ec .ci{background:rgba(82,214,138,.1);}
+.ct{flex:1;}
+.ctt{font-size:.93rem;font-weight:700;letter-spacing:-.02em;margin-bottom:3px;}
+.cs{font-size:.72rem;color:var(--t2);line-height:1.5;}
+.cf{display:flex;align-items:center;gap:8px;margin-top:9px;}
+.cx{font-family:'Space Mono',monospace;font-size:.63rem;white-space:nowrap;}
+.card.dc .cx{color:var(--dc);}.card.hi .cx{color:var(--h1);}.card.ec .cx{color:var(--mk);}
+.cp{flex:1;height:3px;border-radius:2px;background:var(--border);overflow:hidden;}
+.cpf{height:100%;border-radius:2px;width:0;transition:width 1.4s cubic-bezier(.16,1,.3,1) .3s;}
+.card.dc .cpf{background:var(--dc);}
+.card.hi .cpf{background:var(--h1);}
+.card.ec .cpf{background:var(--mk);}
+.csuc2{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--t3);}
+.ca{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.68rem;color:var(--t3);flex-shrink:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);}
+.card:hover .ca{border-color:var(--bh);color:var(--t);transform:translate(2px,-2px) scale(1.1);}
+
+/* Stats section */
+.ss{padding:0 clamp(20px,4vw,60px) 80px;position:relative;z-index:2;}
+.ss-in{max-width:1200px;margin:0 auto;}
+.sh{display:flex;align-items:center;gap:16px;margin-bottom:36px;}
+.st{font-size:clamp(1.6rem,3vw,2.4rem);font-weight:900;letter-spacing:-.04em;}
+.rb{background:none;border:1px solid var(--border);border-radius:100px;padding:3px 10px;font-size:.58rem;letter-spacing:.06em;color:var(--t3);cursor:pointer;transition:all .2s;font-family:'Space Mono',monospace;}
+.rb:hover{border-color:var(--acc);color:var(--acc);}
+#sync-t{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--t3);margin-left:auto;}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:760px){.sg{grid-template-columns:1fr;}}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:26px;transition:border-color .3s;}
+.sc:hover{border-color:var(--bh);}
+.sc.wide{grid-column:1/-1;}
+.sct{font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;}
+
+/* XP card */
+.xbig{font-size:3.5rem;font-weight:900;letter-spacing:-.05em;line-height:1;background:linear-gradient(135deg,#fff,var(--acc2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;}
+.xrank{font-size:.78rem;color:var(--t2);margin-bottom:22px;}
+.xrows{display:flex;flex-direction:column;gap:9px;}
+.xrow{display:flex;align-items:center;gap:10px;}
+.xn{font-size:.68rem;color:var(--t2);width:88px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.xt{flex:1;height:5px;border-radius:3px;background:var(--border);overflow:hidden;}
+.xf{height:100%;border-radius:3px;width:0;transition:width 1.3s cubic-bezier(.16,1,.3,1) .5s;}
+.xv{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--t3);width:32px;text-align:right;flex-shrink:0;}
+
+/* Succes bars */
+.srows{display:flex;flex-direction:column;gap:11px;}
+.srow{display:flex;align-items:center;gap:10px;}
+.sn{font-size:.7rem;color:var(--t2);width:90px;flex-shrink:0;}
+.strack{flex:1;height:7px;border-radius:100px;background:var(--border);overflow:hidden;}
+.sfill{height:100%;border-radius:100px;width:0;transition:width 1.3s cubic-bezier(.16,1,.3,1) .4s;}
+.sv{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--t3);width:42px;text-align:right;flex-shrink:0;}
+
+/* Chart containers — explicit heights on canvas elements */
+.chart-container{position:relative;width:100%;overflow:hidden;}
+.chart-container canvas{display:block;max-width:100%;}
+
+/* Heatmap */
+.hmmonths{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:.52rem;color:var(--t3);margin-bottom:7px;}
+.hmgrid{display:grid;grid-template-columns:repeat(14,1fr);gap:4px;}
+.hmc{aspect-ratio:1;border-radius:4px;background:rgba(255,255,255,.05);transition:transform .15s;cursor:default;}
+.hmc:hover{transform:scale(1.5);position:relative;z-index:2;}
+.hmc[data-v="1"]{background:rgba(108,99,255,.25);}
+.hmc[data-v="2"]{background:rgba(108,99,255,.5);}
+.hmc[data-v="3"]{background:rgba(108,99,255,.75);}
+.hmc[data-v="4"]{background:var(--acc);box-shadow:0 0 8px var(--ag);}
+
+/* Visits */
+.vlist{display:flex;flex-direction:column;gap:7px;}
+.vit{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);font-size:.73rem;}
+.vd{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--t3);}
+.vit-today .vd{color:var(--acc2);}
+
+/* Tooltip */
+#tip{position:fixed;z-index:9998;background:var(--bg2);border:1px solid var(--bh);border-radius:8px;padding:5px 10px;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--t2);pointer-events:none;opacity:0;transition:opacity .15s;white-space:nowrap;}
+#tip.on{opacity:1;}
+
+/* Footer */
+footer{padding:36px clamp(20px,4vw,60px);border-top:1px solid var(--border);position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.fb{font-weight:900;font-size:.9rem;}.fb span{color:var(--acc);}
+.fu{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--t3);}
+
+@media(max-width:640px){.np{display:none;}.kpi{padding:12px 20px 12px 0;margin-right:20px;}}
+</style>
+</head>
+<body>
+<div id="cd"></div><div id="cr"></div>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div id="tip"></div>
+
+<canvas id="particles-canvas"></canvas>
+
+<nav id="nav">
+  <div class="nav-in">
+    <a class="logo" href="#">R<span>·</span>Vision</a>
+    <div class="np">
+      <a href="#droit">Droit Civil</a>
+      <a href="#histoire">Histoire</a>
+      <a href="#eco">Économie</a>
+      <a href="#stats">Stats</a>
+    </div>
+    <div class="nav-xp" id="nav-xp">— XP</div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+
+    <!-- LEFT: text -->
+    <div class="hero-text">
+      <div class="hero-tag"><span class="tdot"></span>L1 Droit-Finance · 2025–2026</div>
+      <h1>Révise<br><span class="ghost">autrement.</span><span class="gr">Plus vite.</span></h1>
+      <p class="hsub">5 cours interactifs. Quiz, flashcards et succès qui rendent la révision addictive.</p>
+      <div class="hkpis">
+        <div class="kpi"><div class="kv" id="kpi-xp">0 XP</div><div class="kl">XP total</div></div>
+        <div class="kpi"><div class="kv" id="kpi-s">0</div><div class="kl">Succès</div></div>
+        <div class="kpi"><div class="kv" id="kpi-q">0</div><div class="kl">Questions</div></div>
+        <div class="kpi"><div class="kv" id="kpi-t">0m</div><div class="kl">Révision</div></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: illustration SVG — self-contained with intrinsic dimensions -->
+    <div class="hero-illo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 400" width="480" height="400" style="width:100%;height:auto;display:block;max-height:460px;">
+        <defs>
+          <radialGradient id="hbg" cx="50%" cy="50%" r="70%">
+            <stop offset="0%" stop-color="#1a1640"/><stop offset="100%" stop-color="#07070f"/>
+          </radialGradient>
+          <radialGradient id="hgl" cx="50%" cy="65%" r="55%">
+            <stop offset="0%" stop-color="rgba(108,99,255,.4)"/><stop offset="100%" stop-color="rgba(108,99,255,0)"/>
+          </radialGradient>
+          <radialGradient id="hgr" cx="70%" cy="30%" r="40%">
+            <stop offset="0%" stop-color="rgba(82,214,138,.25)"/><stop offset="100%" stop-color="rgba(82,214,138,0)"/>
+          </radialGradient>
+          <linearGradient id="hpL" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#1e1c45"/><stop offset="100%" stop-color="#252260"/>
+          </linearGradient>
+          <linearGradient id="hpR" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#252260"/><stop offset="100%" stop-color="#1a183a"/>
+          </linearGradient>
+          <linearGradient id="hcv" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3d3880"/><stop offset="100%" stop-color="#1a1640"/>
+          </linearGradient>
+          <linearGradient id="hac" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#6c63ff"/><stop offset="100%" stop-color="#a89cff"/>
+          </linearGradient>
+          <filter id="hgw"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <style>
+            @keyframes hfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+            @keyframes hfloatA{0%,100%{transform:translate(0,0)}50%{transform:translate(-5px,-12px)}}
+            @keyframes hfloatB{0%,100%{transform:translate(0,0)}50%{transform:translate(6px,-9px)}}
+            @keyframes hfloatC{0%,100%{transform:translate(0,0)}50%{transform:translate(-4px,8px)}}
+            @keyframes horbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+            @keyframes hpuls{0%,100%{opacity:.6}50%{opacity:1}}
+            @keyframes hdraw{from{stroke-dashoffset:200}to{stroke-dashoffset:0}}
+            .hbook{animation:hfloat 4s ease-in-out infinite;transform-origin:240px 220px;}
+            .hfa{animation:hfloatA 5s ease-in-out infinite;}
+            .hfb{animation:hfloatB 6s ease-in-out infinite;}
+            .hfc{animation:hfloatC 4.5s ease-in-out infinite;}
+            .horb{animation:horbit 20s linear infinite;transform-origin:240px 220px;}
+            .hpl{animation:hpuls 2.5s ease-in-out infinite;}
+            .hl1{stroke-dasharray:200;stroke-dashoffset:200;animation:hdraw 1.8s ease forwards .4s;}
+            .hl2{stroke-dasharray:160;stroke-dashoffset:160;animation:hdraw 1.8s ease forwards .7s;}
+            .hl3{stroke-dasharray:140;stroke-dashoffset:140;animation:hdraw 1.8s ease forwards 1s;}
+            .hl4{stroke-dasharray:100;stroke-dashoffset:100;animation:hdraw 1.8s ease forwards 1.3s;}
+          </style>
+        </defs>
+
+        <!-- BG -->
+        <rect width="480" height="400" fill="url(#hbg)" rx="20"/>
+        <rect width="480" height="400" fill="url(#hgl)" rx="20"/>
+        <rect width="480" height="400" fill="url(#hgr)" rx="20"/>
+
+        <!-- Orbit ring -->
+        <g class="horb">
+          <circle cx="240" cy="220" r="148" fill="none" stroke="rgba(108,99,255,.1)" stroke-width="1" stroke-dasharray="5 9"/>
+          <circle cx="240" cy="72" r="5" fill="#6c63ff" opacity=".75" filter="url(#hgw)"/>
+          <circle cx="388" cy="220" r="3.5" fill="#a89cff" opacity=".6"/>
+          <circle cx="240" cy="368" r="3" fill="#52d68a" opacity=".5"/>
+          <circle cx="92" cy="220" r="3" fill="#ff79c6" opacity=".45"/>
+        </g>
+
+        <!-- ═══ OPEN BOOK ═══ -->
+        <g class="hbook">
+          <!-- Shadow -->
+          <ellipse cx="240" cy="305" rx="112" ry="12" fill="rgba(0,0,0,.5)"/>
+          <!-- Back cover -->
+          <rect x="120" y="168" width="240" height="130" rx="4" fill="#100e2e"/>
+          <!-- Spine -->
+          <rect x="233" y="165" width="14" height="136" rx="3" fill="url(#hcv)"/>
+          <rect x="238" y="165" width="5" height="136" fill="rgba(108,99,255,.3)"/>
+          <!-- Left page -->
+          <path d="M233 168 L124 173 L124 293 L233 296Z" fill="url(#hpL)"/>
+          <!-- Right page -->
+          <path d="M247 168 L356 173 L356 293 L247 296Z" fill="url(#hpR)"/>
+          <!-- Animated lines left page -->
+          <line class="hl1" x1="136" y1="192" x2="220" y2="189" stroke="#6c63ff" stroke-width="2.5" stroke-linecap="round" filter="url(#hgw)"/>
+          <line class="hl2" x1="136" y1="207" x2="215" y2="205" stroke="rgba(168,156,255,.55)" stroke-width="1.5" stroke-linecap="round"/>
+          <line class="hl3" x1="136" y1="220" x2="212" y2="219" stroke="rgba(168,156,255,.45)" stroke-width="1.5" stroke-linecap="round"/>
+          <line class="hl4" x1="136" y1="233" x2="205" y2="232" stroke="rgba(168,156,255,.35)" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="136" y1="246" x2="210" y2="245" stroke="rgba(168,156,255,.25)" stroke-width="1" stroke-linecap="round"/>
+          <line x1="136" y1="258" x2="202" y2="257" stroke="rgba(168,156,255,.2)" stroke-width="1" stroke-linecap="round"/>
+          <line x1="136" y1="270" x2="214" y2="269" stroke="rgba(168,156,255,.15)" stroke-width="1" stroke-linecap="round"/>
+          <!-- Right page formulas -->
+          <text x="260" y="192" font-family="Space Mono,monospace" font-size="9" fill="rgba(82,214,138,.9)" filter="url(#hgw)">Art. 212 C.civ</text>
+          <text x="260" y="209" font-family="Space Mono,monospace" font-size="8" fill="rgba(168,156,255,.65)">PV = CF/(1+r)ⁿ</text>
+          <text x="260" y="224" font-family="Space Mono,monospace" font-size="8" fill="rgba(168,156,255,.5)">β = Cov(Ri,Rm)/σ²</text>
+          <line x1="260" y1="238" x2="345" y2="237" stroke="rgba(168,156,255,.28)" stroke-width="1.2"/>
+          <line x1="260" y1="250" x2="340" y2="249" stroke="rgba(168,156,255,.2)" stroke-width="1"/>
+          <line x1="260" y1="262" x2="344" y2="261" stroke="rgba(168,156,255,.16)" stroke-width="1"/>
+          <line x1="260" y1="273" x2="333" y2="272" stroke="rgba(168,156,255,.12)" stroke-width="1"/>
+          <!-- Top cover strip -->
+          <rect x="120" y="160" width="240" height="11" rx="3" fill="url(#hcv)"/>
+          <rect x="120" y="160" width="240" height="11" rx="3" fill="url(#hac)" opacity=".45"/>
+        </g>
+
+        <!-- Diploma scroll top-left -->
+        <g class="hfa" style="transform-origin:108px 112px;">
+          <rect x="68" y="88" width="80" height="50" rx="22" fill="#1a1840" stroke="rgba(108,99,255,.45)" stroke-width="1.5"/>
+          <rect x="72" y="92" width="72" height="42" rx="20" fill="#201e50"/>
+          <rect x="88" y="88" width="8" height="50" rx="2" fill="rgba(108,99,255,.55)"/>
+          <text x="83" y="117" font-family="Space Mono,monospace" font-size="7" fill="rgba(168,156,255,.75)">DIPLÔME</text>
+          <circle cx="104" cy="132" r="6" fill="rgba(108,99,255,.65)" filter="url(#hgw)"/>
+        </g>
+
+        <!-- Mortarboard top-right -->
+        <g class="hfb" style="transform-origin:315px 86px;">
+          <polygon points="315,68 375,84 315,100 255,84" fill="#0e0c2e" stroke="rgba(108,99,255,.55)" stroke-width="1.5"/>
+          <ellipse cx="315" cy="91" rx="28" ry="11" fill="#1a1840"/>
+          <circle cx="315" cy="67" r="4" fill="rgba(168,156,255,.85)" filter="url(#hgw)"/>
+          <path d="M315 67 Q330 71 338 80" fill="none" stroke="#6c63ff" stroke-width="2" stroke-linecap="round" filter="url(#hgw)"/>
+          <circle cx="339" cy="82" r="3.5" fill="#6c63ff" filter="url(#hgw)"/>
+          <line x1="337" y1="82" x2="334" y2="93" stroke="#5550d0" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="340" y1="82" x2="340" y2="94" stroke="#6c63ff" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="342" y1="82" x2="344" y2="93" stroke="#8880ff" stroke-width="1.6" stroke-linecap="round"/>
+        </g>
+
+        <!-- Coin bottom-right -->
+        <g class="hfc" style="transform-origin:378px 295px;">
+          <circle cx="378" cy="295" r="27" fill="#1a1400" stroke="rgba(255,180,0,.45)" stroke-width="1.5"/>
+          <circle cx="378" cy="295" r="21" fill="#221a00"/>
+          <circle cx="378" cy="295" r="17" fill="none" stroke="rgba(255,200,0,.3)" stroke-width="1"/>
+          <text x="378" y="299" font-family="serif" font-size="15" fill="rgba(255,200,0,.75)" text-anchor="middle" filter="url(#hgw)">€</text>
+        </g>
+
+        <!-- Ambient dots -->
+        <g class="hpl">
+          <circle cx="88" cy="318" r="2.5" fill="#6c63ff" opacity=".65"/>
+          <circle cx="418" cy="165" r="2" fill="#52d68a" opacity=".55"/>
+          <circle cx="152" cy="355" r="1.8" fill="#a89cff" opacity=".5"/>
+          <circle cx="398" cy="350" r="2.2" fill="#ff79c6" opacity=".45"/>
+          <circle cx="58" cy="195" r="1.5" fill="#6c63ff" opacity=".4"/>
+          <circle cx="442" cy="258" r="1.8" fill="#52d68a" opacity=".4"/>
+        </g>
+
+        <!-- Neon bottom accent -->
+        <line x1="145" y1="375" x2="335" y2="375" stroke="url(#hac)" stroke-width="1" opacity=".4"/>
+        <circle cx="145" cy="375" r="2.5" fill="#6c63ff" filter="url(#hgw)" opacity=".75"/>
+        <circle cx="335" cy="375" r="2.5" fill="#a89cff" filter="url(#hgw)" opacity=".75"/>
+      </svg>
+    </div>
+
+  </div>
+  <div class="scta">Scroll<div class="sl"></div></div>
+</section>
+
+
+<!-- DROIT CIVIL — BANNER -->
+<div class="book-banner dc" id="droit">
+  <div class="book-banner-bg"></div>
+  <div class="book-label">⚖️ Droit Civil</div>
+  <div class="book-banner-in">
+    <div class="book-wrap dc-glow" id="wrap-dc" data-anim="spin" data-color="#0a1628" data-accent="#4f9eff" data-glow="79,158,255"></div>
+  </div>
+</div>
+
+<!-- DROIT CIVIL — CONTENT -->
+<div class="ms dc">
+  <div class="ms-in">
+    <div class="content-col rv">
+      <div class="chip dc">⚖️ Droit Civil</div>
+      <div class="mt">Mariage<br>& Divorce</div>
+      <div class="md">Art. 212–296 · CEDH H.W. 2025 · Carbonnier · Terré · 120 questions · 60 succès</div>
+      <div class="cl">
+        <a class="card dc rv" href="droit_civil_mariage_divorce2.html">
+          <div class="ci">⚖️</div>
+          <div class="ct">
+            <div class="ctt">Mariage & Divorce · Effets & Dissolution</div>
+            <div class="cs">Régime primaire · PC · Ass. plén. 2004 · PPL 2026</div>
+            <div class="cf"><div class="cx" id="dc-xp">0 XP</div><div class="cp"><div class="cpf" id="dc-bar"></div></div><div class="csuc2" id="dc-suc">— 🏆</div></div>
+          </div>
+          <div class="ca">↗</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTOIRE — BANNER -->
+<div class="book-banner hi" id="histoire">
+  <div class="book-banner-bg"></div>
+  <div class="book-label">🏛️ Histoire du Droit</div>
+  <div class="book-banner-in">
+    <div class="book-wrap hi-glow" id="wrap-hi" data-anim="flip" data-color="#1c0d05" data-accent="#ff8c5a" data-glow="255,140,90"></div>
+  </div>
+</div>
+
+<!-- HISTOIRE — CONTENT -->
+<div class="ms hi">
+  <div class="ms-in">
+    <div class="content-col rv">
+      <div class="chip hi">🏛️ Histoire du Droit</div>
+      <div class="mt">Antiquité<br>→ XIXᵉ siècle</div>
+      <div class="md">Pluralisme juridique · DDHC 1789 · Code civil napoléonien · 3 volumes · Quiz IA</div>
+      <div class="cl">
+        <a class="card hi rv" href="histoire_12.html">
+          <div class="ci">🏛️</div>
+          <div class="ct"><div class="ctt">Vol. 1 — Ancien Régime</div><div class="cs">Droit romain · Coutumes · Ordonnances royales</div><div class="cf"><div class="cx" id="h1-xp">0 XP</div><div class="cp"><div class="cpf" id="h1-bar"></div></div><div class="csuc2" id="h1-suc">— 🏆</div></div></div>
+          <div class="ca">↗</div>
+        </a>
+        <a class="card hi rv" href="Histoire_22.html">
+          <div class="ci">⚜️</div>
+          <div class="ct"><div class="ctt">Vol. 2 — La Révolution française</div><div class="cs">DDHC 1789 · Constituante · Terreur · Directoire</div><div class="cf"><div class="cx" id="h2-xp">0 XP</div><div class="cp"><div class="cpf" id="h2-bar"></div></div><div class="csuc2" id="h2-suc">— 🏆</div></div></div>
+          <div class="ca">↗</div>
+        </a>
+        <a class="card hi rv" href="Histoire_32.html">
+          <div class="ci">📜</div>
+          <div class="ct"><div class="ctt">Vol. 3 — XIXᵉ siècle</div><div class="cs">Consulat · Empire · Restauration · Code Napoléon</div><div class="cf"><div class="cx" id="h3-xp">0 XP</div><div class="cp"><div class="cpf" id="h3-bar"></div></div><div class="csuc2" id="h3-suc">— 🏆</div></div></div>
+          <div class="ca">↗</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ÉCONOMIE — BANNER -->
+<div class="book-banner ec" id="eco">
+  <div class="book-banner-bg"></div>
+  <div class="book-label">📈 Économie</div>
+  <div class="book-banner-in">
+    <div class="book-wrap ec-glow" id="wrap-ec" data-anim="fly" data-color="#071c0f" data-accent="#52d68a" data-glow="82,214,138"></div>
+  </div>
+</div>
+
+<!-- ÉCONOMIE — CONTENT -->
+<div class="ms ec">
+  <div class="ms-in">
+    <div class="content-col rv">
+      <div class="chip ec">📈 Économie</div>
+      <div class="mt">Marchés &<br>Marchandisation</div>
+      <div class="md">Théorie des marchés · Callon · Polanyi · Quiz IA · Schémas interactifs</div>
+      <div class="cl">
+        <a class="card ec rv" href="marches_marchandisation_vF2.html">
+          <div class="ci">📈</div>
+          <div class="ct"><div class="ctt">Marchés & Marchandisation</div><div class="cs">Performativité · Qualification · Calcul marchand</div><div class="cf"><div class="cx" id="mk-xp">0 XP</div><div class="cp"><div class="cpf" id="mk-bar"></div></div><div class="csuc2" id="mk-suc">— 🏆</div></div></div>
+          <div class="ca">↗</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<section class="ss" id="stats">
+  <div class="ss-in">
+    <div class="sh rv">
+      <div class="st">Statistiques</div>
+      <button class="rb" onclick="loadStats()">↺ sync</button>
+      <div id="sync-t">—</div>
+    </div>
+    <div class="sg">
+      <div class="sc rv">
+        <div class="sct">Progression XP</div>
+        <div class="xbig" id="big-xp">0</div>
+        <div class="xrank" id="big-rank">Étudiant</div>
+        <div class="xrows" id="xrows"></div>
+      </div>
+      <div class="sc rv">
+        <div class="sct">Succès débloqués</div>
+        <div class="srows" id="srows"></div>
+        <div class="chart-container" style="margin-top:18px;height:160px;">
+          <canvas id="csuc"></canvas>
+        </div>
+      </div>
+      <div class="sc rv">
+        <div class="sct">Temps de révision <span id="ttlbl" style="color:var(--acc2)"></span></div>
+        <div class="chart-container" style="height:220px;">
+          <canvas id="ctime"></canvas>
+        </div>
+      </div>
+      <div class="sc rv">
+        <div class="sct">Activité · 98 jours</div>
+        <div class="hmmonths" id="hmmonths"></div>
+        <div class="hmgrid" id="hm"></div>
+      </div>
+      <div class="sc wide rv">
+        <div class="sct">Dernières sessions</div>
+        <div class="vlist" id="visits"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="fb">R<span>·</span>Vision L1</div>
+  <div class="fu">nathanponsoda69-oss.github.io/r-vision-L1</div>
+</footer>
+
+<script>
+/* ═══ CURSOR ═══ */
+const CD=document.getElementById('cd'),CR=document.getElementById('cr');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX; my=e.clientY;
+  CD.style.left=mx+'px'; CD.style.top=my+'px';
+});
+document.querySelectorAll('a,button').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('hovering'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('hovering'));
+});
+(function tick(){
+  rx+=(mx-rx)*.12; ry+=(my-ry)*.12;
+  CR.style.left=rx+'px'; CR.style.top=ry+'px';
+  requestAnimationFrame(tick);
+})();
+
+/* ═══ NAV ═══ */
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>40));
+
+/* ═══ CARD GLOW ═══ */
+document.querySelectorAll('.card').forEach(c=>{
+  c.addEventListener('mousemove',e=>{
+    const r=c.getBoundingClientRect();
+    c.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+    c.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+  });
+});
+
+/* ═══ TIP ═══ */
+const TIP=document.getElementById('tip');
+function showTip(e,t){TIP.textContent=t;TIP.classList.add('on');TIP.style.left=(e.clientX+14)+'px';TIP.style.top=(e.clientY-30)+'px';}
+function hideTip(){TIP.classList.remove('on');}
+
+/* ═══ REVEAL ═══ */
+const rObs=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{
+    if(e.isIntersecting){
+      setTimeout(()=>e.target.classList.add('on'),i*45);
+      rObs.unobserve(e.target);
+    }
+  });
+},{threshold:.07});
+document.querySelectorAll('.rv').forEach(el=>rObs.observe(el));
+
+/* ═══════════════════════════════════════════
+   GLOBAL PARTICLES — fixed canvas full page
+═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════════════
+   HERO — torch halo reveal (80px)
+   BASE  : balance · parchemin · chapeau   (froid bleu/violet)
+   REVEAL: pièce · billet · ticker board   (chaud or/ambre)
+   MASK  : 2D canvas — trou noir inversé   (cache base sous halo)
+
+
+
+/* ═══════════════════════════════════════════
+   THREE.JS — BOOK SCENES (lazy, on scroll)
+═══════════════════════════════════════════ */
+function initBook(wrap){
+  if(!wrap||!window.THREE||wrap._three3dInit) return;
+  const W=wrap.offsetWidth, H=wrap.offsetHeight||420;
+  if(W<10) return;
+  wrap._three3dInit=true;
+
+  const animType=wrap.dataset.anim;
+  const coverColor=wrap.dataset.color||'#0a1628';
+  const accentColor=wrap.dataset.accent||'#6c63ff';
+  const glowRGB=wrap.dataset.glow||'108,99,255';
+  let glowR=108,glowG=99,glowB=255;
+  try{[glowR,glowG,glowB]=glowRGB.split(',').map(Number);}catch(e){}
+
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(42,W/H,.1,100);
+  camera.position.set(0,.3,5.2);
+
+  const canvas=document.createElement('canvas');
+  canvas.width=W; canvas.height=H;
+  wrap.appendChild(canvas);
+
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setSize(W,H,false);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+  // ── Lights — strong neon setup ──
+  scene.add(new THREE.AmbientLight(0xffffff,.35));
+
+  const dl=new THREE.DirectionalLight(0xffffff,1.1);
+  dl.position.set(4,6,5);dl.castShadow=true;scene.add(dl);
+
+  // Key neon point light — accent colour, strong
+  const neon1=new THREE.PointLight(0xffffff,4.5,9);
+  neon1.color.setRGB(glowR/255,glowG/255,glowB/255);
+  neon1.position.set(1.8,1.5,2.5);scene.add(neon1);
+
+  // Fill neon from opposite side
+  const neon2=new THREE.PointLight(0xffffff,2.5,7);
+  neon2.color.setRGB(glowR/255,glowG/255,glowB/255);
+  neon2.position.set(-2,-.5,1.5);scene.add(neon2);
+
+  // Rim light (white-ish) to separate from background
+  const rim=new THREE.DirectionalLight(0xffffff,.7);
+  rim.position.set(-3,-1,-3);scene.add(rim);
+
+  // ── Floor glow plane ──
+  const floorGeo=new THREE.PlaneGeometry(6,3);
+  const floorMat=new THREE.MeshStandardMaterial({
+    color:new THREE.Color(glowR/255,glowG/255,glowB/255),
+    transparent:true,opacity:.13,roughness:1,metalness:0
+  });
+  const floor=new THREE.Mesh(floorGeo,floorMat);
+  floor.rotation.x=-Math.PI/2;
+  floor.position.y=-1.25;
+  scene.add(floor);
+
+  // ── Build book ──
+  const BW=1.6,BH=2.1,BD=0.32;
+  const cvM=new THREE.MeshStandardMaterial({color:new THREE.Color(coverColor),roughness:.25,metalness:.15});
+  const spM=new THREE.MeshStandardMaterial({color:new THREE.Color('#050508'),roughness:.6});
+  const pgM=new THREE.MeshStandardMaterial({color:new THREE.Color('#ede8da'),roughness:.85});
+  const acM=new THREE.MeshStandardMaterial({
+    color:new THREE.Color(accentColor),roughness:.3,metalness:.3,
+    emissive:new THREE.Color(accentColor),emissiveIntensity:.55
+  });
+
+  // ── FLIP animation: book is assembled as openable object ──
+  // bookRoot is the whole book group that moves/floats
+  const bookRoot=new THREE.Group();scene.add(bookRoot);
+
+  if(animType==='flip'){
+    // Back cover (fixed)
+    const backCover=new THREE.Mesh(new THREE.BoxGeometry(BW,BH,.055),cvM);
+    backCover.position.set(0,0,-BD/2);
+    bookRoot.add(backCover);
+
+    // Pages block (fixed, slightly thinner than covers)
+    const pages=new THREE.Mesh(new THREE.BoxGeometry(BW-.04,BH-.04,BD-.08),pgM);
+    pages.position.set(0,0,0);
+    bookRoot.add(pages);
+
+    // Spine
+    const spine=new THREE.Mesh(new THREE.BoxGeometry(.12,BH,BD),spM);
+    spine.position.set(-BW/2,0,0);
+    bookRoot.add(spine);
+
+    // Front cover — hinged at LEFT edge, so pivot is at x = -BW/2
+    // We put a pivot group at x=-BW/2, then the cover mesh offset +BW/2 inside it
+    const frontPivot=new THREE.Group();
+    frontPivot.position.set(-BW/2,0,BD/2); // hinge at left edge, front face
+    bookRoot.add(frontPivot);
+    const frontCover=new THREE.Mesh(new THREE.BoxGeometry(BW,BH,.055),cvM);
+    frontCover.position.set(BW/2,0,0); // offset right so hinge is at left
+    frontPivot.add(frontCover);
+    // Accent stripe on front cover
+    const acStripe=new THREE.Mesh(new THREE.PlaneGeometry(BW*.75,.055),acM);
+    acStripe.position.set(BW/2,0,.028);
+    frontPivot.add(acStripe);
+    const acTitle=new THREE.Mesh(new THREE.PlaneGeometry(BW*.55,.28),acM);
+    acTitle.position.set(BW/2,.38,.028);
+    frontPivot.add(acTitle);
+
+    // Individual flip pages — each hinged at left edge too
+    const NUM_PGS=9;
+    const flipPivots=[];
+    for(let i=0;i<NUM_PGS;i++){
+      const pPivot=new THREE.Group();
+      pPivot.position.set(-BW/2+.01,0,BD/2-.04-i*.012);
+      bookRoot.add(pPivot);
+      const brightness=.88-i*.025;
+      const pg=new THREE.Mesh(
+        new THREE.PlaneGeometry(BW-.06,BH-.06),
+        new THREE.MeshStandardMaterial({
+          color:new THREE.Color(brightness,brightness*.97,brightness*.9),
+          roughness:.88,side:THREE.DoubleSide
+        })
+      );
+      pg.position.set((BW-.06)/2,0,.001);
+      pPivot.add(pg);
+      // Small line on page simulating text
+      const lineMat=new THREE.MeshStandardMaterial({color:new THREE.Color(accentColor),emissive:new THREE.Color(accentColor),emissiveIntensity:.3,transparent:true,opacity:.4});
+      for(let l=0;l<4;l++){
+        const line=new THREE.Mesh(new THREE.PlaneGeometry(BW*.55,.012),lineMat);
+        line.position.set((BW-.06)/2,.6-l*.28,.002);
+        pPivot.add(line);
+      }
+      flipPivots.push(pPivot);
+    }
+
+    // ── CURSOR-DRIVEN page turning ──
+    // cursorX in wrap (0=left=pages closed, 1=right=pages open)
+    // Entry: fall state first, then cursor control
+    let state='fall', sT=0;
+    let rawCX=0.5; // cursor X normalised 0..1 within wrap
+    let tRY=0,tRX=0,cRY=0,cRX=0;
+
+    wrap.addEventListener('mousemove',e=>{
+      const r=wrap.getBoundingClientRect();
+      rawCX=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+      tRY=((e.clientX-r.left)/r.width-.5)*.4;
+      tRX=-((e.clientY-r.top)/r.height-.5)*.25;
+    });
+    wrap.addEventListener('mouseleave',()=>{tRY=0;tRX=0;});
+
+    // Smooth cursor position
+    let sCX=0.5;
+
+    // Per-element current rotations (smoothed)
+    let currentFrontY=0;
+    let currentPgY=new Array(NUM_PGS).fill(0);
+
+    function anim(){
+      requestAnimationFrame(anim);
+      sT+=.016;
+      cRY+=(tRY-cRY)*.07;cRX+=(tRX-cRX)*.07;
+      sCX+=(rawCX-sCX)*.07; // smooth
+
+      if(state==='fall'){
+        const t=Math.min(1,sT/.9);
+        const ease=1-Math.pow(1-t,4);
+        const bounce=t>=1?0:Math.abs(Math.sin(t*Math.PI*1.5))*(1-t)*.35;
+        bookRoot.position.y=(1-ease)*5.5-bounce;
+        bookRoot.rotation.z=(1-ease)*Math.PI*.18*(1-t);
+        bookRoot.rotation.x=cRX;bookRoot.rotation.y=cRY;
+        if(t>=1){state='idle';sT=0;bookRoot.position.y=0;bookRoot.rotation.z=0;}
+      } else {
+        // Idle float
+        bookRoot.position.y=Math.sin(sT*.5)*.07;
+        bookRoot.rotation.x=Math.sin(sT*.4)*.03+cRX*.5;
+        bookRoot.rotation.y=-.2+Math.sin(sT*.25)*.06+cRY*.5;
+
+        // Front cover: cursor right half opens cover
+        // sCX 0..1 → cover opens from 0 (closed) to -PI*.9 (fully open)
+        const coverTarget= -(sCX)*Math.PI*.92;
+        currentFrontY+=(coverTarget-currentFrontY)*.09;
+        frontPivot.rotation.y=currentFrontY;
+
+        // Pages: staggered — page i opens when cursor > (i+1)/(NUM_PGS+1)
+        for(let i=0;i<NUM_PGS;i++){
+          const threshold=(i+1)/(NUM_PGS+1);
+          // Map sCX past threshold → page opens progressively
+          const pgProg=Math.max(0,Math.min(1,(sCX-threshold)/(1-threshold+.001)));
+          const pgTarget=-(pgProg)*Math.PI*.85;
+          currentPgY[i]+=(pgTarget-currentPgY[i])*.08;
+          flipPivots[i].rotation.y=currentPgY[i];
+        }
+      }
+
+      neon1.intensity=4.0+Math.sin(sT*1.3)*.7;
+      neon2.intensity=2.2+Math.sin(sT*1.1+1)*.5;
+      renderer.render(scene,camera);
+    }
+    anim();
+
+  } else {
+    // ── SPIN (Droit Civil) / FLY (Éco) ──
+    const book=new THREE.Group();bookRoot.add(book);
+
+    const bc1=new THREE.Mesh(new THREE.BoxGeometry(BW,BH,.055),cvM);bc1.position.set(0,0,-BD/2);book.add(bc1);
+    const bc2=new THREE.Mesh(new THREE.BoxGeometry(BW,BH,.055),cvM);bc2.position.set(0,0,BD/2);book.add(bc2);
+    const bsp=new THREE.Mesh(new THREE.BoxGeometry(.12,BH,BD),spM);bsp.position.set(-BW/2,0,0);book.add(bsp);
+    book.add(new THREE.Mesh(new THREE.BoxGeometry(BW-.06,BH-.05,BD-.06),pgM));
+    const ts1=new THREE.Mesh(new THREE.PlaneGeometry(BW*.8,.055),acM);ts1.position.set(0,0,BD/2+.029);book.add(ts1);
+    const ts2=new THREE.Mesh(new THREE.PlaneGeometry(BW*.55,.3),acM);ts2.position.set(0,.38,BD/2+.029);book.add(ts2);
+    // Extra decorative stripes
+    const ts3=new THREE.Mesh(new THREE.PlaneGeometry(BW*.4,.055),acM);ts3.position.set(0,-.3,BD/2+.029);book.add(ts3);
+
+    let tRY=0,tRX=0,cRY=0,cRX=0;
+    wrap.addEventListener('mousemove',e=>{
+      const r=wrap.getBoundingClientRect();
+      tRY=((e.clientX-r.left)/r.width-.5)*.55;
+      tRX=-((e.clientY-r.top)/r.height-.5)*.35;
+    });
+    wrap.addEventListener('mouseleave',()=>{tRY=0;tRX=0;});
+
+    let sT=0;
+    function anim(){
+      requestAnimationFrame(anim);
+      sT+=.016;
+      cRY+=(tRY-cRY)*.07;cRX+=(tRX-cRX)*.07;
+
+      if(animType==='spin'){
+        const t=Math.min(1,sT/1.2);
+        const ease=1-Math.pow(1-t,3);
+        // Entry: rises + slight spin burst, then continuous slow spin
+        bookRoot.position.y=(1-ease)*-4.5+Math.sin(sT*.6)*.07;
+        bookRoot.rotation.y=sT*.42+cRY;
+        bookRoot.rotation.x=(1-ease)*.35+Math.sin(sT*.4)*.03+cRX;
+        // Scale pulse on entry
+        const sc=1+(1-ease)*.15;
+        bookRoot.scale.set(sc,sc,sc);
+      }
+      else if(animType==='fly'){
+        const t=Math.min(1,sT/1.1);
+        const ease=1-Math.pow(1-t,3);
+        bookRoot.position.x=(1-ease)*5.5+Math.sin(sT*.5)*.06;
+        bookRoot.position.y=(1-ease)*4+Math.sin(sT*.7)*.09;
+        bookRoot.rotation.z=(1-ease)*Math.PI*.32;
+        bookRoot.rotation.y=-Math.PI*.08+Math.sin(sT*.35)*.12+cRY;
+        bookRoot.rotation.x=Math.sin(sT*.4)*.05+cRX;
+      }
+
+      neon1.intensity=4.0+Math.sin(sT*1.3)*.8;
+      neon2.intensity=2.2+Math.sin(sT*1.1+1)*.5;
+      renderer.render(scene,camera);
+    }
+    anim();
+  }
+
+  window.addEventListener('resize',()=>{
+    const nW=wrap.offsetWidth, nH=wrap.offsetHeight||420;
+    if(!nW) return;
+    camera.aspect=nW/nH;camera.updateProjectionMatrix();
+    renderer.setSize(nW,nH,false);
+  });
+}
+
+// Lazy init books via IntersectionObserver — single clean observer
+const bookObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      bookObs.unobserve(e.target);
+      // Wait for the element to have layout dimensions
+      function tryInit(attempts){
+        const w=e.target.offsetWidth, h=e.target.offsetHeight;
+        if(w>0 && h>0){
+          initBook(e.target);
+        } else if(attempts>0){
+          setTimeout(()=>tryInit(attempts-1),80);
+        }
+      }
+      tryInit(15);
+    }
+  });
+},{threshold:.1, rootMargin:'0px 0px -50px 0px'});
+document.querySelectorAll('.book-wrap').forEach(w=>bookObs.observe(w));
+
+/* ═══ DATA ═══ */
+const SITES=[
+  {id:'dc',key:'rvision_dc',name:'Droit Civil',   color:'#4f9eff',maxXp:2000,maxSuc:65},
+  {id:'h1',key:'rvision_h1',name:'Histoire I',    color:'#ff8c5a',maxXp:1500,maxSuc:59},
+  {id:'h2',key:'rvision_h2',name:'Histoire II',   color:'#ffaa72',maxXp:4000,maxSuc:65},
+  {id:'h3',key:'rvision_h3',name:'Histoire III',  color:'#ffc890',maxXp:3000,maxSuc:55},
+  {id:'mk',key:'rvision_mk',name:'Marchés & Éco', color:'#52d68a',maxXp:2000,maxSuc:40},
+];
+const RANKS=[{xp:0,n:'Étudiant'},{xp:300,n:'Juriste'},{xp:800,n:'Avocat'},{xp:1500,n:'Magistrat'},{xp:3000,n:'Docteur'},{xp:6000,n:'Professeur'}];
+function readSite(s){const g=k=>localStorage.getItem(s.key+'_'+k);return{xp:+(g('xp')||0),succes:+(g('succes')||0),quiz:+(g('quiz')||0),time:+(g('time')||0),last:+(g('lastvisit')||0),activity:JSON.parse(g('activity')||'{}')};}
+
+/* ═══ CHARTS ═══ */
+let cSuc=null,cTime=null;
+function buildCharts(stats){
+  // Succès bar chart
+  const cs=document.getElementById('csuc');
+  if(cs){
+    if(cSuc){cSuc.destroy();cSuc=null;}
+    cSuc=new Chart(cs,{
+      type:'bar',
+      data:{labels:SITES.map(s=>s.name),datasets:[{data:stats.map(s=>s.succes),backgroundColor:SITES.map(s=>s.color+'44'),borderColor:SITES.map(s=>s.color),borderWidth:2,borderRadius:8,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw} succès`}}},scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.28)',font:{family:'Space Mono',size:9}}},x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.28)',font:{family:'Space Mono',size:9},maxRotation:25}}},animation:{duration:900,easing:'easeOutQuart'}}
+    });
+  }
+  // Time doughnut
+  const ct=document.getElementById('ctime');
+  if(ct){
+    if(cTime){cTime.destroy();cTime=null;}
+    const total=stats.reduce((a,s)=>a+s.time,0);
+    cTime=new Chart(ct,{
+      type:'doughnut',
+      data:{labels:SITES.map(s=>s.name),datasets:[{data:stats.map(s=>s.time||.001),backgroundColor:SITES.map(s=>s.color+'cc'),borderColor:'#07070f',borderWidth:3,hoverOffset:8}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.35)',font:{family:'Space Mono',size:9},boxWidth:7,padding:12}},tooltip:{callbacks:{label:c=>` ${Math.round(c.raw/60)} min`}}},animation:{duration:900}},
+      plugins:[{id:'cl',beforeDraw(ch){const{ctx,chartArea:{width:cw,height:ch2,left:cl,top:ct2}}=ch;ctx.save();ctx.font='700 '+(cw*.17)+'px Outfit';ctx.fillStyle='rgba(255,255,255,.85)';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(Math.round(total/60)+'m',cl+cw/2,ct2+ch2/2);ctx.restore();}}]
+    });
+  }
+}
+
+/* ═══ HEATMAP ═══ */
+function buildHeatmap(allAct){
+  const el=document.getElementById('hm'),mEl=document.getElementById('hmmonths');
+  if(!el) return;
+  const today=new Date(),cells=[],seen={};
+  for(let i=97;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const key=d.toISOString().slice(0,10);
+    const n=Object.values(allAct).reduce((s,a)=>s+(a[key]||0),0);
+    const v=n===0?0:n===1?1:n<=3?2:n<=6?3:4;
+    const mo=d.toLocaleDateString('fr-FR',{month:'short'});
+    if(!seen[mo])seen[mo]=true;
+    cells.push({v,n,label:d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})});
+  }
+  el.innerHTML=cells.map(c=>`<div class="hmc" data-v="${c.v}" data-tip="${c.label} · ${c.n}×"></div>`).join('');
+  mEl.innerHTML=Object.keys(seen).slice(-7).map(m=>`<span>${m}</span>`).join('');
+  el.querySelectorAll('.hmc').forEach(c=>{c.addEventListener('mousemove',e=>showTip(e,c.dataset.tip));c.addEventListener('mouseleave',hideTip);});
+}
+
+/* ═══ COUNTER ═══ */
+function animTo(id,target,fmt=v=>String(v)){
+  const el=document.getElementById(id);if(!el) return;
+  const dur=900,t0=Date.now(),from=parseFloat(el.dataset.v||0)||0;
+  el.dataset.v=target;
+  (function tick(){const p=Math.min(1,(Date.now()-t0)/dur);el.textContent=fmt(Math.round(from+(target-from)*(1-Math.pow(1-p,3))));if(p<1)requestAnimationFrame(tick);})();
+}
+
+/* ═══ LOAD STATS ═══ */
+function loadStats(){
+  const stats=SITES.map(s=>({...s,...readSite(s)}));
+  const tx=stats.reduce((a,s)=>a+s.xp,0),ts=stats.reduce((a,s)=>a+s.succes,0);
+  const tq=stats.reduce((a,s)=>a+s.quiz,0),tt=stats.reduce((a,s)=>a+s.time,0);
+  animTo('kpi-xp',tx,v=>v+' XP'); animTo('kpi-s',ts); animTo('kpi-q',tq); animTo('kpi-t',Math.round(tt/60),v=>v+'m');
+  document.getElementById('nav-xp').textContent=tx+' XP';
+  animTo('big-xp',tx);
+  const rank=[...RANKS].reverse().find(r=>tx>=r.xp)||RANKS[0];
+  document.getElementById('big-rank').textContent=rank.n+' · '+ts+' succès';
+  document.getElementById('xrows').innerHTML=stats.map(s=>`<div class="xrow"><div class="xn">${s.name}</div><div class="xt"><div class="xf" style="background:${s.color};width:${Math.round(s.xp/s.maxXp*100)}%"></div></div><div class="xv">${s.xp}</div></div>`).join('');
+  document.getElementById('srows').innerHTML=stats.map(s=>`<div class="srow"><div class="sn">${s.name}</div><div class="strack"><div class="sfill" style="background:${s.color};width:${s.maxSuc>0?Math.round(s.succes/s.maxSuc*100):0}%"></div></div><div class="sv">${s.succes}/${s.maxSuc}</div></div>`).join('');
+  stats.forEach(s=>{
+    const xe=document.getElementById(s.id+'-xp'),be=document.getElementById(s.id+'-bar'),se=document.getElementById(s.id+'-suc');
+    if(xe)xe.textContent=s.xp+' XP';
+    if(be)be.style.width=Math.min(100,Math.round(s.xp/Math.max(s.maxXp,1)*100))+'%';
+    if(se)se.textContent=s.succes+' 🏆';
+  });
+  buildCharts(stats);
+  const allAct={};stats.forEach(s=>allAct[s.id]=s.activity);buildHeatmap(allAct);
+  document.getElementById('ttlbl').textContent=Math.round(tt/60)+' min total';
+  document.getElementById('sync-t').textContent='sync '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const vl=stats.filter(s=>s.last>0).sort((a,b)=>b.last-a.last).map(s=>{
+    const d=new Date(s.last),td=d.toDateString()===new Date().toDateString();
+    return `<div class="vit ${td?'vit-today':''}"><div>${s.name}</div><div class="vd">${td?'Aujourd\'hui · '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})}</div></div>`;
+  });
+  document.getElementById('visits').innerHTML=vl.length?vl.join(''):'<div class="vit"><div style="color:var(--t3)">Aucune session — ouvre un cours pour commencer</div></div>';
+}
+
+/* ═══ INIT ═══ */
+// Stats reset: wipe all rvision_* keys on very first homepage load
+(function firstVisitReset(){
+  const FLAG='rvision_homepage_visited';
+  if(!localStorage.getItem(FLAG)){
+    // First ever load — clear all rvision data
+    const keysToRemove=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k && k.startsWith('rvision_') && k!==FLAG) keysToRemove.push(k);
+    }
+    keysToRemove.forEach(k=>localStorage.removeItem(k));
+    localStorage.setItem(FLAG,'1');
+  }
+})();
+
+function startInit(){
+  // Global particles — fixed canvas full page
+  (function(){
+    const canvas=document.getElementById('particles-canvas');
+    if(!canvas) return;
+    const ctx=canvas.getContext('2d');
+    let W,H,pts=[];
+    function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+    resize(); window.addEventListener('resize',resize);
+    // 400 particles spread evenly across the page
+    for(let i=0;i<400;i++) pts.push({
+      x:Math.random()*window.innerWidth,
+      y:Math.random()*window.innerHeight,
+      vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,
+      r:Math.random()*1.8+.4,
+      c:Math.random()<.55?'rgba(108,99,255,':Math.random()<.6?'rgba(82,214,138,':'rgba(168,156,255,',
+      o:Math.random()*.45+.1,
+      phase:Math.random()*Math.PI*2
+    });
+    let t=0;
+    (function loop(){
+      requestAnimationFrame(loop); t+=.008;
+      ctx.clearRect(0,0,W,H);
+      pts.forEach(p=>{
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+        if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+        const pulse=p.o+Math.sin(t*1.4+p.phase)*.07;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle=p.c+Math.max(0,Math.min(1,pulse))+')'; ctx.fill();
+      });
+    })();
+  })();
+  loadStats();
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>requestAnimationFrame(()=>requestAnimationFrame(startInit)));
+} else {
+  requestAnimationFrame(()=>requestAnimationFrame(startInit));
+}
+setInterval(()=>{if(!document.hidden)loadStats();},30000);
+</script>
+</body>
+</html>
