@@ -1,0 +1,2602 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R·Vision — L1 Droit & Économie</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#07070f;--bg2:#0d0d1f;--surface:rgba(255,255,255,.04);
+  --border:rgba(255,255,255,.07);--bh:rgba(255,255,255,.16);
+  --t:#f0f0ff;--t2:rgba(240,240,255,.55);--t3:rgba(240,240,255,.25);
+  --acc:#6c63ff;--acc2:#a89cff;--ag:rgba(108,99,255,.4);
+  --dc:#4f9eff;--h1:#ff8c5a;--h2:#ffaa72;--h3:#ffc890;--mk:#52d68a;--co:#c084fc;
+  --r:20px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--t);overflow-x:hidden;cursor:none;}
+
+/* Cursor */
+#cd,#cr{position:fixed;top:0;left:0;border-radius:50%;pointer-events:none;z-index:9999;mix-blend-mode:difference;will-change:transform;}
+#cd{width:6px;height:6px;background:#fff;margin:-3px 0 0 -3px;}
+#cr{width:34px;height:34px;border:1.5px solid rgba(255,255,255,.45);margin:-17px 0 0 -17px;transition:width .2s,height .2s,margin .2s,border-color .2s;}
+.hovering #cr{width:50px;height:50px;margin:-25px 0 0 -25px;border-color:var(--acc);}
+
+/* Noise */
+body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.025'/%3E%3C/svg%3E");opacity:.7;}
+
+/* Blobs */
+.blob{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;animation:blobF 14s ease-in-out infinite;}
+.b1{width:600px;height:600px;background:var(--acc);top:-200px;right:-150px;opacity:.11;animation-delay:0s;}
+.b2{width:400px;height:400px;background:#ff5f9e;bottom:5%;left:-100px;opacity:.09;animation-delay:-5s;}
+.b3{width:300px;height:300px;background:#52d68a;bottom:25%;right:5%;opacity:.09;animation-delay:-9s;}
+@keyframes blobF{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(25px,-35px) scale(1.06);}66%{transform:translate(-18px,25px) scale(.96);}}
+
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 clamp(20px,4vw,60px);transition:background .3s;}
+nav.scrolled{background:rgba(7,7,15,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-in{max-width:1200px;margin:0 auto;height:68px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:1.3rem;font-weight:900;letter-spacing:-.03em;text-decoration:none;color:var(--t);}
+.logo span{color:var(--acc);}
+.np{display:flex;gap:6px;}
+.np a{font-size:.7rem;font-weight:500;padding:6px 14px;border-radius:100px;border:1px solid var(--border);color:var(--t2);text-decoration:none;transition:all .2s;letter-spacing:.04em;}
+.np a:hover{border-color:var(--bh);color:var(--t);background:var(--surface);}
+.nav-xp{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--acc2);}
+
+/* ── USER SYSTEM ── */
+.user-btn{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:6px 14px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:.7rem;color:var(--t2);transition:all .2s;}
+.user-btn:hover{border-color:var(--bh);color:var(--t);}
+.user-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#fff;flex-shrink:0;}
+/* Modal overlay */
+.um-overlay{position:fixed;inset:0;z-index:9000;background:rgba(7,7,15,.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.um-overlay.open{opacity:1;pointer-events:all;}
+.um-box{background:#0d0d1f;border:1px solid rgba(108,99,255,.3);border-radius:24px;padding:40px;width:clamp(300px,90vw,460px);transform:translateY(20px);transition:transform .3s;}
+.um-overlay.open .um-box{transform:translateY(0);}
+.um-title{font-size:1.4rem;font-weight:800;color:var(--t);margin-bottom:6px;}
+.um-sub{font-size:.82rem;color:var(--t2);margin-bottom:28px;line-height:1.5;}
+.um-input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 18px;font-family:'Outfit',sans-serif;font-size:1rem;color:var(--t);outline:none;transition:border .2s;}
+.um-input:focus{border-color:var(--acc);}
+.um-profiles{margin-top:16px;display:flex;flex-direction:column;gap:8px;max-height:160px;overflow-y:auto;}
+.um-profile{display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;transition:all .2s;}
+.um-profile:hover{border-color:var(--acc);background:rgba(108,99,255,.08);}
+.um-profile-name{font-size:.85rem;font-weight:600;color:var(--t);}
+.um-profile-xp{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--acc2);}
+.um-profile-del{background:none;border:none;color:var(--t3);cursor:pointer;font-size:.9rem;padding:4px;border-radius:6px;transition:color .2s;}
+.um-profile-del:hover{color:#ff5f5f;}
+.um-sep{font-size:.7rem;color:var(--t3);text-align:center;margin:12px 0;letter-spacing:.08em;text-transform:uppercase;}
+.um-btn{width:100%;background:var(--acc);border:none;border-radius:12px;padding:14px;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;color:#fff;cursor:pointer;margin-top:16px;transition:background .2s;}
+.um-btn:hover{background:#7c74ff;}
+.um-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--t3);font-size:1.2rem;cursor:pointer;}
+.um-box{position:relative;}
+/* Droit Constitutionnel card color */
+.card.co{--cg:rgba(192,132,252,.12);}
+.card.co .ci{background:rgba(192,132,252,.1);}
+.card.co .cx{color:var(--co);}
+.card.co .cpf{background:var(--co);}
+.book-banner.co .book-banner-bg{background:radial-gradient(ellipse at 60% 50%,rgba(192,132,252,.18) 0%,transparent 70%);}
+
+/* ── INSIGHT ANALYSIS STYLES ── */
+.insight-summary{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-bottom:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;}
+.ins-kpi{display:flex;flex-direction:column;gap:4px;}
+.ins-kpi-v{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--t);}
+.ins-kpi-l{font-size:.68rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;}
+.ins-pause{font-size:.7rem;color:var(--t3);font-style:italic;margin-top:8px;grid-column:1/-1;}
+.insight-mastery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:28px;}
+.im-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;}
+.im-card-title{font-size:.75rem;font-weight:700;color:var(--t2);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+.im-score{font-family:'Space Mono',monospace;font-size:.75rem;font-weight:700;}
+.im-bar-bg{background:rgba(255,255,255,.06);border-radius:100px;height:6px;overflow:hidden;margin-bottom:12px;}
+.im-bar-fill{height:100%;border-radius:100px;transition:width 1s cubic-bezier(.34,1.56,.64,1);}
+.im-themes{display:flex;flex-direction:column;gap:6px;}
+.im-theme{display:flex;align-items:center;gap:8px;font-size:.72rem;}
+.im-theme-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.im-theme-name{color:var(--t2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.im-theme-score{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--t3);}
+.insight-reco{margin-bottom:28px;}
+.ir-title{font-size:1rem;font-weight:700;color:var(--t);margin-bottom:16px;}
+.ir-list{display:flex;flex-direction:column;gap:10px;}
+.ir-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;transition:border-color .2s;}
+.ir-item:hover{border-color:var(--bh);}
+.ir-item.red{border-left:3px solid #ff5f5f;}
+.ir-item.orange{border-left:3px solid #ffaa44;}
+.ir-item.green{border-left:3px solid #52d68a;}
+/* ── Profil étudiant dynamique ── */
+.profile-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 22px;margin-bottom:20px;position:relative;overflow:hidden;}
+.profile-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 0% 50%,var(--pc,rgba(108,99,255,.08)),transparent 70%);pointer-events:none;}
+.profile-header{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.profile-emoji{font-size:2rem;flex-shrink:0;}
+.profile-name{font-size:1.1rem;font-weight:800;letter-spacing:-.02em;}
+.profile-since{font-size:.62rem;color:var(--t3);font-family:'Space Mono',monospace;margin-top:2px;}
+.profile-desc{font-size:.8rem;color:var(--t2);line-height:1.65;margin-bottom:14px;}
+.profile-dims{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.dim-item{display:flex;flex-direction:column;gap:3px;}
+.dim-label{font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;}
+.dim-bar-bg{height:4px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden;}
+.dim-bar-fill{height:100%;border-radius:100px;transition:width 1.2s cubic-bezier(.34,1.56,.64,1);}
+.dim-val{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--t3);}
+.profile-signals{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.sig-tag{font-size:.62rem;padding:3px 8px;border-radius:100px;border:1px solid;white-space:nowrap;}
+.sig-tag.pos{color:#52d68a;border-color:rgba(82,214,138,.3);background:rgba(82,214,138,.06);}
+.sig-tag.neg{color:#ff5f5f;border-color:rgba(255,95,95,.3);background:rgba(255,95,95,.06);}
+.sig-tag.neu{color:var(--acc2);border-color:rgba(108,99,255,.3);background:rgba(108,99,255,.06);}
+.profile-history{font-size:.65rem;color:var(--t3);border-top:1px solid var(--border);padding-top:8px;margin-top:8px;line-height:1.7;}
+/* ── Tableau profil ── */
+.profile-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:16px;}
+.profile-table-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.profile-table-emoji{font-size:1.4rem;}
+.profile-table-name{font-size:.92rem;font-weight:800;letter-spacing:-.02em;}
+.profile-table-sub{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--t3);margin-left:auto;}
+.profile-dims-table{display:flex;flex-direction:column;gap:7px;}
+.pdt-row{display:grid;grid-template-columns:82px 1fr 28px;align-items:center;gap:10px;}
+.pdt-label{font-size:.64rem;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+.pdt-bar-wrap{height:5px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden;}
+.pdt-bar-fill{height:100%;border-radius:100px;transition:width 1.2s cubic-bezier(.34,1.56,.64,1);}
+.pdt-val{font-family:'Space Mono',monospace;font-size:.62rem;font-weight:700;text-align:right;}
+
+.profile-change{display:inline-block;padding:2px 7px;border-radius:6px;font-family:'Space Mono',monospace;font-size:.58rem;background:rgba(255,170,68,.12);color:#ffaa44;border:1px solid rgba(255,170,68,.2);margin-left:6px;}
+/* Notion micro-parcelle */
+.notion-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:5px;}
+.notion-title{font-size:.82rem;font-weight:700;color:var(--t);}
+.notion-path{font-size:.62rem;color:var(--t3);font-family:'Space Mono',monospace;}
+.notion-signals{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
+.notion-action{font-size:.72rem;color:var(--t2);border-left:2px solid;padding-left:8px;margin-top:4px;line-height:1.5;}
+.ir-item.purple{border-left:3px solid #a89cff;}
+.ir-item.blue{border-left:3px solid #4f9eff;}
+
+.ir-rank{font-family:'Space Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--t3);}
+.ir-content{display:flex;flex-direction:column;gap:3px;}
+.ir-theme{font-size:.85rem;font-weight:700;color:var(--t);}
+.ir-course{font-size:.68rem;color:var(--t3);}
+.ir-signals{font-size:.7rem;color:var(--t2);margin-top:2px;}
+.ir-score{font-family:'Space Mono',monospace;font-size:.85rem;font-weight:700;}
+.insight-themes{display:flex;flex-direction:column;gap:8px;margin-top:0;}
+.it-header{font-size:.75rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.it-row{display:grid;grid-template-columns:1fr 80px 80px 60px 80px;gap:8px;align-items:center;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:.72rem;}
+.it-row:hover{border-color:var(--bh);}
+.it-name{color:var(--t2);font-weight:600;}
+.it-stat{font-family:'Space Mono',monospace;color:var(--t3);text-align:right;}
+.it-score{font-family:'Space Mono',monospace;font-weight:700;text-align:right;}
+.it-bar{height:4px;border-radius:100px;margin-top:4px;}
+.insight-empty{color:var(--t3);font-size:.85rem;text-align:center;padding:40px;border:1px dashed var(--border);border-radius:12px;}
+@media(max-width:640px){.it-row{grid-template-columns:1fr 60px 50px;}.it-stat:nth-child(3),.it-stat:nth-child(4){display:none;}}
+
+/* Particles canvas MUST be fixed — not in document flow */
+#particles-canvas{position:fixed;top:0;left:0;pointer-events:none;z-index:1;}
+.hero-inner{max-width:1200px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;padding:88px clamp(20px,4vw,60px) 80px;}
+.hero-text{display:flex;flex-direction:column;}
+.hero-illo{display:flex;align-items:center;justify-content:center;}
+.hero-illo svg{border-radius:20px;border:1px solid var(--border);}
+@media(max-width:860px){.hero-inner{grid-template-columns:1fr;}.hero-illo{margin-top:32px;}}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--acc2);padding:6px 14px;border-radius:100px;border:1px solid rgba(108,99,255,.3);background:rgba(108,99,255,.08);margin-bottom:28px;}
+.tdot{width:5px;height:5px;border-radius:50%;background:var(--acc);animation:p 1s ease-in-out infinite;}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.2}}
+h1{font-size:clamp(3rem,7vw,7rem);font-weight:900;line-height:.95;letter-spacing:-.04em;}
+h1 .ghost{display:block;color:transparent;-webkit-text-stroke:1px rgba(240,240,255,.18);}
+h1 .gr{background:linear-gradient(135deg,var(--acc) 0%,var(--acc2) 50%,#ff79c6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hsub{margin-top:24px;max-width:420px;font-size:clamp(.88rem,1.4vw,1rem);color:var(--t2);line-height:1.75;}
+.hkpis{display:flex;gap:0;flex-wrap:wrap;margin-top:48px;}
+.kpi{padding:16px 32px 16px 0;border-right:1px solid var(--border);margin-right:32px;}
+.kpi:last-child{border-right:none;}
+.kv{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:900;line-height:1;color:var(--acc2);}
+.kl{font-size:.62rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-top:3px;}
+.scta{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--t3);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;}
+.sl{width:1px;height:40px;background:linear-gradient(to bottom,transparent,var(--t3));animation:sl 1.5s ease-in-out infinite;}
+@keyframes sl{0%,100%{transform:scaleY(1);opacity:1}50%{transform:scaleY(.55);opacity:.3}}
+
+@keyframes rUp{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* Reveal */
+.rv{opacity:0;transform:translateY(20px);transition:opacity .65s cubic-bezier(.16,1,.3,1),transform .65s cubic-bezier(.16,1,.3,1);}
+.rv.on{opacity:1;transform:translateY(0);}
+
+/* Mat section */
+/* ── Book banner — standalone strip before each section ── */
+.book-banner{position:relative;z-index:2;width:100%;padding:0 clamp(20px,4vw,60px);overflow:visible;}
+.book-banner-in{max-width:760px;margin:0 auto;position:relative;}
+/* Colored top border line */
+.book-banner::before{content:'';display:block;height:1px;background:linear-gradient(90deg,transparent,var(--bclr,rgba(255,255,255,.12)),transparent);margin-bottom:0;}
+/* Floating label inside banner */
+.book-label{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:3;font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--bclr2,rgba(255,255,255,.3));background:var(--bg);border:1px solid var(--bclr3,rgba(255,255,255,.08));padding:4px 14px;border-radius:100px;white-space:nowrap;pointer-events:none;}
+.book-banner.dc{--bclr:rgba(79,158,255,.3);--bclr2:rgba(79,158,255,.7);--bclr3:rgba(79,158,255,.2);}
+.book-banner.hi{--bclr:rgba(255,140,90,.3);--bclr2:rgba(255,140,90,.7);--bclr3:rgba(255,140,90,.2);}
+.book-banner.ec{--bclr:rgba(82,214,138,.3);--bclr2:rgba(82,214,138,.7);--bclr3:rgba(82,214,138,.2);}
+/* Gradient bg strip */
+.book-banner-bg{position:absolute;inset:0;pointer-events:none;z-index:0;}
+.book-banner.dc .book-banner-bg{background:radial-gradient(ellipse 80% 100% at 50% 60%,rgba(79,158,255,.07) 0%,transparent 70%);}
+.book-banner.hi .book-banner-bg{background:radial-gradient(ellipse 80% 100% at 50% 60%,rgba(255,140,90,.07) 0%,transparent 70%);}
+.book-banner.ec .book-banner-bg{background:radial-gradient(ellipse 80% 100% at 50% 60%,rgba(82,214,138,.07) 0%,transparent 70%);}
+
+/* Content section — no book inside anymore */
+.ms{padding:40px clamp(20px,4vw,60px) 80px;position:relative;z-index:2;overflow:hidden;}
+.ms::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.04;}
+.ms.dc::before{background:radial-gradient(ellipse 70% 60% at 50% 0%,var(--dc),transparent);}
+.ms.hi::before{background:radial-gradient(ellipse 70% 60% at 50% 0%,var(--h1),transparent);}
+.ms.ec::before{background:radial-gradient(ellipse 70% 60% at 50% 0%,var(--mk),transparent);}
+.ms-in{max-width:900px;margin:0 auto;}
+.content-col{width:100%;}
+
+/* Book canvas wrapper — inside banner */
+.book-wrap{overflow:visible;height:460px;position:relative;width:100%;z-index:1;}
+.book-wrap canvas{display:block;position:absolute;top:0;left:0;width:100%;height:100%;}
+/* Neon glow per matiere */
+.book-wrap.dc-glow{filter:drop-shadow(0 0 22px rgba(79,158,255,.65)) drop-shadow(0 0 60px rgba(79,158,255,.28));}
+.book-wrap.hi-glow{filter:drop-shadow(0 0 22px rgba(255,140,90,.65)) drop-shadow(0 0 60px rgba(255,140,90,.28));}
+.book-wrap.co-glow{filter:drop-shadow(0 0 22px rgba(192,132,252,.65)) drop-shadow(0 0 60px rgba(192,132,252,.28));}
+
+.chip{display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:100px;border:1px solid;font-weight:700;margin-bottom:16px;}
+.chip.dc{color:var(--dc);border-color:rgba(79,158,255,.3);background:rgba(79,158,255,.07);}
+.chip.hi{color:var(--h1);border-color:rgba(255,140,90,.3);background:rgba(255,140,90,.07);}
+.chip.ec{color:var(--mk);border-color:rgba(82,214,138,.3);background:rgba(82,214,138,.07);}
+.chip.co{color:var(--co);border-color:rgba(192,132,252,.3);background:rgba(192,132,252,.07);}
+.mt{font-size:clamp(2rem,4vw,3.2rem);font-weight:900;letter-spacing:-.04em;line-height:1.05;margin-bottom:12px;}
+.md{font-size:.88rem;color:var(--t2);line-height:1.75;margin-bottom:24px;}
+
+/* Book canvas wrapper — full width, taller for vertical layout */
+.book-wrap{border-radius:24px;overflow:visible;height:420px;position:relative;width:100%;}
+.book-wrap canvas{display:block;position:absolute;top:0;left:0;width:100%;height:100%;border-radius:24px;}
+/* Neon glow per matiere */
+.book-wrap.dc-glow{filter:drop-shadow(0 0 18px rgba(79,158,255,.55)) drop-shadow(0 0 48px rgba(79,158,255,.25));}
+.book-wrap.hi-glow{filter:drop-shadow(0 0 18px rgba(255,140,90,.55)) drop-shadow(0 0 48px rgba(255,140,90,.25));}
+.book-wrap.ec-glow{filter:drop-shadow(0 0 18px rgba(82,214,138,.55)) drop-shadow(0 0 48px rgba(82,214,138,.25));}
+.book-wrap.co-glow{filter:drop-shadow(0 0 18px rgba(192,132,252,.55)) drop-shadow(0 0 48px rgba(192,132,252,.25));}
+
+/* Cards */
+.cl{display:flex;flex-direction:column;gap:10px;}
+.card{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;text-decoration:none;color:var(--t);display:flex;align-items:center;gap:14px;transition:border-color .3s,transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .35s;}
+.card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at var(--mx,50%) var(--my,50%),var(--cg,rgba(108,99,255,.1)),transparent 70%);opacity:0;transition:opacity .4s;pointer-events:none;}
+.card:hover{border-color:var(--bh);transform:translateX(6px);box-shadow:0 10px 36px rgba(0,0,0,.4);}
+.card:hover::before{opacity:1;}
+.card.dc{--cg:rgba(79,158,255,.12);}
+.card.hi{--cg:rgba(255,140,90,.12);}
+.card.ec{--cg:rgba(82,214,138,.12);}
+.ci{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
+.card:hover .ci{transform:scale(1.15) rotate(-8deg);}
+.card.dc .ci{background:rgba(79,158,255,.1);}
+.card.hi .ci{background:rgba(255,140,90,.1);}
+.card.ec .ci{background:rgba(82,214,138,.1);}
+.ct{flex:1;}
+.ctt{font-size:.93rem;font-weight:700;letter-spacing:-.02em;margin-bottom:3px;}
+.cs{font-size:.72rem;color:var(--t2);line-height:1.5;}
+.cf{display:flex;align-items:center;gap:8px;margin-top:9px;}
+.cx{font-family:'Space Mono',monospace;font-size:.63rem;white-space:nowrap;}
+.card.dc .cx{color:var(--dc);}.card.hi .cx{color:var(--h1);}.card.ec .cx{color:var(--mk);}
+.cp{flex:1;height:3px;border-radius:2px;background:var(--border);overflow:hidden;}
+.cpf{height:100%;border-radius:2px;width:0;transition:width 1.4s cubic-bezier(.16,1,.3,1) .3s;}
+.card.dc .cpf{background:var(--dc);}
+.card.hi .cpf{background:var(--h1);}
+.card.ec .cpf{background:var(--mk);}
+.csuc2{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--t3);}
+.ca{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.68rem;color:var(--t3);flex-shrink:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);}
+.card:hover .ca{border-color:var(--bh);color:var(--t);transform:translate(2px,-2px) scale(1.1);}
+
+/* Stats section */
+.ss{padding:0 clamp(20px,4vw,60px) 80px;position:relative;z-index:2;}
+.ss-in{max-width:1200px;margin:0 auto;}
+.sh{display:flex;align-items:center;gap:16px;margin-bottom:36px;}
+.st{font-size:clamp(1.6rem,3vw,2.4rem);font-weight:900;letter-spacing:-.04em;}
+.rb{background:none;border:1px solid var(--border);border-radius:100px;padding:3px 10px;font-size:.58rem;letter-spacing:.06em;color:var(--t3);cursor:pointer;transition:all .2s;font-family:'Space Mono',monospace;}
+.rb:hover{border-color:var(--acc);color:var(--acc);}
+#sync-t{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--t3);margin-left:auto;}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:760px){.sg{grid-template-columns:1fr;}}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:26px;transition:border-color .3s;}
+.sc:hover{border-color:var(--bh);}
+.sc.wide{grid-column:1/-1;}
+.sct{font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;}
+
+/* XP card */
+.xbig{font-size:3.5rem;font-weight:900;letter-spacing:-.05em;line-height:1;background:linear-gradient(135deg,#fff,var(--acc2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;}
+.xrank{font-size:.78rem;color:var(--t2);margin-bottom:22px;}
+.xrows{display:flex;flex-direction:column;gap:9px;}
+.xrow{display:flex;align-items:center;gap:10px;}
+.xn{font-size:.68rem;color:var(--t2);width:88px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.xt{flex:1;height:5px;border-radius:3px;background:var(--border);overflow:hidden;}
+.xf{height:100%;border-radius:3px;width:0;transition:width 1.3s cubic-bezier(.16,1,.3,1) .5s;}
+.xv{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--t3);width:32px;text-align:right;flex-shrink:0;}
+
+/* Succes bars */
+.srows{display:flex;flex-direction:column;gap:11px;}
+.srow{display:flex;align-items:center;gap:10px;}
+.sn{font-size:.7rem;color:var(--t2);width:90px;flex-shrink:0;}
+.strack{flex:1;height:7px;border-radius:100px;background:var(--border);overflow:hidden;}
+.sfill{height:100%;border-radius:100px;width:0;transition:width 1.3s cubic-bezier(.16,1,.3,1) .4s;}
+.sv{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--t3);width:42px;text-align:right;flex-shrink:0;}
+
+/* Chart containers — explicit heights on canvas elements */
+.chart-container{position:relative;width:100%;overflow:hidden;}
+.chart-container canvas{display:block;max-width:100%;}
+
+/* Heatmap */
+.hmwrap{display:flex;gap:6px;}
+.hmdays-col{display:flex;flex-direction:column;gap:4px;justify-content:flex-start;}
+.hm-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.hm-toggle button{background:none;border:none;padding:4px 12px;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--t3);cursor:pointer;transition:all .2s;letter-spacing:.04em;}
+.hm-toggle button.active{background:var(--acc);color:#fff;}
+.hm-toggle button:hover:not(.active){color:var(--t);background:var(--surface);}
+.hmc-month{aspect-ratio:1;border-radius:3px;background:rgba(255,255,255,.05);cursor:pointer;transition:transform .12s;}
+.hmc-month:hover{transform:scale(1.3);position:relative;z-index:2;}
+.hmc-month[data-v="1"]{background:rgba(108,99,255,.25);}
+.hmc-month[data-v="2"]{background:rgba(108,99,255,.5);}
+.hmc-month[data-v="3"]{background:rgba(108,99,255,.75);}
+.hmc-month[data-v="4"]{background:var(--acc);box-shadow:0 0 6px var(--ag);}
+.hm-month-label{font-family:'Space Mono',monospace;font-size:.48rem;color:var(--t3);text-align:center;margin-bottom:3px;}
+.hm-month-grid{display:grid;gap:2px;margin-bottom:10px;}
+.hm-month-header{font-family:'Space Mono',monospace;font-size:.55rem;color:var(--acc2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;margin-top:12px;}
+.hm-month-header:first-child{margin-top:0;}
+.hmday-label{font-family:'Space Mono',monospace;font-size:.48rem;color:var(--t3);height:calc((100% - 4px*6)/7);display:flex;align-items:center;min-height:12px;}
+.hmweeks{flex:1;}
+.hmweek-labels{display:flex;gap:4px;margin-bottom:4px;}
+.hmweek-label{font-family:'Space Mono',monospace;font-size:.48rem;color:var(--t3);flex:1;text-align:center;}
+.hmgrid{display:grid;gap:3px;min-height:80px;}
+.hmmonths{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:.52rem;color:var(--t3);margin-bottom:4px;}
+.hmgrid{display:grid;grid-template-columns:repeat(14,1fr);grid-template-rows:repeat(7,1fr);gap:3px;min-height:80px;}
+.hmc{aspect-ratio:1;border-radius:4px;background:rgba(255,255,255,.05);transition:transform .15s;cursor:pointer;}
+.hmc:hover{transform:scale(1.5);position:relative;z-index:2;}
+.hmc[data-v="1"]{background:rgba(108,99,255,.25);}
+.hmc[data-v="2"]{background:rgba(108,99,255,.5);}
+.hmc[data-v="3"]{background:rgba(108,99,255,.75);}
+.hmc[data-v="4"]{background:var(--acc);box-shadow:0 0 8px var(--ag);}
+
+/* Visits */
+.vlist{display:flex;flex-direction:column;gap:7px;}
+.vit{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);font-size:.73rem;}
+.vd{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--t3);}
+.vit-today .vd{color:var(--acc2);}
+
+/* Tooltip */
+#tip{position:fixed;z-index:9998;background:var(--bg2);border:1px solid var(--bh);border-radius:8px;padding:5px 10px;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--t2);pointer-events:none;opacity:0;transition:opacity .15s;white-space:nowrap;}
+#tip.on{opacity:1;}
+
+/* Footer */
+footer{padding:36px clamp(20px,4vw,60px);border-top:1px solid var(--border);position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.fb{font-weight:900;font-size:.9rem;}.fb span{color:var(--acc);}
+.fu{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--t3);}
+
+@media(max-width:640px){.np{display:none;}.kpi{padding:12px 20px 12px 0;margin-right:20px;}}
+</style>
+</head>
+<body>
+<div id="cd"></div><div id="cr"></div>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div id="tip"></div>
+
+<canvas id="particles-canvas"></canvas>
+
+<nav id="nav">
+  <div class="nav-in">
+    <a class="logo" href="#">R<span>·</span>Vision</a>
+    <div class="np">
+      <a href="#droit">Droit Civil</a>
+      <a href="#histoire">Histoire</a>
+      <a href="#constit">Constit.</a>
+      <a href="#eco">Économie</a>
+      <a href="#stats">Stats</a>
+      <a href="#analyse">Analyse</a>
+    </div>
+    <div class="nav-xp" id="nav-xp">— XP</div>
+    <button class="user-btn" id="user-btn" onclick="openUserModal()">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span id="user-name-nav">Profil</span>
+    </button>
+  </div>
+</nav>
+
+<!-- USER MODAL -->
+<div class="um-overlay" id="um-overlay">
+  <div class="um-box">
+    <button class="um-close" onclick="closeUserModal()">✕</button>
+    <div class="um-title">👤 Profil</div>
+    <div class="um-sub">Choisis ton profil pour sauvegarder ta progression. Chaque profil est isolé — tes stats restent les tiennes.</div>
+    <div class="um-profiles" id="um-profiles"></div>
+    <div class="um-sep">— ou créer un nouveau profil —</div>
+    <input class="um-input" id="um-input" type="text" placeholder="Ton prénom ou pseudo…" maxlength="20" autocomplete="off"
+      onkeydown="if(event.key==='Enter')confirmUser()">
+    <button class="um-btn" onclick="confirmUser()">Continuer →</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+
+    <!-- LEFT: text -->
+    <div class="hero-text">
+      <div class="hero-tag"><span class="tdot"></span>L1 Droit-Finance · 2025–2026</div>
+      <h1>Révise<br><span class="ghost">autrement.</span><span class="gr">Plus vite.</span></h1>
+      <p class="hsub">5 cours interactifs. Quiz, flashcards et succès qui rendent la révision addictive.</p>
+      <div class="hkpis">
+        <div class="kpi"><div class="kv" id="kpi-xp">0 XP</div><div class="kl">XP total</div></div>
+        <div class="kpi"><div class="kv" id="kpi-s">0</div><div class="kl">Succès</div></div>
+        <div class="kpi"><div class="kv" id="kpi-q">0</div><div class="kl">Questions</div></div>
+        <div class="kpi"><div class="kv" id="kpi-t">0m</div><div class="kl">Révision</div></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: illustration SVG — self-contained with intrinsic dimensions -->
+    <div class="hero-illo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 400" width="480" height="400" style="width:100%;height:auto;display:block;max-height:460px;">
+        <defs>
+          <radialGradient id="hbg" cx="50%" cy="50%" r="70%">
+            <stop offset="0%" stop-color="#1a1640"/><stop offset="100%" stop-color="#07070f"/>
+          </radialGradient>
+          <radialGradient id="hgl" cx="50%" cy="65%" r="55%">
+            <stop offset="0%" stop-color="rgba(108,99,255,.4)"/><stop offset="100%" stop-color="rgba(108,99,255,0)"/>
+          </radialGradient>
+          <radialGradient id="hgr" cx="70%" cy="30%" r="40%">
+            <stop offset="0%" stop-color="rgba(82,214,138,.25)"/><stop offset="100%" stop-color="rgba(82,214,138,0)"/>
+          </radialGradient>
+          <linearGradient id="hpL" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#1e1c45"/><stop offset="100%" stop-color="#252260"/>
+          </linearGradient>
+          <linearGradient id="hpR" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#252260"/><stop offset="100%" stop-color="#1a183a"/>
+          </linearGradient>
+          <linearGradient id="hcv" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3d3880"/><stop offset="100%" stop-color="#1a1640"/>
+          </linearGradient>
+          <linearGradient id="hac" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#6c63ff"/><stop offset="100%" stop-color="#a89cff"/>
+          </linearGradient>
+          <filter id="hgw"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <style>
+            @keyframes hfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+            @keyframes hfloatA{0%,100%{transform:translate(0,0)}50%{transform:translate(-5px,-12px)}}
+            @keyframes hfloatB{0%,100%{transform:translate(0,0)}50%{transform:translate(6px,-9px)}}
+            @keyframes hfloatC{0%,100%{transform:translate(0,0)}50%{transform:translate(-4px,8px)}}
+            @keyframes horbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+            @keyframes hpuls{0%,100%{opacity:.6}50%{opacity:1}}
+            @keyframes hdraw{from{stroke-dashoffset:200}to{stroke-dashoffset:0}}
+            .hbook{animation:hfloat 4s ease-in-out infinite;transform-origin:240px 220px;}
+            .hfa{animation:hfloatA 5s ease-in-out infinite;}
+            .hfb{animation:hfloatB 6s ease-in-out infinite;}
+            .hfc{animation:hfloatC 4.5s ease-in-out infinite;}
+            .horb{animation:horbit 20s linear infinite;transform-origin:240px 220px;}
+            .hpl{animation:hpuls 2.5s ease-in-out infinite;}
+            .hl1{stroke-dasharray:200;stroke-dashoffset:200;animation:hdraw 1.8s ease forwards .4s;}
+            .hl2{stroke-dasharray:160;stroke-dashoffset:160;animation:hdraw 1.8s ease forwards .7s;}
+            .hl3{stroke-dasharray:140;stroke-dashoffset:140;animation:hdraw 1.8s ease forwards 1s;}
+            .hl4{stroke-dasharray:100;stroke-dashoffset:100;animation:hdraw 1.8s ease forwards 1.3s;}
+          </style>
+        </defs>
+
+        <!-- BG -->
+        <rect width="480" height="400" fill="url(#hbg)" rx="20"/>
+        <rect width="480" height="400" fill="url(#hgl)" rx="20"/>
+        <rect width="480" height="400" fill="url(#hgr)" rx="20"/>
+
+        <!-- Orbit ring -->
+        <g class="horb">
+          <circle cx="240" cy="220" r="148" fill="none" stroke="rgba(108,99,255,.1)" stroke-width="1" stroke-dasharray="5 9"/>
+          <circle cx="240" cy="72" r="5" fill="#6c63ff" opacity=".75" filter="url(#hgw)"/>
+          <circle cx="388" cy="220" r="3.5" fill="#a89cff" opacity=".6"/>
+          <circle cx="240" cy="368" r="3" fill="#52d68a" opacity=".5"/>
+          <circle cx="92" cy="220" r="3" fill="#ff79c6" opacity=".45"/>
+        </g>
+
+        <!-- ═══ OPEN BOOK ═══ -->
+        <g class="hbook">
+          <!-- Shadow -->
+          <ellipse cx="240" cy="305" rx="112" ry="12" fill="rgba(0,0,0,.5)"/>
+          <!-- Back cover -->
+          <rect x="120" y="168" width="240" height="130" rx="4" fill="#100e2e"/>
+          <!-- Spine -->
+          <rect x="233" y="165" width="14" height="136" rx="3" fill="url(#hcv)"/>
+          <rect x="238" y="165" width="5" height="136" fill="rgba(108,99,255,.3)"/>
+          <!-- Left page -->
+          <path d="M233 168 L124 173 L124 293 L233 296Z" fill="url(#hpL)"/>
+          <!-- Right page -->
+          <path d="M247 168 L356 173 L356 293 L247 296Z" fill="url(#hpR)"/>
+          <!-- Animated lines left page -->
+          <line class="hl1" x1="136" y1="192" x2="220" y2="189" stroke="#6c63ff" stroke-width="2.5" stroke-linecap="round" filter="url(#hgw)"/>
+          <line class="hl2" x1="136" y1="207" x2="215" y2="205" stroke="rgba(168,156,255,.55)" stroke-width="1.5" stroke-linecap="round"/>
+          <line class="hl3" x1="136" y1="220" x2="212" y2="219" stroke="rgba(168,156,255,.45)" stroke-width="1.5" stroke-linecap="round"/>
+          <line class="hl4" x1="136" y1="233" x2="205" y2="232" stroke="rgba(168,156,255,.35)" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="136" y1="246" x2="210" y2="245" stroke="rgba(168,156,255,.25)" stroke-width="1" stroke-linecap="round"/>
+          <line x1="136" y1="258" x2="202" y2="257" stroke="rgba(168,156,255,.2)" stroke-width="1" stroke-linecap="round"/>
+          <line x1="136" y1="270" x2="214" y2="269" stroke="rgba(168,156,255,.15)" stroke-width="1" stroke-linecap="round"/>
+          <!-- Right page formulas -->
+          <text x="260" y="192" font-family="Space Mono,monospace" font-size="9" fill="rgba(82,214,138,.9)" filter="url(#hgw)">Art. 212 C.civ</text>
+          <text x="260" y="209" font-family="Space Mono,monospace" font-size="8" fill="rgba(168,156,255,.65)">PV = CF/(1+r)ⁿ</text>
+          <text x="260" y="224" font-family="Space Mono,monospace" font-size="8" fill="rgba(168,156,255,.5)">β = Cov(Ri,Rm)/σ²</text>
+          <line x1="260" y1="238" x2="345" y2="237" stroke="rgba(168,156,255,.28)" stroke-width="1.2"/>
+          <line x1="260" y1="250" x2="340" y2="249" stroke="rgba(168,156,255,.2)" stroke-width="1"/>
+          <line x1="260" y1="262" x2="344" y2="261" stroke="rgba(168,156,255,.16)" stroke-width="1"/>
+          <line x1="260" y1="273" x2="333" y2="272" stroke="rgba(168,156,255,.12)" stroke-width="1"/>
+          <!-- Top cover strip -->
+          <rect x="120" y="160" width="240" height="11" rx="3" fill="url(#hcv)"/>
+          <rect x="120" y="160" width="240" height="11" rx="3" fill="url(#hac)" opacity=".45"/>
+        </g>
+
+        <!-- Diploma scroll top-left -->
+        <g class="hfa" style="transform-origin:108px 112px;">
+          <rect x="68" y="88" width="80" height="50" rx="22" fill="#1a1840" stroke="rgba(108,99,255,.45)" stroke-width="1.5"/>
+          <rect x="72" y="92" width="72" height="42" rx="20" fill="#201e50"/>
+          <rect x="88" y="88" width="8" height="50" rx="2" fill="rgba(108,99,255,.55)"/>
+          <text x="83" y="117" font-family="Space Mono,monospace" font-size="7" fill="rgba(168,156,255,.75)">DIPLÔME</text>
+          <circle cx="104" cy="132" r="6" fill="rgba(108,99,255,.65)" filter="url(#hgw)"/>
+        </g>
+
+        <!-- Mortarboard top-right -->
+        <g class="hfb" style="transform-origin:315px 86px;">
+          <polygon points="315,68 375,84 315,100 255,84" fill="#0e0c2e" stroke="rgba(108,99,255,.55)" stroke-width="1.5"/>
+          <ellipse cx="315" cy="91" rx="28" ry="11" fill="#1a1840"/>
+          <circle cx="315" cy="67" r="4" fill="rgba(168,156,255,.85)" filter="url(#hgw)"/>
+          <path d="M315 67 Q330 71 338 80" fill="none" stroke="#6c63ff" stroke-width="2" stroke-linecap="round" filter="url(#hgw)"/>
+          <circle cx="339" cy="82" r="3.5" fill="#6c63ff" filter="url(#hgw)"/>
+          <line x1="337" y1="82" x2="334" y2="93" stroke="#5550d0" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="340" y1="82" x2="340" y2="94" stroke="#6c63ff" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="342" y1="82" x2="344" y2="93" stroke="#8880ff" stroke-width="1.6" stroke-linecap="round"/>
+        </g>
+
+        <!-- Coin bottom-right -->
+        <g class="hfc" style="transform-origin:378px 295px;">
+          <circle cx="378" cy="295" r="27" fill="#1a1400" stroke="rgba(255,180,0,.45)" stroke-width="1.5"/>
+          <circle cx="378" cy="295" r="21" fill="#221a00"/>
+          <circle cx="378" cy="295" r="17" fill="none" stroke="rgba(255,200,0,.3)" stroke-width="1"/>
+          <text x="378" y="299" font-family="serif" font-size="15" fill="rgba(255,200,0,.75)" text-anchor="middle" filter="url(#hgw)">€</text>
+        </g>
+
+        <!-- Ambient dots -->
+        <g class="hpl">
+          <circle cx="88" cy="318" r="2.5" fill="#6c63ff" opacity=".65"/>
+          <circle cx="418" cy="165" r="2" fill="#52d68a" opacity=".55"/>
+          <circle cx="152" cy="355" r="1.8" fill="#a89cff" opacity=".5"/>
+          <circle cx="398" cy="350" r="2.2" fill="#ff79c6" opacity=".45"/>
+          <circle cx="58" cy="195" r="1.5" fill="#6c63ff" opacity=".4"/>
+          <circle cx="442" cy="258" r="1.8" fill="#52d68a" opacity=".4"/>
+        </g>
+
+        <!-- Neon bottom accent -->
+        <line x1="145" y1="375" x2="335" y2="375" stroke="url(#hac)" stroke-width="1" opacity=".4"/>
+        <circle cx="145" cy="375" r="2.5" fill="#6c63ff" filter="url(#hgw)" opacity=".75"/>
+        <circle cx="335" cy="375" r="2.5" fill="#a89cff" filter="url(#hgw)" opacity=".75"/>
+      </svg>
+    </div>
+
+  </div>
+  <div class="scta">Scroll<div class="sl"></div></div>
+</section>
+
+
+<!-- DROIT CIVIL — BANNER -->
+<div class="book-banner dc" id="droit">
+  <div class="book-banner-bg"></div>
+  <div class="book-label">⚖️ Droit Civil</div>
+  <div class="book-banner-in">
+    <div class="book-wrap dc-glow" id="wrap-dc" data-anim="spin" data-color="#0a1628" data-accent="#4f9eff" data-glow="79,158,255"></div>
+  </div>
+</div>
+
+<!-- DROIT CIVIL — CONTENT -->
+<div class="ms dc">
+  <div class="ms-in">
+    <div class="content-col rv">
+      <div class="chip dc">⚖️ Droit Civil</div>
+      <div class="mt">Mariage<br>& Divorce</div>
+      <div class="md">Art. 212–296 · CEDH H.W. 2025 · Carbonnier · Terré · 120 questions · 60 succès</div>
+      <div class="cl">
+        <a class="card dc rv" href="droit_civil_mariage_divorce2.html">
+          <div class="ci">⚖️</div>
+          <div class="ct">
+            <div class="ctt">Mariage & Divorce · Effets & Dissolution</div>
+            <div class="cs">Régime primaire · PC · Ass. plén. 2004 · PPL 2026</div>
+            <div class="cf"><div class="cx" id="dc-xp">0 XP</div><div class="cp"><div class="cpf" id="dc-bar"></div></div><div class="csuc2" id="dc-suc">— 🏆</div></div>
+          </div>
+          <div class="ca">↗</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTOIRE — BANNER -->
+<div class="book-banner hi" id="histoire">
+  <div class="book-banner-bg"></div>
+  <div class="book-label">🏛️ Histoire du Droit</div>
+  <div class="book-banner-in">
+    <div class="book-wrap hi-glow" id="wrap-hi" data-anim="flip" data-color="#1c0d05" data-accent="#ff8c5a" data-glow="255,140,90"></div>
+  </div>
+</div>
+
+<!-- HISTOIRE — CONTENT -->
+<div class="ms hi">
+  <div class="ms-in">
+    <div class="content-col rv">
+      <div class="chip hi">🏛️ Histoire du Droit</div>
+      <div class="mt">Antiquité<br>→ XIXᵉ siècle</div>
+      <div class="md">Pluralisme juridique · DDHC 1789 · Code civil napoléonien · 3 volumes · Quiz IA</div>
+      <div class="cl">
+        <a class="card hi rv" href="histoire_12.html">
+          <div class="ci">🏛️</div>
+          <div class="ct"><div class="ctt">Vol. 1 — Ancien Régime</div><div class="cs">Droit romain · Coutumes · Ordonnances royales</div><div class="cf"><div class="cx" id="h1-xp">0 XP</div><div class="cp"><div class="cpf" id="h1-bar"></div></div><div class="csuc2" id="h1-suc">— 🏆</div></div></div>
+          <div class="ca">↗</div>
+        </a>
+        <a class="card hi rv" href="Histoire_22.html">
+          <div class="ci">⚜️</div>
+          <div class="ct"><div class="ctt">Vol. 2 — La Révolution française</div><div class="cs">DDHC 1789 · Constituante · Terreur · Directoire</div><div class="cf"><div class="cx" id="h2-xp">0 XP</div><div class="cp"><div class="cpf" id="h2-bar"></div></div><div class="csuc2" id="h2-suc">— 🏆</div></div></div>
+          <div class="ca">↗</div>
+        </a>
+        <a class="card hi rv" href="Histoire_32.html">
+          <div class="ci">📜</div>
+          <div class="ct"><div class="ctt">Vol. 3 — XIXᵉ siècle</div><div class="cs">Consulat · Empire · Restauration · Code Napoléon</div><div class="cf"><div class="cx" id="h3-xp">0 XP</div><div class="cp"><div class="cpf" id="h3-bar"></div></div><div class="csuc2" id="h3-suc">— 🏆</div></div></div>
+          <div class="ca">↗</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DROIT CONSTITUTIONNEL — BANNER -->
+<div class="book-banner co" id="constit">
+  <div class="book-banner-bg"></div>
+  <div class="book-label">🏛 Droit Constitutionnel</div>
+  <div class="book-banner-in">
+    <div class="book-wrap co-glow" id="wrap-co" data-anim="diagonal" data-color="#120a1e" data-accent="#c084fc" data-glow="192,132,252"></div>
+  </div>
+</div>
+
+<!-- DROIT CONSTITUTIONNEL — CONTENT -->
+<div class="ms co" style="--ms-bg:rgba(192,132,252,.04);">
+  <div class="ms-in">
+    <div class="content-col rv">
+      <div class="chip co">🏛 Droit Constitutionnel</div>
+      <div class="mt">Exécutif<br>Ve République</div>
+      <div class="md">Art. 5–68 · Massot · Carcassonne · Avril · Jurisprudence CC · 65 questions · 30 succès</div>
+      <div class="cl">
+        <a class="card co rv" href="Droit_Constitution_executif_v2.html">
+          <div class="ci">🏛</div>
+          <div class="ct">
+            <div class="ctt">L'Exécutif sous la Ve République</div>
+            <div class="cs">PDR · PM · Cohabitation · Art. 16 · Ordonnances · CJR</div>
+            <div class="cf"><div class="cx" id="co-xp">0 XP</div><div class="cp"><div class="cpf" id="co-bar"></div></div><div class="csuc2" id="co-suc">— 🏆</div></div>
+          </div>
+          <div class="ca">↗</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ÉCONOMIE — BANNER -->
+<div class="book-banner ec" id="eco">
+  <div class="book-banner-bg"></div>
+  <div class="book-label">📈 Économie</div>
+  <div class="book-banner-in">
+    <div class="book-wrap ec-glow" id="wrap-ec" data-anim="fly" data-color="#071c0f" data-accent="#52d68a" data-glow="82,214,138"></div>
+  </div>
+</div>
+
+<!-- ÉCONOMIE — CONTENT -->
+<div class="ms ec">
+  <div class="ms-in">
+    <div class="content-col rv">
+      <div class="chip ec">📈 Économie</div>
+      <div class="mt">Marchés &<br>Marchandisation</div>
+      <div class="md">Théorie des marchés · Callon · Polanyi · Quiz IA · Schémas interactifs</div>
+      <div class="cl">
+        <a class="card ec rv" href="marches_marchandisation_vF2.html">
+          <div class="ci">📈</div>
+          <div class="ct"><div class="ctt">Marchés & Marchandisation</div><div class="cs">Performativité · Qualification · Calcul marchand</div><div class="cf"><div class="cx" id="mk-xp">0 XP</div><div class="cp"><div class="cpf" id="mk-bar"></div></div><div class="csuc2" id="mk-suc">— 🏆</div></div></div>
+          <div class="ca">↗</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<section class="ss" id="stats">
+  <div class="ss-in">
+    <div class="sh rv">
+      <div class="st">Statistiques</div>
+      <button class="rb" onclick="loadStats()">↺ sync</button>
+      <div id="sync-t">—</div>
+    </div>
+    <div class="sg">
+      <div class="sc rv">
+        <div class="sct">Progression XP</div>
+        <div class="xbig" id="big-xp">0</div>
+        <div class="xrank" id="big-rank">Étudiant</div>
+        <div class="xrows" id="xrows"></div>
+      </div>
+      <div class="sc rv">
+        <div class="sct">Succès débloqués</div>
+        <div class="srows" id="srows"></div>
+        <div class="chart-container" style="margin-top:18px;height:160px;">
+          <canvas id="csuc"></canvas>
+        </div>
+      </div>
+      <div class="sc rv">
+        <div class="sct">Aujourd'hui <span id="ttlbl" style="color:var(--acc2)"></span></div>
+        <div class="chart-container" style="height:220px;">
+          <canvas id="ctime"></canvas>
+        </div>
+      </div>
+      <div class="sc rv">
+        <div class="sct" style="display:flex;justify-content:space-between;align-items:center;">
+          <span id="hm-title">Activité — semaine en cours</span>
+          <div class="hm-toggle">
+            <button id="hm-btn-week" class="active" onclick="setHmMode('week')">Semaine</button>
+            <button id="hm-btn-month" onclick="setHmMode('month')">Mois</button>
+          </div>
+        </div>
+        <div id="hm-container">
+          <div class="hmwrap">
+            <div class="hmdays-col" id="hm-day-labels"></div>
+            <div class="hmweeks">
+              <div class="hmweek-labels" id="hmmonths"></div>
+              <div class="hmgrid" id="hm"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sc wide rv">
+        <div class="sct">Dernières sessions</div>
+        <div class="vlist" id="visits"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ANALYSE & RECOMMANDATIONS -->
+<section class="ss" id="analyse">
+  <div class="ss-in">
+    <div class="sh rv">
+      <div class="st">Analyse & Recommandations</div>
+      <button class="rb" onclick="runInsightAnalysis()">↺ Analyser</button>
+      <div id="insight-sync">—</div>
+    </div>
+    <!-- Résumé session -->
+    <div id="insight-summary" class="insight-summary rv"></div>
+    <!-- Barres de maîtrise par cours -->
+    <div id="insight-mastery"></div>
+    <!-- Recommandations -->
+    <div id="insight-reco" class="insight-reco"></div>
+    <!-- Détail thèmes -->
+    <div id="insight-themes" class="insight-themes"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="fb">R<span>·</span>Vision L1</div>
+  <div class="fu">nathanponsoda69-oss.github.io/r-vision-L1</div>
+</footer>
+
+<script>
+/* ═══ CURSOR ═══ */
+const CD=document.getElementById('cd'),CR=document.getElementById('cr');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX; my=e.clientY;
+  CD.style.left=mx+'px'; CD.style.top=my+'px';
+});
+document.querySelectorAll('a,button').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('hovering'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('hovering'));
+});
+(function tick(){
+  rx+=(mx-rx)*.12; ry+=(my-ry)*.12;
+  CR.style.left=rx+'px'; CR.style.top=ry+'px';
+  requestAnimationFrame(tick);
+})();
+
+/* ═══ NAV ═══ */
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>40));
+
+/* ═══ CARD GLOW ═══ */
+document.querySelectorAll('.card').forEach(c=>{
+  c.addEventListener('mousemove',e=>{
+    const r=c.getBoundingClientRect();
+    c.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+    c.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+  });
+});
+
+/* ═══ TIP ═══ */
+const TIP=document.getElementById('tip');
+function showTip(e,t){TIP.textContent=t;TIP.classList.add('on');TIP.style.left=(e.clientX+14)+'px';TIP.style.top=(e.clientY-30)+'px';}
+function hideTip(){TIP.classList.remove('on');}
+
+/* ═══ REVEAL ═══ */
+const rObs=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{
+    if(e.isIntersecting){
+      setTimeout(()=>e.target.classList.add('on'),i*45);
+      rObs.unobserve(e.target);
+    }
+  });
+},{threshold:.07});
+document.querySelectorAll('.rv').forEach(el=>rObs.observe(el));
+
+/* ═══════════════════════════════════════════
+   GLOBAL PARTICLES — fixed canvas full page
+═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════════════
+   HERO — torch halo reveal (80px)
+   BASE  : balance · parchemin · chapeau   (froid bleu/violet)
+   REVEAL: pièce · billet · ticker board   (chaud or/ambre)
+   MASK  : 2D canvas — trou noir inversé   (cache base sous halo)
+
+
+
+/* ═══════════════════════════════════════════
+   THREE.JS — BOOK SCENES (lazy, on scroll)
+═══════════════════════════════════════════ */
+function initBook(wrap){
+  if(!wrap||!window.THREE||wrap._three3dInit) return;
+  const W=wrap.offsetWidth, H=wrap.offsetHeight||420;
+  if(W<10) return;
+  wrap._three3dInit=true;
+
+  const animType=wrap.dataset.anim;
+  const coverColor=wrap.dataset.color||'#0a1628';
+  const accentColor=wrap.dataset.accent||'#6c63ff';
+  const glowRGB=wrap.dataset.glow||'108,99,255';
+  let glowR=108,glowG=99,glowB=255;
+  try{[glowR,glowG,glowB]=glowRGB.split(',').map(Number);}catch(e){}
+
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(42,W/H,.1,100);
+  camera.position.set(0,.3,5.2);
+
+  const canvas=document.createElement('canvas');
+  canvas.width=W; canvas.height=H;
+  wrap.appendChild(canvas);
+
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setSize(W,H,false);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+  // ── Lights — strong neon setup ──
+  scene.add(new THREE.AmbientLight(0xffffff,.35));
+
+  const dl=new THREE.DirectionalLight(0xffffff,1.1);
+  dl.position.set(4,6,5);dl.castShadow=true;scene.add(dl);
+
+  // Key neon point light — accent colour, strong
+  const neon1=new THREE.PointLight(0xffffff,4.5,9);
+  neon1.color.setRGB(glowR/255,glowG/255,glowB/255);
+  neon1.position.set(1.8,1.5,2.5);scene.add(neon1);
+
+  // Fill neon from opposite side
+  const neon2=new THREE.PointLight(0xffffff,2.5,7);
+  neon2.color.setRGB(glowR/255,glowG/255,glowB/255);
+  neon2.position.set(-2,-.5,1.5);scene.add(neon2);
+
+  // Rim light (white-ish) to separate from background
+  const rim=new THREE.DirectionalLight(0xffffff,.7);
+  rim.position.set(-3,-1,-3);scene.add(rim);
+
+  // ── Floor glow plane ──
+  const floorGeo=new THREE.PlaneGeometry(6,3);
+  const floorMat=new THREE.MeshStandardMaterial({
+    color:new THREE.Color(glowR/255,glowG/255,glowB/255),
+    transparent:true,opacity:.13,roughness:1,metalness:0
+  });
+  const floor=new THREE.Mesh(floorGeo,floorMat);
+  floor.rotation.x=-Math.PI/2;
+  floor.position.y=-1.25;
+  scene.add(floor);
+
+  // ── Build book ──
+  const BW=1.6,BH=2.1,BD=0.32;
+  const cvM=new THREE.MeshStandardMaterial({color:new THREE.Color(coverColor),roughness:.25,metalness:.15});
+  const spM=new THREE.MeshStandardMaterial({color:new THREE.Color('#050508'),roughness:.6});
+  const pgM=new THREE.MeshStandardMaterial({color:new THREE.Color('#ede8da'),roughness:.85});
+  const acM=new THREE.MeshStandardMaterial({
+    color:new THREE.Color(accentColor),roughness:.3,metalness:.3,
+    emissive:new THREE.Color(accentColor),emissiveIntensity:.55
+  });
+
+  // ── FLIP animation: book is assembled as openable object ──
+  // bookRoot is the whole book group that moves/floats
+  const bookRoot=new THREE.Group();scene.add(bookRoot);
+
+  if(animType==='flip'){
+    // Back cover (fixed)
+    const backCover=new THREE.Mesh(new THREE.BoxGeometry(BW,BH,.055),cvM);
+    backCover.position.set(0,0,-BD/2);
+    bookRoot.add(backCover);
+
+    // Pages block (fixed, slightly thinner than covers)
+    const pages=new THREE.Mesh(new THREE.BoxGeometry(BW-.04,BH-.04,BD-.08),pgM);
+    pages.position.set(0,0,0);
+    bookRoot.add(pages);
+
+    // Spine
+    const spine=new THREE.Mesh(new THREE.BoxGeometry(.12,BH,BD),spM);
+    spine.position.set(-BW/2,0,0);
+    bookRoot.add(spine);
+
+    // Front cover — hinged at LEFT edge, so pivot is at x = -BW/2
+    // We put a pivot group at x=-BW/2, then the cover mesh offset +BW/2 inside it
+    const frontPivot=new THREE.Group();
+    frontPivot.position.set(-BW/2,0,BD/2); // hinge at left edge, front face
+    bookRoot.add(frontPivot);
+    const frontCover=new THREE.Mesh(new THREE.BoxGeometry(BW,BH,.055),cvM);
+    frontCover.position.set(BW/2,0,0); // offset right so hinge is at left
+    frontPivot.add(frontCover);
+    // Accent stripe on front cover
+    const acStripe=new THREE.Mesh(new THREE.PlaneGeometry(BW*.75,.055),acM);
+    acStripe.position.set(BW/2,0,.028);
+    frontPivot.add(acStripe);
+    const acTitle=new THREE.Mesh(new THREE.PlaneGeometry(BW*.55,.28),acM);
+    acTitle.position.set(BW/2,.38,.028);
+    frontPivot.add(acTitle);
+
+    // Individual flip pages — each hinged at left edge too
+    const NUM_PGS=9;
+    const flipPivots=[];
+    for(let i=0;i<NUM_PGS;i++){
+      const pPivot=new THREE.Group();
+      pPivot.position.set(-BW/2+.01,0,BD/2-.04-i*.012);
+      bookRoot.add(pPivot);
+      const brightness=.88-i*.025;
+      const pg=new THREE.Mesh(
+        new THREE.PlaneGeometry(BW-.06,BH-.06),
+        new THREE.MeshStandardMaterial({
+          color:new THREE.Color(brightness,brightness*.97,brightness*.9),
+          roughness:.88,side:THREE.DoubleSide
+        })
+      );
+      pg.position.set((BW-.06)/2,0,.001);
+      pPivot.add(pg);
+      // Small line on page simulating text
+      const lineMat=new THREE.MeshStandardMaterial({color:new THREE.Color(accentColor),emissive:new THREE.Color(accentColor),emissiveIntensity:.3,transparent:true,opacity:.4});
+      for(let l=0;l<4;l++){
+        const line=new THREE.Mesh(new THREE.PlaneGeometry(BW*.55,.012),lineMat);
+        line.position.set((BW-.06)/2,.6-l*.28,.002);
+        pPivot.add(line);
+      }
+      flipPivots.push(pPivot);
+    }
+
+    // ── CURSOR-DRIVEN page turning ──
+    // cursorX in wrap (0=left=pages closed, 1=right=pages open)
+    // Entry: fall state first, then cursor control
+    let state='fall', sT=0;
+    let rawCX=0.5; // cursor X normalised 0..1 within wrap
+    let tRY=0,tRX=0,cRY=0,cRX=0;
+
+    wrap.addEventListener('mousemove',e=>{
+      const r=wrap.getBoundingClientRect();
+      rawCX=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+      tRY=((e.clientX-r.left)/r.width-.5)*.4;
+      tRX=-((e.clientY-r.top)/r.height-.5)*.25;
+    });
+    wrap.addEventListener('mouseleave',()=>{tRY=0;tRX=0;});
+
+    // Smooth cursor position
+    let sCX=0.5;
+
+    // Per-element current rotations (smoothed)
+    let currentFrontY=0;
+    let currentPgY=new Array(NUM_PGS).fill(0);
+
+    function anim(){
+      requestAnimationFrame(anim);
+      sT+=.016;
+      cRY+=(tRY-cRY)*.07;cRX+=(tRX-cRX)*.07;
+      sCX+=(rawCX-sCX)*.07; // smooth
+
+      if(state==='fall'){
+        const t=Math.min(1,sT/.9);
+        const ease=1-Math.pow(1-t,4);
+        const bounce=t>=1?0:Math.abs(Math.sin(t*Math.PI*1.5))*(1-t)*.35;
+        bookRoot.position.y=(1-ease)*5.5-bounce;
+        bookRoot.rotation.z=(1-ease)*Math.PI*.18*(1-t);
+        bookRoot.rotation.x=cRX;bookRoot.rotation.y=cRY;
+        if(t>=1){state='idle';sT=0;bookRoot.position.y=0;bookRoot.rotation.z=0;}
+      } else {
+        // Idle float
+        bookRoot.position.y=Math.sin(sT*.5)*.07;
+        bookRoot.rotation.x=Math.sin(sT*.4)*.03+cRX*.5;
+        bookRoot.rotation.y=-.2+Math.sin(sT*.25)*.06+cRY*.5;
+
+        // Front cover: cursor right half opens cover
+        // sCX 0..1 → cover opens from 0 (closed) to -PI*.9 (fully open)
+        const coverTarget= -(sCX)*Math.PI*.92;
+        currentFrontY+=(coverTarget-currentFrontY)*.09;
+        frontPivot.rotation.y=currentFrontY;
+
+        // Pages: staggered — page i opens when cursor > (i+1)/(NUM_PGS+1)
+        for(let i=0;i<NUM_PGS;i++){
+          const threshold=(i+1)/(NUM_PGS+1);
+          // Map sCX past threshold → page opens progressively
+          const pgProg=Math.max(0,Math.min(1,(sCX-threshold)/(1-threshold+.001)));
+          const pgTarget=-(pgProg)*Math.PI*.85;
+          currentPgY[i]+=(pgTarget-currentPgY[i])*.08;
+          flipPivots[i].rotation.y=currentPgY[i];
+        }
+      }
+
+      neon1.intensity=4.0+Math.sin(sT*1.3)*.7;
+      neon2.intensity=2.2+Math.sin(sT*1.1+1)*.5;
+      renderer.render(scene,camera);
+    }
+    anim();
+
+  } else {
+    // ── SPIN (Droit Civil) / FLY (Éco) ──
+    const book=new THREE.Group();bookRoot.add(book);
+
+    const bc1=new THREE.Mesh(new THREE.BoxGeometry(BW,BH,.055),cvM);bc1.position.set(0,0,-BD/2);book.add(bc1);
+    const bc2=new THREE.Mesh(new THREE.BoxGeometry(BW,BH,.055),cvM);bc2.position.set(0,0,BD/2);book.add(bc2);
+    const bsp=new THREE.Mesh(new THREE.BoxGeometry(.12,BH,BD),spM);bsp.position.set(-BW/2,0,0);book.add(bsp);
+    book.add(new THREE.Mesh(new THREE.BoxGeometry(BW-.06,BH-.05,BD-.06),pgM));
+    const ts1=new THREE.Mesh(new THREE.PlaneGeometry(BW*.8,.055),acM);ts1.position.set(0,0,BD/2+.029);book.add(ts1);
+    const ts2=new THREE.Mesh(new THREE.PlaneGeometry(BW*.55,.3),acM);ts2.position.set(0,.38,BD/2+.029);book.add(ts2);
+    // Extra decorative stripes
+    const ts3=new THREE.Mesh(new THREE.PlaneGeometry(BW*.4,.055),acM);ts3.position.set(0,-.3,BD/2+.029);book.add(ts3);
+
+    let tRY=0,tRX=0,cRY=0,cRX=0;
+    wrap.addEventListener('mousemove',e=>{
+      const r=wrap.getBoundingClientRect();
+      tRY=((e.clientX-r.left)/r.width-.5)*.55;
+      tRX=-((e.clientY-r.top)/r.height-.5)*.35;
+    });
+    wrap.addEventListener('mouseleave',()=>{tRY=0;tRX=0;});
+
+    let sT=0;
+    function anim(){
+      requestAnimationFrame(anim);
+      sT+=.016;
+      cRY+=(tRY-cRY)*.07;cRX+=(tRX-cRX)*.07;
+
+      if(animType==='spin'){
+        const t=Math.min(1,sT/1.2);
+        const ease=1-Math.pow(1-t,3);
+        bookRoot.position.y=(1-ease)*-4.5+Math.sin(sT*.6)*.07;
+        bookRoot.rotation.y=sT*.42+cRY;
+        bookRoot.rotation.x=(1-ease)*.35+Math.sin(sT*.4)*.03+cRX;
+        const sc=1+(1-ease)*.15;
+        bookRoot.scale.set(sc,sc,sc);
+      }
+      else if(animType==='diagonal'){
+        // Diagonal tumbling: book tourne sur un axe incliné X+Y simultanément
+        const t=Math.min(1,sT/1.3);
+        const ease=1-Math.pow(1-t,3);
+        bookRoot.position.x=(1-ease)*3.5+Math.sin(sT*.45)*.05;
+        bookRoot.position.y=(1-ease)*3+Math.sin(sT*.6)*.08;
+        bookRoot.rotation.y=sT*.28+cRY;
+        bookRoot.rotation.x=sT*.18+Math.sin(sT*.35)*.04+cRX;
+        bookRoot.rotation.z=(1-ease)*Math.PI*.22+Math.sin(sT*.22)*.06;
+        const sc=1+(1-ease)*.2;
+        bookRoot.scale.set(sc,sc,sc);
+      }
+      else if(animType==='fly'){
+        const t=Math.min(1,sT/1.1);
+        const ease=1-Math.pow(1-t,3);
+        bookRoot.position.x=(1-ease)*5.5+Math.sin(sT*.5)*.06;
+        bookRoot.position.y=(1-ease)*4+Math.sin(sT*.7)*.09;
+        bookRoot.rotation.z=(1-ease)*Math.PI*.32;
+        bookRoot.rotation.y=-Math.PI*.08+Math.sin(sT*.35)*.12+cRY;
+        bookRoot.rotation.x=Math.sin(sT*.4)*.05+cRX;
+      }
+
+      neon1.intensity=4.0+Math.sin(sT*1.3)*.8;
+      neon2.intensity=2.2+Math.sin(sT*1.1+1)*.5;
+      renderer.render(scene,camera);
+    }
+    anim();
+  }
+
+  window.addEventListener('resize',()=>{
+    const nW=wrap.offsetWidth, nH=wrap.offsetHeight||420;
+    if(!nW) return;
+    camera.aspect=nW/nH;camera.updateProjectionMatrix();
+    renderer.setSize(nW,nH,false);
+  });
+}
+
+// Lazy init books via IntersectionObserver — single clean observer
+const bookObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      bookObs.unobserve(e.target);
+      // Wait for the element to have layout dimensions
+      function tryInit(attempts){
+        const w=e.target.offsetWidth, h=e.target.offsetHeight;
+        if(w>0 && h>0){
+          initBook(e.target);
+        } else if(attempts>0){
+          setTimeout(()=>tryInit(attempts-1),80);
+        }
+      }
+      tryInit(15);
+    }
+  });
+},{threshold:.1, rootMargin:'0px 0px -50px 0px'});
+document.querySelectorAll('.book-wrap').forEach(w=>bookObs.observe(w));
+
+/* ═══════════════════════════════════════════════
+   USER SYSTEM
+   Clé globale (indépendante du profil) :
+     rvision_current_user  → pseudo actif
+     rvision_users         → JSON liste des pseudos connus
+   Clés par profil :
+     rvision_<pseudo>_<site>_<stat>
+   Logique "première visite par profil" :
+     rvision_<pseudo>_visited_<site>  → '1' une fois qu'on a ouvert ce cours avec ce profil
+     rvision_<pseudo>_index_visited   → '1' une fois qu'on a ouvert l'accueil avec ce profil
+   Comportement :
+     - 1ère ouverture de l'accueil avec un profil → reset stats de tous les cours pour ce profil
+     - Ouvertures suivantes → stats sauvegardées conservées
+     - 1ère ouverture d'un cours (nouveau profil) → cours repart à zéro pour ce profil
+     - Retour dans un cours déjà ouvert → état restauré
+═══════════════════════════════════════════════ */
+
+let CURRENT_USER = '';
+
+function getPrefix(){ return CURRENT_USER ? 'rvision_'+CURRENT_USER+'_' : 'rvision_'; }
+
+function getUsers(){
+  try{ return JSON.parse(localStorage.getItem('rvision_users')||'[]'); }
+  catch(e){ return []; }
+}
+function saveUsers(arr){ localStorage.setItem('rvision_users',JSON.stringify(arr)); }
+
+function setCurrentUser(pseudo){
+  CURRENT_USER = pseudo;
+  localStorage.setItem('rvision_current_user', pseudo);
+  // Add to known users list if not present
+  const users = getUsers();
+  if(!users.includes(pseudo)){ users.push(pseudo); saveUsers(users); }
+  // Update nav UI
+  const nav = document.getElementById('user-name-nav');
+  const av  = document.getElementById('user-avatar');
+  if(nav) nav.textContent = pseudo;
+  if(av)  av.textContent  = pseudo.charAt(0).toUpperCase();
+  // Handle first-visit reset for this profile on the index
+  handleIndexFirstVisit();
+  loadStats();
+}
+
+function handleIndexFirstVisit(){
+  const p   = getPrefix();
+  const key = p+'index_visited';
+  if(!localStorage.getItem(key)){
+    // First time THIS user opens the index → wipe all course data for THIS profile
+    const toRemove=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k && k.startsWith(p) && k!==key) toRemove.push(k);
+    }
+    toRemove.forEach(k=>localStorage.removeItem(k));
+    localStorage.setItem(key,'1');
+  }
+}
+
+/* ── USER MODAL ── */
+function openUserModal(){
+  renderUserProfiles();
+  document.getElementById('um-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('um-input').focus(),200);
+}
+function closeUserModal(){
+  document.getElementById('um-overlay').classList.remove('open');
+}
+function renderUserProfiles(){
+  const users=getUsers();
+  const container=document.getElementById('um-profiles');
+  if(!users.length){container.innerHTML='<div style="color:var(--t3);font-size:.8rem;text-align:center;padding:8px 0">Aucun profil existant</div>';return;}
+  container.innerHTML=users.map(u=>`
+    <div class="um-profile" onclick="selectExistingUser('${u}')">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="user-avatar" style="width:28px;height:28px;font-size:.7rem">${u.charAt(0).toUpperCase()}</div>
+        <div class="um-profile-name">${u}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="um-profile-xp">${getTotalXPForUser(u)} XP</div>
+        <button class="um-profile-del" onclick="event.stopPropagation();deleteUser('${u}')" title="Supprimer ce profil">✕</button>
+      </div>
+    </div>`).join('');
+}
+function getTotalXPForUser(pseudo){
+  let total=0;
+  const p='rvision_'+pseudo+'_';
+  ['dc','h1','h2','h3','co','mk'].forEach(id=>{
+    total+=+(localStorage.getItem(p+id+'_xp')||0);
+  });
+  return total;
+}
+function selectExistingUser(pseudo){
+  setCurrentUser(pseudo);
+  closeUserModal();
+}
+function deleteUser(pseudo){
+  if(!confirm('Supprimer le profil "'+pseudo+'" et toutes ses données ?')) return;
+  const p='rvision_'+pseudo+'_';
+  const toRemove=[];
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(p))toRemove.push(k);}
+  toRemove.forEach(k=>localStorage.removeItem(k));
+  const users=getUsers().filter(u=>u!==pseudo);
+  saveUsers(users);
+  if(CURRENT_USER===pseudo){CURRENT_USER='';localStorage.removeItem('rvision_current_user');}
+  renderUserProfiles();
+  loadStats();
+}
+function confirmUser(){
+  const val=document.getElementById('um-input').value.trim();
+  if(!val){document.getElementById('um-input').style.border='1px solid #ff5f5f';return;}
+  document.getElementById('um-input').style.border='';
+  setCurrentUser(val);
+  document.getElementById('um-input').value='';
+  closeUserModal();
+}
+
+/* ═══ DATA ═══ */
+const SITES=[
+  {id:'dc', key:'dc',  name:'Droit Civil',    color:'#4f9eff',maxXp:2000,maxSuc:65},
+  {id:'h1', key:'h1',  name:'Histoire I',     color:'#ff8c5a',maxXp:1500,maxSuc:59},
+  {id:'h2', key:'h2',  name:'Histoire II',    color:'#ffaa72',maxXp:4000,maxSuc:65},
+  {id:'h3', key:'h3',  name:'Histoire III',   color:'#ffc890',maxXp:3000,maxSuc:55},
+  {id:'co', key:'co',  name:'Droit Constit.', color:'#c084fc',maxXp:1500,maxSuc:30},
+  {id:'mk', key:'mk',  name:'Marchés & Éco',  color:'#52d68a',maxXp:2000,maxSuc:40},
+];
+const RANKS=[{xp:0,n:'Étudiant'},{xp:300,n:'Juriste'},{xp:800,n:'Avocat'},{xp:1500,n:'Magistrat'},{xp:3000,n:'Docteur'},{xp:6000,n:'Professeur'}];
+
+function readSite(s){
+  const p=getPrefix();
+  const g=k=>localStorage.getItem(p+s.key+'_'+k);
+  return{xp:+(g('xp')||0),succes:+(g('succes')||0),quiz:+(g('quiz')||0),time:+(g('time')||0),last:+(g('lastvisit')||0),activity:JSON.parse(g('activity')||'{}')};
+}
+
+/* ═══ CHARTS ═══ */
+let cSuc=null,cTime=null;
+function buildCharts(stats){
+  // Succès bar chart
+  const cs=document.getElementById('csuc');
+  if(cs){
+    if(cSuc){cSuc.destroy();cSuc=null;}
+    cSuc=new Chart(cs,{
+      type:'bar',
+      data:{labels:SITES.map(s=>s.name),datasets:[{data:stats.map(s=>Math.min(s.succes,s.maxSuc)),backgroundColor:SITES.map(s=>s.color+'44'),borderColor:SITES.map(s=>s.color),borderWidth:2,borderRadius:8,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw} succès`}}},scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(255,255,255,.28)',font:{family:'Space Mono',size:9}}},x:{grid:{display:false},ticks:{color:'rgba(255,255,255,.28)',font:{family:'Space Mono',size:9},maxRotation:25}}},animation:{duration:900,easing:'easeOutQuart'}}
+    });
+  }
+  // Time doughnut
+  const ct=document.getElementById('ctime');
+  if(ct){
+    if(cTime){cTime.destroy();cTime=null;}
+    const todayKey2=new Date().toISOString().slice(0,10);
+    // Donut = temps du JOUR seulement (RAZ à minuit)
+    const todayTimes=stats.map(s=>{
+      const act=s.activity||{};
+      return (act[todayKey2]||0)*60; // activity stocke nb de sessions ~60s chacune
+    });
+    const total=todayTimes.reduce((a,b)=>a+b,0);
+    cTime=new Chart(ct,{
+      type:'doughnut',
+      data:{labels:SITES.map(s=>s.name),datasets:[{data:todayTimes.map(v=>v||.001),backgroundColor:SITES.map(s=>s.color+'cc'),borderColor:'#07070f',borderWidth:3,hoverOffset:8}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.35)',font:{family:'Space Mono',size:9},boxWidth:7,padding:12}},tooltip:{callbacks:{label:c=>{const s=Math.round(c.raw);const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return ' '+(h>0?h+'h '+(m>0?m+'m':''):m+'m');}}}},animation:{duration:900}},
+      plugins:[{id:'cl',beforeDraw(ch){const{ctx,chartArea:{width:cw,height:ch2,left:cl,top:ct2}}=ch;const cx=cl+cw/2,cy=ct2+ch2/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';const todayKey=new Date().toISOString().slice(0,10);const todaySec=_allStats?_allStats.reduce((a,s)=>{const act=s.activity||{};return a+(act[todayKey]||0)*60;},0):0;const th=Math.floor(todaySec/3600),tm=Math.floor((todaySec%3600)/60);if(th>0){ctx.font='700 '+(cw*.1)+'px Outfit';ctx.fillStyle='rgba(255,255,255,.88)';ctx.fillText(th+'h',cx,cy-8);ctx.font='500 '+(cw*.075)+'px Outfit';ctx.fillStyle='rgba(255,255,255,.5)';ctx.fillText(tm+'m',cx,cy+8);}else{ctx.font='700 '+(cw*.1)+'px Outfit';ctx.fillStyle='rgba(255,255,255,.88)';ctx.fillText(tm+'m',cx,cy);}ctx.restore();}}]
+    });
+  }
+}
+
+/* ═══ HEATMAP ═══ */
+function buildHeatmap(allAct){
+  window._lastHmData=allAct;
+  const mode=window._hmMode||'week';
+  if(mode==='month') buildHeatmapMonth(allAct);
+  else buildHeatmapWeek(allAct);
+}
+
+let _hmMode='week';
+function setHmMode(mode){
+  _hmMode=mode;window._hmMode=mode;
+  if(mode==='month') _hmMonthOffset=0; // reset au mois courant à chaque switch
+  document.getElementById('hm-btn-week').classList.toggle('active',mode==='week');
+  document.getElementById('hm-btn-month').classList.toggle('active',mode==='month');
+  document.getElementById('hm-title').textContent=mode==='week'?'Activité — semaine en cours':'Activité — mois';
+  if(window._lastHmData) buildHeatmap(window._lastHmData);
+}
+
+/* ── Mode SEMAINE (14 semaines × 7 jours) ── */
+function buildHeatmapWeek(allAct){
+  const container=document.getElementById('hm-container');
+  // 7 jours de la semaine courante (lundi → dimanche)
+  const today=new Date();
+  const todayDay=today.getDay()===0?7:today.getDay(); // 1=lun..7=dim
+  const monday=new Date(today);
+  monday.setDate(today.getDate()-(todayDay-1));
+
+  const joursFr=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  const cells=[];
+  for(let d=0;d<7;d++){
+    const cellDate=new Date(monday);
+    cellDate.setDate(monday.getDate()+d);
+    const key=cellDate.toISOString().slice(0,10);
+    const sessions=Object.values(allAct).reduce((s,a)=>s+(a[key]||0),0);
+    const mins=Math.round(sessions/4);
+    const v=sessions===0?0:sessions<=4?1:sessions<=12?2:sessions<=24?3:4;
+    const isFuture=cellDate>today;
+    const sucDay=parseInt(localStorage.getItem('rvision_suc_day_'+key)||'0');
+    const isToday=key===today.toISOString().slice(0,10);
+    cells.push({v:isFuture?-1:v,mins,key,sucDay,isFuture,isToday,
+      label:cellDate.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}),
+      dayLabel:joursFr[d],
+      dateLabel:cellDate.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})});
+  }
+
+  // Grille 7 colonnes (1 par jour), 1 seule ligne de cases
+  // + barre de temps sous chaque jour
+  const maxMins=Math.max(...cells.filter(c=>!c.isFuture).map(c=>c.mins),1);
+  container.innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px">
+      ${cells.map(cell=>{
+        const barH=cell.isFuture?0:Math.round((cell.mins/maxMins)*44);
+        const tipTxt=`${cell.label} · ${cell.mins>0?cell.mins+'min':'-'} · ${cell.sucDay}🏆`;
+        return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;"
+          onclick="showDayPopup(event,'${cell.key}','${cell.label.replace(/'/g,'')}}',${cell.mins},${cell.sucDay})"
+          onmouseenter="showTip(event,'${tipTxt.replace(/'/g,'')}')" onmouseleave="hideTip()">
+          <div style="font-family:'Space Mono',monospace;font-size:.52rem;color:${cell.isToday?'var(--acc2)':'var(--t3)'};font-weight:${cell.isToday?700:400}">${cell.dayLabel}</div>
+          <div style="width:100%;height:52px;display:flex;align-items:flex-end;justify-content:center;">
+            <div style="width:80%;border-radius:5px 5px 3px 3px;height:${cell.isFuture?4:Math.max(barH,4)}px;
+              background:${cell.v===0?'rgba(255,255,255,.06)':cell.v===1?'rgba(108,99,255,.3)':cell.v===2?'rgba(108,99,255,.55)':cell.v===3?'rgba(108,99,255,.8)':'var(--acc)'};
+              transition:height .4s cubic-bezier(.34,1.56,.64,1);
+              ${cell.isToday?'box-shadow:0 0 8px var(--ag)':''};
+              ${cell.isFuture?'opacity:.18':''}"></div>
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:.52rem;color:${cell.isToday?'var(--acc2)':'var(--t3)'}">${cell.dateLabel}</div>
+          ${cell.mins>0?`<div style="font-family:'Space Mono',monospace;font-size:.55rem;color:var(--acc2);font-weight:700">${cell.mins}m</div>`:'<div style="height:13px"></div>'}
+          ${cell.sucDay>0?`<div style="font-size:.6rem">🏆${cell.sucDay}</div>`:'<div style="height:14px"></div>'}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+/* ── Mode MOIS — mois courant avec nav prev/next ── */
+let _hmMonthOffset=0; // 0 = mois courant, -1 = mois précédent, etc.
+
+function buildHeatmapMonth(allAct){
+  const container=document.getElementById('hm-container');
+  const today=new Date();
+  const refDate=new Date(today.getFullYear(),today.getMonth()+_hmMonthOffset,1);
+  const year=refDate.getFullYear();
+  const month=refDate.getMonth();
+  const monthLabel=refDate.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  const firstDay=new Date(year,month,1).getDay();
+  const offset=firstDay===0?6:firstDay-1; // lundi=0
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const joursFr=['L','M','M','J','V','S','D'];
+  const isCurrentMonth=(_hmMonthOffset===0);
+
+  let html=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <button onclick="_hmMonthOffset--;buildHeatmapMonth(window._lastHmData||{})"
+        style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--t2);cursor:pointer;font-family:'Space Mono',monospace;font-size:.65rem;">‹</button>
+      <span style="font-family:'Space Mono',monospace;font-size:.68rem;color:var(--acc2);text-transform:capitalize;font-weight:700">${monthLabel}</span>
+      <button onclick="_hmMonthOffset++;buildHeatmapMonth(window._lastHmData||{})"
+        style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:${isCurrentMonth?'var(--t3)':'var(--t2)'};cursor:${isCurrentMonth?'default':'pointer'};font-family:'Space Mono',monospace;font-size:.65rem;"
+        ${isCurrentMonth?'disabled':''}>›</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">
+      ${joursFr.map(j=>`<div style="font-family:'Space Mono',monospace;font-size:.5rem;color:var(--t3);text-align:center">${j}</div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">`;
+
+  // Cellules vides avant le 1er du mois
+  for(let i=0;i<offset;i++) html+=`<div></div>`;
+
+  for(let day=1;day<=daysInMonth;day++){
+    const cellDate=new Date(year,month,day);
+    const key=cellDate.toISOString().slice(0,10);
+    const isFuture=cellDate>today;
+    const isToday=key===today.toISOString().slice(0,10);
+    if(isFuture){
+      html+=`<div style="aspect-ratio:1;border-radius:5px;background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:.5rem;color:rgba(255,255,255,.1)">${day}</div>`;
+      continue;
+    }
+    const sessions=Object.values(allAct).reduce((s,a)=>s+(a[key]||0),0);
+    const mins=Math.round(sessions/4);
+    const v=sessions===0?0:sessions<=4?1:sessions<=12?2:sessions<=24?3:4;
+    const sucDay=parseInt(localStorage.getItem('rvision_suc_day_'+key)||'0');
+    const label=cellDate.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+    const tip=`${label} · ${mins>0?mins+'min':'-'} · ${sucDay}🏆`;
+    const bg=v===0?'rgba(255,255,255,.05)':v===1?'rgba(108,99,255,.25)':v===2?'rgba(108,99,255,.5)':v===3?'rgba(108,99,255,.75)':'var(--acc)';
+    const glow=isToday?'box-shadow:0 0 0 2px var(--acc);':'';
+    const dayColor=isToday?'var(--acc2)':v>0?'rgba(255,255,255,.7)':'var(--t3)';
+    html+=`<div
+      style="aspect-ratio:1;border-radius:5px;background:${bg};${glow}display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:.55rem;color:${dayColor};cursor:pointer;position:relative;transition:transform .12s;"
+      onmouseenter="this.style.transform='scale(1.15)';showTip(event,'${tip.replace(/'/g,'\'')}')"
+      onmouseleave="this.style.transform='';hideTip()"
+      onclick="showDayPopup(event,'${key}','${label.replace(/'/g,'\'')}',${mins},${sucDay})"
+    >${day}</div>`;
+  }
+  html+=`</div>`;
+  container.innerHTML=html;
+}
+/* Popup jour au clic */
+function showDayPopup(e,key,label,mins,suc){
+  e.stopPropagation();
+  const existing=document.getElementById('day-popup');
+  if(existing) existing.remove();
+  const h=Math.floor(mins/60),m=mins%60;
+  const timeStr=h>0?h+'h '+(m>0?m+'m ':''):(m>0?m+'m':'—');
+  const popup=document.createElement('div');
+  popup.id='day-popup';
+  popup.style.cssText=`position:fixed;z-index:9999;background:#0d0d1f;border:1px solid rgba(108,99,255,.4);border-radius:10px;padding:12px 16px;font-family:'Outfit',sans-serif;font-size:.78rem;color:#f0f0ff;min-width:160px;box-shadow:0 8px 32px rgba(0,0,0,.6);`;
+  popup.style.left=Math.min(e.clientX+10,window.innerWidth-180)+'px';
+  popup.style.top=Math.max(e.clientY-80,10)+'px';
+  popup.innerHTML=`<div style="font-weight:700;margin-bottom:8px;color:#a89cff">${label}</div>
+    <div style="display:flex;flex-direction:column;gap:5px;">
+      <div>⏱ <strong>${timeStr}</strong> de révision</div>
+      <div>🏆 <strong>${suc}</strong> succès débloqué${suc>1?'s':''}</div>
+    </div>`;
+  document.body.appendChild(popup);
+  setTimeout(()=>document.addEventListener('click',()=>popup.remove(),{once:true}),50);
+}
+
+/* ═══ COUNTER ═══ */
+function animTo(id,target,fmt=v=>String(v)){
+  const el=document.getElementById(id);if(!el) return;
+  const dur=900,t0=Date.now(),from=parseFloat(el.dataset.v||0)||0;
+  el.dataset.v=target;
+  (function tick(){const p=Math.min(1,(Date.now()-t0)/dur);el.textContent=fmt(Math.round(from+(target-from)*(1-Math.pow(1-p,3))));if(p<1)requestAnimationFrame(tick);})();
+}
+
+/* ═══ LOAD STATS ═══ */
+function loadStats(){
+  const stats=SITES.map(s=>({...s,...readSite(s)}));
+  const tx=stats.reduce((a,s)=>a+s.xp,0);
+  const ts=stats.reduce((a,s)=>a+Math.min(s.succes,s.maxSuc),0); // cap par cours
+  const tq=stats.reduce((a,s)=>a+s.quiz,0),tt=stats.reduce((a,s)=>a+s.time,0);
+  function fmtTime(sec){const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);return h>0?h+'h '+(m>0?m+'m':''):m+'m';}
+  window._fmtTime=fmtTime;
+  const ttMin=Math.round(tt/60);
+  animTo('kpi-xp',tx,v=>v+' XP'); animTo('kpi-s',ts); animTo('kpi-q',tq);
+  // Timer : afficher Xh Ym si >= 60 min, sinon Xm
+  const kpiT=document.getElementById('kpi-t');
+  if(kpiT){ const h=Math.floor(tt/3600),m=Math.floor((tt%3600)/60); kpiT.textContent=h>0?h+'h '+(m>0?m+'m':''):m+'m'; }
+  document.getElementById('nav-xp').textContent=tx+' XP';
+  animTo('big-xp',tx);
+  const rank=[...RANKS].reverse().find(r=>tx>=r.xp)||RANKS[0];
+  document.getElementById('big-rank').textContent=rank.n+' · '+ts+' succès';
+  document.getElementById('xrows').innerHTML=stats.map(s=>`<div class="xrow"><div class="xn">${s.name}</div><div class="xt"><div class="xf" style="background:${s.color};width:${Math.round(s.xp/s.maxXp*100)}%"></div></div><div class="xv">${s.xp}</div></div>`).join('');
+  document.getElementById('srows').innerHTML=stats.map(s=>{
+    const sucReal=Math.min(s.succes,s.maxSuc); // cap au max
+    const pct=s.maxSuc>0?Math.min(100,Math.round(sucReal/s.maxSuc*100)):0;
+    return `<div class="srow"><div class="sn">${s.name}</div><div class="strack"><div class="sfill" style="background:${s.color};width:${pct}%"></div></div><div class="sv">${sucReal}/${s.maxSuc}</div></div>`;
+  }).join('');
+  stats.forEach(s=>{
+    const xe=document.getElementById(s.id+'-xp'),be=document.getElementById(s.id+'-bar'),se=document.getElementById(s.id+'-suc');
+    if(xe)xe.textContent=s.xp+' XP';
+    if(be)be.style.width=Math.min(100,Math.round(s.xp/Math.max(s.maxXp,1)*100))+'%';
+    if(se)se.textContent=Math.min(s.succes,s.maxSuc)+' 🏆';
+  });
+  window._allStats=stats;
+  buildCharts(stats);
+  const allAct={};stats.forEach(s=>allAct[s.id]=s.activity);buildHeatmap(allAct);
+  // KPI texte = total cumulé
+  const _h=Math.floor(tt/3600),_m=Math.floor((tt%3600)/60);
+  const _todayKey=new Date().toISOString().slice(0,10);
+  const _todaySec=stats.reduce((a,s)=>a+(((s.activity||{})[_todayKey]||0)*15),0); // 15s par save
+  const _th2=Math.floor(_todaySec/3600),_tm2=Math.floor((_todaySec%3600)/60);
+  document.getElementById('ttlbl').textContent=(_th2>0?_th2+'h '+(_tm2>0?_tm2+'m ':''):_tm2+'m');
+  document.getElementById('sync-t').textContent='sync '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const vl=stats.filter(s=>s.last>0).sort((a,b)=>b.last-a.last).map(s=>{
+    const d=new Date(s.last),td=d.toDateString()===new Date().toDateString();
+    return `<div class="vit ${td?'vit-today':''}"><div>${s.name}</div><div class="vd">${td?'Aujourd\'hui · '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})}</div></div>`;
+  });
+  document.getElementById('visits').innerHTML=vl.length?vl.join(''):'<div class="vit"><div style="color:var(--t3)">Aucune session — ouvre un cours pour commencer</div></div>';
+}
+
+/* ═══ INIT ═══ */
+function startInit(){
+  // Bootstrap user from localStorage
+  const saved=localStorage.getItem('rvision_current_user');
+  if(saved){
+    CURRENT_USER=saved;
+    const nav=document.getElementById('user-name-nav');
+    const av=document.getElementById('user-avatar');
+    if(nav) nav.textContent=saved;
+    if(av)  av.textContent=saved.charAt(0).toUpperCase();
+    handleIndexFirstVisit();
+  } else {
+    // First ever visit on this machine → open modal
+    openUserModal();
+  }
+
+  // Global particles — fixed canvas full page
+  (function(){
+    const canvas=document.getElementById('particles-canvas');
+    if(!canvas) return;
+    const ctx=canvas.getContext('2d');
+    let W,H,pts=[];
+    function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+    resize(); window.addEventListener('resize',resize);
+    for(let i=0;i<400;i++) pts.push({
+      x:Math.random()*window.innerWidth,
+      y:Math.random()*window.innerHeight,
+      vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,
+      r:Math.random()*1.8+.4,
+      c:Math.random()<.55?'rgba(108,99,255,':Math.random()<.6?'rgba(82,214,138,':'rgba(168,156,255,',
+      o:Math.random()*.45+.1,
+      phase:Math.random()*Math.PI*2
+    });
+    let t=0;
+    (function loop(){
+      requestAnimationFrame(loop); t+=.008;
+      ctx.clearRect(0,0,W,H);
+      pts.forEach(p=>{
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+        if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+        const pulse=p.o+Math.sin(t*1.4+p.phase)*.07;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle=p.c+Math.max(0,Math.min(1,pulse))+')'; ctx.fill();
+      });
+    })();
+  })();
+  loadStats();
+  runInsightAnalysis();
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>requestAnimationFrame(()=>requestAnimationFrame(startInit)));
+} else {
+  requestAnimationFrame(()=>requestAnimationFrame(startInit));
+}
+// Auto-refresh stats et analyse toutes les 12 secondes
+setInterval(()=>{if(!document.hidden){loadStats();runInsightAnalysis();}},12000);
+
+/* ═══════════════════════════════════════════════════════════════
+   RVISION_INSIGHT — MOTEUR D'ANALYSE v2.0 (index.html)
+
+   Score [0-100] par theme = QUIZ(50%) + COMPORTEMENTAL(35%) + FC(15%)
+   QUIZ : taux reussite(25%) + temps reponse(15%) + erreurs seq.(10%)
+   COMPORTEMENTAL : revisites(15%) + dwell actif(10%) + souris(5%) + surlin.(5%)
+   FC : hesitation moyenne(15%)
+   Anti-biais : inactivite exclue, relecture != apprentissage, notions complexes
+   Decrochage : temps reponse croissant -> suggestion pause 15 min
+═══════════════════════════════════════════════════════════════ */
+
+const INSIGHT_COURSES = [
+  {id:'dc', name:'Droit Civil',       color:'#4f9eff'},
+  {id:'h1', name:'Histoire I',        color:'#ff8c5a'},
+  {id:'h2', name:'Histoire II',       color:'#ffaa72'},
+  {id:'h3', name:'Histoire III',      color:'#ffc890'},
+  {id:'co', name:'Droit Constit.',    color:'#c084fc'},
+  {id:'mk', name:'Marchés & Éco',     color:'#52d68a'},
+];
+
+/* ── Lire les données INSIGHT d'un cours ── */
+function readInsight(courseId){
+  try{
+    const u=localStorage.getItem('rvision_current_user');
+    const key=u?'rvision_'+u+'_'+courseId+'_insight':'rvision_'+courseId+'_insight';
+    const raw=localStorage.getItem(key);
+    return raw?JSON.parse(raw):null;
+  }catch(e){return null;}
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   RVISION_INSIGHT v4 — Moteur de profilage dynamique
+   
+   Architecture :
+   ┌─ 12 DIMENSIONS comportementales (D1–D12)
+   ├─ 20 PROFILS avec score de probabilité (pas binaire)
+   ├─ HISTORIQUE de profil (transitions détectées)
+   ├─ MICRO-PARCELLISATION des notions du cours
+   ├─ SIGNAL PIPELINE : priorité pondérée par fraîcheur + confiance
+   └─ RECOMMANDATIONS contextuelles tirées du profil exact
+═══════════════════════════════════════════════════════════════════ */
+
+/* ══════════════════ UTILITAIRES ══════════════════ */
+function fmtDuration(ms){
+  const s=Math.round(ms/1000);
+  if(s<60) return s+'s';
+  const m=Math.floor(s/60),sec=s%60;
+  if(m<60) return m+'min'+(sec>0?' '+sec+'s':'');
+  return Math.floor(m/60)+'h '+(m%60)+'min';
+}
+function hex2rgb(h){
+  const r=h.replace('#','').match(/../g).map(x=>parseInt(x,16));
+  return r.join(',');
+}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function lerp(a,b,t){return a+(b-a)*t;}
+
+/* ══════════════════ SCORING DE BASE ══════════════════ */
+
+function scoreResponseTime(themeData){
+  const times=(themeData.responseTimes||[]).filter(t=>t>=300&&t<60000);
+  if(!times.length) return null;
+  const avg=times.reduce((a,b)=>a+b,0)/times.length;
+  if(avg<3000) return 97; if(avg<5000) return 88;
+  if(avg<8000) return 74; if(avg<12000) return 58;
+  if(avg<18000) return 42; if(avg<28000) return 28;
+  return 14;
+}
+
+function detectAttentionDrop(themeData){
+  const times=(themeData.responseTimes||[]).filter(t=>t>=300&&t<60000);
+  if(times.length<5) return {drop:false,ratio:1};
+  const half=Math.floor(times.length/2);
+  const first=times.slice(0,half).reduce((a,b)=>a+b,0)/half;
+  const second=times.slice(half).reduce((a,b)=>a+b,0)/(times.length-half);
+  const ratio=second/first;
+  return {drop:ratio>1.55, ratio:Math.round(ratio*10)/10};
+}
+
+function scoreFCCourse(insightData){
+  if(!insightData||!insightData.flashcards) return null;
+  const cards=Object.values(insightData.flashcards);
+  if(!cards.length) return null;
+  let tw=0,ws=0;
+  cards.forEach(fc=>{
+    const times=(fc.thinkTimesMs||[]).filter(t=>t>=500&&t<120000);
+    if(!times.length) return;
+    const avg=times.reduce((a,b)=>a+b,0)/times.length;
+    const flips=fc.flips||1;
+    const s=avg<3000?97:avg<5000?85:avg<8000?70:avg<12000?52:avg<18000?35:18;
+    ws+=s*flips; tw+=flips;
+  });
+  return tw>0?Math.round(ws/tw):null;
+}
+
+function scoreBehaviorSection(s){
+  if(!s) return 50;
+  const visits=Math.max(1,s.visits||1);
+  const revScore=visits<=1?100:visits<=2?82:visits<=3?68:visits<=5?50:visits<=8?32:16;
+  const hlScore=Math.min(100,(s.highlights||0)*14);
+  const msScore=s.mouseActive?72:s._mouseMoves>2?52:32;
+  const dwellPerVisit=(s.activeMs||0)/visits;
+  // Bonus concentration : dwell élevé mais pas excessif
+  const dwellScore=dwellPerVisit<30000?45:dwellPerVisit<120000?75:dwellPerVisit<300000?62:48;
+  return clamp(Math.round(revScore*0.38+hlScore*0.22+msScore*0.18+dwellScore*0.22),0,100);
+}
+
+function scoreThemeFull(themeData,sectionData){
+  const total=(themeData.correct||0)+(themeData.wrong||0);
+  if(total<1) return null;
+  const partial=total<3;
+
+  const quizRate=(themeData.correct||0)/total;
+  let repPenalty=0;
+  if(themeData.questions){
+    Object.values(themeData.questions).forEach(q=>{
+      if((q.wrong||0)>=4) repPenalty+=20;
+      else if((q.wrong||0)>=3) repPenalty+=14;
+      else if((q.wrong||0)>=2) repPenalty+=7;
+    });
+  }
+  const A1=clamp(quizRate*100-repPenalty,0,100);
+  const rtScore=scoreResponseTime(themeData);
+  const A2=rtScore!==null?rtScore:55;
+  const errStrk=themeData.errorStreak||0;
+  const A3=clamp(100-errStrk*20,0,100);
+  const quiz=A1*0.5+A2*0.3+A3*0.2;
+
+  const B=scoreBehaviorSection(sectionData);
+  const raw=quiz*0.62+B*0.38;
+  return {score:clamp(Math.round(raw),0,100),partial,quizRate,A1,A2,A3,B};
+}
+
+function scoreCourse(insightData){
+  if(!insightData) return null;
+  const fc=scoreFCCourse(insightData);
+  let ts=[];
+  if(insightData.quiz) Object.values(insightData.quiz).forEach(t=>{
+    const tot=(t.correct||0)+(t.wrong||0);
+    if(tot>=1) ts.push(((t.correct||0)/tot)*100);
+  });
+  if(!ts.length&&!fc) return null;
+  let sc=0,w=0;
+  if(ts.length){sc+=(ts.reduce((a,b)=>a+b,0)/ts.length)*0.7;w+=0.7;}
+  if(fc!==null){sc+=fc*0.3;w+=0.3;}
+  return w>0?Math.round(sc/w):null;
+}
+
+function masteryClass(s){return s===null?'unknown':s<40?'red':s<55?'orange':s<75?'blue':'green';}
+function masteryColor(s){return s===null?'var(--t3)':s<40?'#ff5f5f':s<55?'#ffaa44':s<75?'#4f9eff':'#52d68a';}
+
+/* ══════════════════ MICRO-PARCELLISATION ══════════════════
+   Mappe chaque ID de section/onglet vers :
+   - nom lisible
+   - notions précises qui la composent
+   - poids de complexité (1=facile, 3=dense, 5=très technique)
+══════════════════════════════════════════════════════════ */
+const NOTION_MAP = {
+  // ── Droit Civil mariage/divorce ──────────────────────────────
+  'page-cours': {
+    label:'Cours principal', course:'dc',
+    notions:[
+      {id:'art212',name:'Art. 212 — Devoirs réciproques (respect, fidélité, secours, assistance)',complexity:2,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c1',search:'§ 1. Le devoir de respect'},
+      {id:'art213',name:'Art. 213 — Direction morale et matérielle de la famille',complexity:2,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c1',search:'§ 6. Les devoirs communs'},
+      {id:'art215',name:'Art. 215 — Communauté de vie & protection logement familial',complexity:3,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c1',search:'La communauté de vie'},
+      {id:'art214',name:'Art. 214 — Contribution aux charges du mariage',complexity:3,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c2',search:'§ 5. La contribution aux charges'},
+      {id:'art220',name:'Art. 220 — Solidarité des dettes ménagères',complexity:3,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c2',search:'La solidarité des dettes'},
+      {id:'art221',name:'Art. 221-225 — Autonomies bancaire, mobilière, professionnelle',complexity:2,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c2',search:'autonomies'},
+      {id:'art217',name:'Art. 217 — Habilitation judiciaire',complexity:2,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c2',search:'Habilitation judiciaire'},
+      {id:'art230',name:'Art. 230 — Divorce par consentement mutuel',complexity:2,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c3',search:'Le divorce par consentement mutuel'},
+      {id:'art242',name:'Art. 242 — Divorce pour faute (violation grave et renouvelée)',complexity:4,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c3',search:'§ 5. Le divorce pour faute'},
+      {id:'art246',name:'Art. 246 — Passerelle CM → faute',complexity:3,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c3',search:'Passerelle'},
+      {id:'art247',name:'Art. 247-1 — Passerelle acceptation → CM',complexity:3,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c3',search:'Passerelle'},
+      {id:'art249',name:'Art. 249 — Altération définitive du lien conjugal',complexity:3,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c3',search:'L\'altération définitive'},
+      {id:'art270',name:'Art. 270 — Prestation compensatoire (principe)',complexity:3,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c4',search:'Prestation compensatoire'},
+      {id:'art271',name:'Art. 271 — Critères de la PC (8 critères)',complexity:4,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c4',search:'critères'},
+      {id:'art274',name:'Art. 274 — Formes de la PC (capital vs rente)',complexity:3,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c4',search:'formes'},
+      {id:'cedh2025',name:'CEDH H.W. c. France 23 jan. 2025 — fin du devoir conjugal',complexity:5,file:'droit_civil_mariage_divorce2.html',page:'juris',tab:null,search:'H.W.'},
+      {id:'art264',name:'Art. 264 — Nom après divorce (règle + exceptions)',complexity:2,file:'droit_civil_mariage_divorce2.html',page:'cours',tab:'c4',search:'Art. 264'},
+    ],
+  },
+  // ── Histoire I (Ancien Régime) ────────────────────────────────
+  'page-chronologie':{label:'Chronologie',course:'h1',notions:[
+    {id:'chron_ar',name:'Chronologie Ancien Régime (événements clés)',complexity:2,file:'histoire_12.html',page:'page-chronologie',tab:null},
+  ]},
+  'page-fiches':{label:'Fiches de révision',course:'h1',notions:[
+    {id:'fiche_parl',name:'Les parlements — composition, résistance, remontrances',complexity:4,file:'histoire_12.html',page:'page-fiches',tab:null,search:'parlements'},
+    {id:'fiche_noblesse',name:'Noblesse — types, privilèges, anoblissement',complexity:3,file:'histoire_12.html',page:'page-fiches',tab:null,search:'Noblesse'},
+    {id:'fiche_lumiere',name:'Lumières — Montesquieu, Rousseau, Voltaire, contrat social',complexity:4,file:'histoire_12.html',page:'page-fiches',tab:null,search:'Lumières'},
+    {id:'fiche_conseil',name:'Conseil royal — structure, attributions',complexity:3,file:'histoire_12.html',page:'page-fiches',tab:null,search:'Conseil'},
+  ]},
+  // ── Histoire II (Révolution) ──────────────────────────────────
+  'page-cours':{label:'Cours Révolution',course:'h2',notions:[
+    {id:'rev_1789',name:'1789 — États généraux, serment du Jeu de Paume, DDHC',complexity:3,file:'Histoire_22.html',page:'page-cours',tab:null,search:'États généraux'},
+    {id:'rev_const',name:'Constitution civile du clergé — schisme, réfractaires',complexity:4,file:'Histoire_22.html',page:'page-cours',tab:null,search:'Constitution civile'},
+    {id:'rev_conv',name:'Convention — Girondins vs Montagnards, procès Louis XVI',complexity:4,file:'Histoire_22.html',page:'page-cours',tab:null,search:'Convention'},
+    {id:'rev_terreur',name:'Terreur — Comité de salut public, loi des suspects',complexity:4,file:'Histoire_22.html',page:'page-cours',tab:null,search:'Terreur'},
+    {id:'rev_therm',name:'Thermidor — chute Robespierre, réaction thermidorienne',complexity:3,file:'Histoire_22.html',page:'page-cours',tab:null,search:'Thermidor'},
+    {id:'rev_const93',name:'Constitution 1793 (non appliquée) vs Constitution 1795',complexity:5,file:'Histoire_22.html',page:'page-cours',tab:null,search:'Constitution 1793'},
+  ]},
+  // ── Droit Constitutionnel ────────────────────────────────────
+  'page-executif':{label:"L'exécutif",course:'co',notions:[
+    {id:'co_pdre',name:"Président — élection, pouvoirs propres, art. 5, 8, 12, 16",complexity:4,file:'Droit_Constitution_executif_v2.html',page:'page-cours',tab:null,search:'L\'élection présidentielle'},
+    {id:'co_pm',name:'Premier ministre — nomination, responsabilité, art. 21',complexity:3,file:'Droit_Constitution_executif_v2.html',page:'page-cours',tab:null,search:'Le Gouvernement'},
+    {id:'co_cohabit',name:'Cohabitation — rapports de force, domaines réservés',complexity:5,file:'Droit_Constitution_executif_v2.html',page:'page-cours',tab:null,search:'La Cohabitation'},
+    {id:'co_art49',name:'Art. 49-3 — engagement de responsabilité, motion de censure',complexity:5,file:'Droit_Constitution_executif_v2.html',page:'page-cours',tab:null,search:'responsabilité'},
+    {id:'co_ord',name:'Ordonnances art. 38 — habilitation, ratification',complexity:4,file:'Droit_Constitution_executif_v2.html',page:'page-cours',tab:null,search:'Les Ordonnances de l\'Article 38'},
+  ]},
+  // ── Marchés & Marchandisation ─────────────────────────────────
+  'page-marches':{label:'Marchés & Marchandisation',course:'mk',notions:[
+    {id:'mk_callon',name:'Callon — théorie de la performativité des marchés',complexity:5,file:'marches_marchandisation_vF2.html',page:'page-marches',tab:null,search:'performativité'},
+    {id:'mk_fiske',name:"Fiske — 4 modes d'échange",complexity:4,file:'marches_marchandisation_vF2.html',page:'page-marches',tab:null,search:'Les modèles relationnels de Fiske'},
+    {id:'mk_elster',name:'Elster — normes sociales vs rationalité économique',complexity:4,file:'marches_marchandisation_vF2.html',page:'page-marches',tab:null,search:'Les modes d\'allocation identifiés par Elster'},
+    {id:'mk_sandel',name:'Sandel — limites morales du marché',complexity:4,file:'marches_marchandisation_vF2.html',page:'page-marches',tab:null,search:'corruption'},
+    {id:'mk_hodgson',name:'Hodgson — institutions et habitudes, néo-institutionnalisme',complexity:4,file:'marches_marchandisation_vF2.html',page:'page-marches',tab:null,search:'Hodgson'},
+    {id:'mk_gale',name:'Gale-Shapley — algorithme de stable matching',complexity:5,file:'marches_marchandisation_vF2.html',page:'page-marches',tab:null,search:'mariage stable'},
+    {id:'mk_marchandisation',name:'Marchandisation — processus, critique, limites',complexity:3,file:'marches_marchandisation_vF2.html',page:'page-marches',tab:null,search:'Qu\'est-ce que la marchandisation'},
+  ]},
+};
+/* Noms lisibles fallback */
+const SECTION_LABELS_EXTRA = {
+  'page-accueil':'Accueil','page-quiz':'Quiz','page-flashcards':'Flashcards',
+  'page-notions':'Notions clés','page-personnages':'Personnages historiques',
+  'page-dissertation':'Dissertation','page-legislature':'Le Parlement',
+  'page-relations':'Relations exécutif / législatif','page-auteurs':'Auteurs clés',
+  'cours_onglet_mariage':'Formation du mariage','cours_onglet_effets':'Effets du mariage',
+  'cours_onglet_divorce':'Causes & procédure du divorce','cours_onglet_effets_div':'Effets du divorce',
+};
+function secLabel(id){
+  if(NOTION_MAP[id]) return NOTION_MAP[id].label;
+  return SECTION_LABELS_EXTRA[id]||id.replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+}
+
+/* Construire l'URL vers une notion précise dans un cours */
+function buildNotionUrl(notion){
+  if(!notion||!notion.file) return null;
+  let url=notion.file+'?goto='+encodeURIComponent(notion.page||'');
+  if(notion.tab) url+='&tab='+encodeURIComponent(notion.tab);
+  if(notion.search) url+='&search='+encodeURIComponent(notion.search);
+  return url;
+}
+
+/* Ouvrir le cours directement à la bonne section */
+function goToNotion(notion){
+  const url=buildNotionUrl(notion);
+  if(url) window.open(url,'_blank');
+}
+
+/* ══════════════════ 12 DIMENSIONS ══════════════════
+  D1  Vitesse réponse quiz         (0=très lent → 100=très rapide)
+  D2  Engagement visuel            (surlignage + souris active)
+  D3  Intensité de révision        (revisites, retours cours)
+  D4  Fluidité mémorielle          (flashcard hésitation inversée)
+  D5  Appétence quiz vs lecture    (ratio questions / dwell)
+  D6  Régularité inter-sessions    (nb cours avec >30min actif)
+  D7  Résistance à l'erreur        (récupération après erreurs)
+  D8  Profondeur d'exploration     (nb sections distinctes visitées)
+  D9  Consistance                  (écart-type temps réponse — faible=stable)
+  D10 Appétence formules denses    (dwell élevé sections complexes)
+  D11 Vitesse d'apprentissage      (score quiz améliore-t-il avec le temps?)
+  D12 Autonomie post-erreur        (revient-on au cours après une erreur?)
+══════════════════════════════════════════════════════ */
+function computeDimensions(allData){
+  const dims={D1:50,D2:50,D3:50,D4:50,D5:50,D6:50,D7:50,D8:50,D9:50,D10:50,D11:50,D12:50};
+  const acc={};
+  for(const k of Object.keys(dims)) acc[k]={sum:0,n:0};
+  const add=(k,v)=>{if(v!==null&&!isNaN(v)){acc[k].sum+=v;acc[k].n++;}};
+
+  let activeCourses=0;
+
+  INSIGHT_COURSES.forEach(c=>{
+    const d=allData[c.id]; if(!d) return;
+    activeCourses++;
+
+    // D1 : vitesse réponse
+    if(d.quiz) Object.values(d.quiz).forEach(t=>{
+      const rt=scoreResponseTime(t);
+      if(rt!==null) add('D1',rt);
+    });
+
+    // D2 : engagement visuel
+    if(d.sections) Object.values(d.sections).forEach(s=>{
+      const hlScore=clamp((s.highlights||0)*15,0,100);
+      const msScore=s.mouseActive?78:s._mouseMoves>3?50:25;
+      add('D2',(hlScore*0.6+msScore*0.4));
+    });
+
+    // D3 : intensité révision
+    if(d.sections) Object.values(d.sections).forEach(s=>{
+      const v=s.visits||0;
+      add('D3',clamp((v-1)*35,0,100));
+    });
+
+    // D4 : fluidité mémorielle
+    const fc=scoreFCCourse(d); if(fc!==null) add('D4',fc);
+
+    // D5 : ratio quiz / dwell
+    const nq=Object.values(d.quiz||{}).reduce((a,t)=>a+(t.correct||0)+(t.wrong||0),0);
+    const dwell=Object.values(d.sections||{}).reduce((a,s)=>a+(s.activeMs||0),0)/1000;
+    if(dwell>60) add('D5',clamp((nq/(dwell/60))*32,0,100));
+
+    // D6 : régularité (proxy : nb cours avec sessions significatives)
+    if((d.totalActiveMs||0)>900000) add('D6',100);
+    else if((d.totalActiveMs||0)>300000) add('D6',55);
+    else add('D6',15);
+
+    // D7 : résistance à l'erreur (taux de récupération après mauvaises réponses)
+    if(d.quiz){
+      let totalRecov=0,totalErr=0;
+      Object.values(d.quiz).forEach(t=>{
+        const wrong=t.wrong||0;
+        const correct=t.correct||0;
+        const tot=correct+wrong;
+        if(tot>=3&&wrong>0){
+          // Si après les erreurs le streak remonte → récupération
+          const recovScore=clamp(((correct/tot)*100)+(t.streak||0)*5,0,100);
+          add('D7',recovScore); totalErr++;
+        }
+      });
+    }
+
+    // D8 : profondeur exploration (nb sections distinctes visitées)
+    if(d.sections){
+      const nSec=Object.values(d.sections).filter(s=>(s.visits||0)>0).length;
+      add('D8',clamp(nSec*15,0,100));
+    }
+
+    // D9 : consistance réponse (faible écart-type = stable)
+    if(d.quiz) Object.values(d.quiz).forEach(t=>{
+      const times=(t.responseTimes||[]).filter(r=>r>=300&&r<60000);
+      if(times.length<4) return;
+      const avg=times.reduce((a,b)=>a+b,0)/times.length;
+      const std=Math.sqrt(times.reduce((a,t)=>a+(t-avg)**2,0)/times.length);
+      // Faible std → consistant → score élevé
+      const consistScore=clamp(100-(std/avg)*60,0,100);
+      add('D9',consistScore);
+    });
+
+    // D10 : appétence notions denses (dwell élevé sur sections à complexity>=4)
+    if(d.sections) Object.entries(d.sections).forEach(([secId,s])=>{
+      const nm=NOTION_MAP[secId];
+      if(!nm) return;
+      const highComplexNotions=nm.notions.filter(n=>n.complexity>=4).length;
+      if(highComplexNotions===0) return;
+      const dwellPerVisit=(s.activeMs||0)/Math.max(1,s.visits||1);
+      // Dwell long sur sections complexes = appétence technique
+      add('D10',clamp((dwellPerVisit/180000)*70,0,100));
+    });
+
+    // D11 : vitesse d'apprentissage (amélioration du taux de réussite dans le temps)
+    if(d.quiz) Object.values(d.quiz).forEach(t=>{
+      const qs=Object.values(t.questions||{});
+      if(qs.length<3) return;
+      // Proxy : questions répondues plusieurs fois avec amélioration
+      const improved=qs.filter(q=>(q.correct||0)>0&&(q.wrong||0)>0&&(q.correct||0)>(q.wrong||0)).length;
+      add('D11',clamp((improved/qs.length)*100,0,100));
+    });
+
+    // D12 : autonomie post-erreur (revisites après erreurs = self-correction)
+    if(d.sections&&d.quiz){
+      const totalErrors=Object.values(d.quiz).reduce((a,t)=>a+(t.wrong||0),0);
+      const totalRevisits=Object.values(d.sections).reduce((a,s)=>a+Math.max(0,(s.visits||0)-1),0);
+      if(totalErrors>0){
+        add('D12',clamp((totalRevisits/totalErrors)*40,0,100));
+      }
+    }
+  });
+
+  for(const k of Object.keys(dims)){
+    if(acc[k].n>0) dims[k]=Math.round(acc[k].sum/acc[k].n);
+  }
+  dims._activeCourses=activeCourses;
+  dims._dataPoints=Object.values(acc).reduce((a,v)=>a+v.n,0);
+  return dims;
+}
+
+/* ══════════════════ 20 PROFILS — SCORING PROBABILISTE ══════════════════
+   Chaque profil a une fonction score(dims) → 0-100 (probabilité d'appartenance)
+   Le profil dominant = celui avec le score le plus élevé
+   Les 3 premiers sont affichés avec leur %, le 1er est "actif"
+══════════════════════════════════════════════════════════════════════ */
+const LEARNER_PROFILES = [
+  {
+    id:'strategist', label:'Stratège Précis', emoji:'🎯', color:'#6c63ff',
+    desc:'Tu traites l\'information de manière chirurgicale. Peu de revisites, réponses rapides et taux d\'erreur bas — tu identifies d\'emblée ce qui est testable et tu y vas directement. Tu n\'es pas là pour tout comprendre, tu es là pour maîtriser ce qui compte.',
+    strengths:['Efficacité temporelle élevée','Identification rapide des notions clés','Faible dispersion cognitive'],
+    risks:['Peut rater les subtilités doctrinales','Lacunes sur les zones non testées','Fausse confiance possible'],
+    advice:(d,notions)=>`Ton ratio quiz/dwell (${d.D5}/100) confirme une approche test-first. ${notions.length?`Reviens sur ${notions[0].name} — c\'est précisément le type de notion que ton profil sous-estime.`:'Anticipe les questions pièges qui jouent sur les exceptions.'}`,
+    score:d=>clamp(Math.round((d.D1*0.3+d.D5*0.3+(100-d.D3)*0.2+(100-d.D2)*0.1+d.D7*0.1)),0,100),
+    conditions:d=>d.D1>65&&d.D5>60,
+  },
+  {
+    id:'deep_analyst', label:'Analyste en Profondeur', emoji:'🔬', color:'#4f9eff',
+    desc:'Tu construis des structures de compréhension denses. Surlignage fréquent, revisites ciblées, temps de réponse mesuré — tu ne mémorises pas, tu comprends. Le risque : t\'attarder trop longtemps sur ce qui est déjà compris.',
+    strengths:['Compréhension solide des enchaînements','Mémorisation structurelle durable','Détecte les contradictions dans le cours'],
+    risks:['Lenteur relative sur les parties descriptives','Risque de perfectionnisme','Peut perdre le fil de l\'avancement global'],
+    advice:(d,notions)=>`Ta dimension D10 (appétence technique : ${d.D10}/100) et D2 (engagement visuel : ${d.D2}/100) te définissent. ${notions.length?`Priorité : ${notions[0].name} — notion que tu as revisitée ${notions[0].visits||'plusieurs'} fois.`:'Tu peux te permettre d\'avancer plus vite sur les sections descriptives.'}`,
+    score:d=>clamp(Math.round((d.D2*0.28+(100-d.D1)*0.18+d.D3*0.2+d.D10*0.2+d.D8*0.14)),0,100),
+    conditions:d=>d.D2>55&&d.D10>45,
+  },
+  {
+    id:'sprinter', label:'Sprinter Cognitif', emoji:'⚡', color:'#52d68a',
+    desc:'Tu avances vite, très vite. Temps de réponse dans le top, peu de revisites, fort appétence quiz — ton cerveau fonctionne en mode scan. Efficace sur les définitions et les règles directes, vulnérable sur les notions qui demandent une mise en contexte.',
+    strengths:['Vitesse de traitement élevée','Bonne rétention des règles directes','Endurance cognitive sur de longues sessions'],
+    risks:['Articles à nuances (art. 242, 271) sous-estimés','Erreurs sur les exceptions','Peut confondre vitesse et maîtrise'],
+    advice:(d,notions)=>`Vitesse D1 : ${d.D1}/100, régularité D9 : ${d.D9}/100. ${d.D9<50?'Ton écart-type de réponse est élevé — tu es rapide mais instable. Ralentis sur les notions à plusieurs conditions cumulatives.':notions.length?`Ralentis spécifiquement sur : ${notions[0].name}.`:'Continue, mais vérifie les notions en orange dans le tableau.'}`,
+    score:d=>clamp(Math.round((d.D1*0.38+d.D5*0.25+(100-d.D3)*0.2+(100-d.D10)*0.17)),0,100),
+    conditions:d=>d.D1>78,
+  },
+  {
+    id:'rereader', label:'Relecteur Méthodique', emoji:'🔄', color:'#ffaa72',
+    desc:'La répétition est ta stratégie. Tu reviens systématiquement sur les sections, tu construis la maîtrise par couches successives. C\'est une approche valide — à condition de ne pas relire passivement mais de t\'auto-tester à chaque passage.',
+    strengths:['Mémorisation progressive et solide','Faible oubli sur les sections revisitées','Détecte les incohérences entre passages'],
+    risks:['Relecture passive sans bénéfice réel','Temps total de révision élevé','Peut négliger les sections non encore revisitées'],
+    advice:(d,notions)=>`D3 (intensité révision) : ${d.D3}/100 — tu revisites beaucoup. ${d.D12>50?`D12 : ${d.D12}/100 — bien, tu reviens au cours après tes erreurs.`:'Mais D12 bas : tu ne reviens pas assez au cours après les erreurs de quiz.'} ${notions.length?`Priorité de relecture : ${notions[0].name}.`:''}`,
+    score:d=>clamp(Math.round((d.D3*0.38+d.D4*0.22+(100-d.D5)*0.2+(100-d.D11)*0.2)),0,100),
+    conditions:d=>d.D3>55,
+  },
+  {
+    id:'quizzer', label:'Quizzeur Pur', emoji:'🎲', color:'#c084fc',
+    desc:'Tu testes avant de comprendre. Le quiz est ton cours. Cette approche de trial-and-error a un avantage neuroscientifique réel (effet testing) — mais elle nécessite un retour immédiat au cours après chaque erreur, que tu ne fais pas toujours.',
+    strengths:['Excellent entraînement à l\'examen','L\'effet testing consolide mieux que la relecture','Identifie vite les zones de flou'],
+    risks:['Lacunes profondes si on ne revient jamais au cours','Peut apprendre la bonne réponse sans comprendre la règle','Fragilité sur les questions reformulées'],
+    advice:(d,notions)=>`D5 : ${d.D5}/100 — fort appétence quiz. D12 : ${d.D12}/100 — ${d.D12>55?'bon, tu reviens au cours après les erreurs.':'critique : tu ne reviens pas assez au cours après tes erreurs. Sans ce retour, le quiz ne consolide rien.'} ${notions.length?`Notion à retourner dans le cours immédiatement : ${notions[0].name}.`:''}`,
+    score:d=>clamp(Math.round((d.D5*0.38+(100-d.D3)*0.22+(100-d.D2)*0.2+d.D7*0.2)),0,100),
+    conditions:d=>d.D5>70&&d.D3<50,
+  },
+  {
+    id:'flashcard_master', label:'Maître des Flashcards', emoji:'🃏', color:'#ff79c6',
+    desc:'Tu fais confiance à la répétition espacée et au rappel actif. Temps d\'hésitation courts, beaucoup de flips — ton système mémoriel est entraîné. La limite est dans les questions de compréhension profonde que les flashcards ne couvrent pas.',
+    strengths:['Mémorisation des définitions et règles irréprochable','Rythme de révision efficace','Courbe de progression régulière'],
+    risks:['Notions relationnelles (liens entre articles) moins bien mémorisées','Fragile en dissertation si manque de structure'],
+    advice:(d,notions)=>`D4 (fluidité mémorielle) : ${d.D4}/100. ${notions.length?`Utilise maintenant les flashcards sur : ${notions[0].name} — c\'est la zone de fragilité identifiée.`:'Crée des flashcards personnalisées sur les notions en orange.'}`,
+    score:d=>clamp(Math.round((d.D4*0.45+(100-d.D1)*0.2+(100-d.D5)*0.2+d.D6*0.15)),0,100),
+    conditions:d=>d.D4>65,
+  },
+  {
+    id:'deep_thinker', label:'Penseur Lent & Sûr', emoji:'🧠', color:'#a89cff',
+    desc:'Tu prends le temps de construire ta réponse. Temps de réponse longs mais écart-type faible — tu es lent et cohérent, pas lent et approximatif. C\'est une signature cognitive de compréhension profonde plutôt que de mémorisation de surface.',
+    strengths:['Rarement de mauvaises surprises sur les détails','Compréhension des enchaînements logiques','Faible taux d\'erreur sur les questions complexes'],
+    risks:['Pression temporelle à l\'examen','Peut se bloquer sur les formulations inattendues','Tendance à sur-analyser'],
+    advice:(d,notions)=>`D1 : ${d.D1}/100 — lent. D9 : ${d.D9}/100 — ${d.D9>65?'mais cohérent, c\'est une force.':'et instable — travaille ta fluidité sur les définitions pures.'} ${notions.length?`Focus sur : ${notions[0].name} — ta compréhension y est incomplète selon les signaux.`:''}`,
+    score:d=>clamp(Math.round(((100-d.D1)*0.32+d.D9*0.28+d.D10*0.22+d.D2*0.18)),0,100),
+    conditions:d=>d.D1<45&&d.D9>50,
+  },
+  {
+    id:'consistent_worker', label:'Travailleur Régulier', emoji:'📅', color:'#52d68a',
+    desc:'Tu ne cherches pas à tout faire en une nuit. Sessions régulières, progression stable — tu laisses la consolidation se faire entre les sessions. La courbe d\'Ebbinghaus travaille pour toi. C\'est le profil le plus favorable à la réussite sur la durée.',
+    strengths:['Mémorisation à long terme supérieure','Pas de surcharge cognitive','Progression prévisible et mesurable'],
+    risks:['Peut accuser du retard si les révisions s\'espacent trop','Profil qui sous-estime parfois l\'urgence d\'une notion critique'],
+    advice:(d,notions)=>`D6 : ${d.D6}/100 — régularité solide. ${notions.length?`Ne laisse pas traîner : ${notions[0].name} est une lacune identifiée — règle-la à la prochaine session (dans 24-48h max).`:'Maintiens cette régularité, elle est ton plus grand avantage.'}`,
+    score:d=>clamp(Math.round((d.D6*0.38+d.D9*0.25+d.D3*0.2+d.D7*0.17)),0,100),
+    conditions:d=>d.D6>55,
+  },
+  {
+    id:'visual_mapper', label:'Cartographe Visuel', emoji:'👁️', color:'#ff8c5a',
+    desc:'Tu apprends en interagissant avec la page. Surlignages fréquents, mouvement souris actif sur les sections clés — tu cartographies mentalement le cours. Les schémas et tableaux sont tes alliés naturels.',
+    strengths:['Mémorisation spatiale forte','Bonne structuration des notions','Retrouve facilement dans le cours'],
+    risks:['Fragile sans support visuel (examen blanc)','Peut manquer des notions non mises en avant'],
+    advice:(d,notions)=>`D2 : ${d.D2}/100. ${notions.length?`Tu as particulièrement interagi avec la zone de ${notions[0].name} — approfondis-la.`:'Crée tes propres schémas sur les notions en rouge.'}`,
+    score:d=>clamp(Math.round((d.D2*0.42+(100-d.D1)*0.2+d.D8*0.22+(100-d.D5)*0.16)),0,100),
+    conditions:d=>d.D2>68,
+  },
+  {
+    id:'avoider', label:'Éviteur de Difficulté', emoji:'🌊', color:'#ffaa44',
+    desc:'Tu contournes l\'inconfort cognitif. Dwell faible sur les sections difficiles, peu d\'interactions sur les notions techniques — tu avances mais tu laisses derrière toi des zones non travaillées. Ce profil est normal au début d\'une session, problématique si persistant.',
+    strengths:['Progression subjective rapide','Peu de blocages psychologiques'],
+    risks:['Lacunes profondes non détectées','Fausse confiance','Fragilité totale sur les notions évitées'],
+    advice:(d,notions)=>{
+      const zones=notions.filter(n=>n.isComplex||n.cls==='red').slice(0,2);
+      return `D3 bas : ${d.D3}/100 — tu ne reviens pas sur tes difficultés. ${zones.length?`Force-toi 5 minutes sur : ${zones.map(n=>n.name||n.theme).join(' et ')}. L\'inconfort cognitif que tu ressens est exactement le signe que tu apprends.`:'Identifie tes 2 notions les plus floues et travaille-les frontalement.'}`;
+    },
+    score:d=>clamp(Math.round(((100-d.D3)*0.32+(100-d.D2)*0.28+(100-d.D12)*0.22+(100-d.D10)*0.18)),0,100),
+    conditions:d=>d.D3<35&&d.D2<45,
+  },
+  {
+    id:'perfectionist', label:'Perfectionniste Cognitif', emoji:'⚗️', color:'#4f9eff',
+    desc:'Tu ne passes à la suite que quand tu te sens sûr. Revisites élevées, surlignage dense, flashcard très travaillées — tu construis une maîtrise rigoureuse mais tu risques de t\'y perdre. La perfection à 80% sur l\'ensemble vaut mieux que 100% sur la moitié.',
+    strengths:['Maîtrise profonde des sections revisitées','Peu d\'erreurs sur les notions travaillées','Très solide en dissertation sur les sujets préparés'],
+    risks:['Gestion du temps à l\'examen','Couverture partielle du cours','Peut bloquer sur une notion et perdre du temps'],
+    advice:(d,notions)=>`D3 : ${d.D3}/100 + D2 : ${d.D2}/100 — tu es dense dans ton travail. ${notions.length?`Mais tu as passé beaucoup de temps sur ${notions[0].name} — selon les signaux, ta compréhension est maintenant suffisante. Passe à la suite.`:'Accepte 75% de maîtrise sur les sections descriptives et réserve ton énergie pour les notions techniques.'}`,
+    score:d=>clamp(Math.round((d.D3*0.3+d.D2*0.28+d.D4*0.22+d.D10*0.2)),0,100),
+    conditions:d=>d.D3>60&&d.D2>55,
+  },
+  {
+    id:'crisis_mode', label:'Mode Crise', emoji:'🚨', color:'#ff5f5f',
+    desc:'Tu révises sous pression temporelle. Sessions longues d\'un coup, temps de réponse qui se dégradent en cours de session, peu de régularité — ton cerveau donne tout en une fois. Ce n\'est pas nul, mais c\'est biologiquement inefficace : la mémoire consolide pendant le sommeil, pas pendant la session.',
+    strengths:['Forte motivation à court terme','Capacité à aller vite quand nécessaire'],
+    risks:['Oubli massif dans les 48h','Fatigue cognitive en fin de session','Lacunes sur les notions vues en fin de session'],
+    advice:(d,notions)=>`D6 : ${d.D6}/100 — peu de régularité. ${notions.length?`En urgence : ${notions.slice(0,2).map(n=>n.name||n.theme).join(', ')} — concentre-toi là.`:'Fais 3 sessions de 45 min plutôt qu\'une session de 3h — c\'est 3× plus efficace neurologiquement.'}`,
+    score:d=>clamp(Math.round(((100-d.D1)*0.25+(100-d.D6)*0.3+d.D3*0.25+(100-d.D9)*0.2)),0,100),
+    conditions:d=>d.D6<35&&d.D3>40,
+  },
+  {
+    id:'explorer', label:'Explorateur Systémique', emoji:'🗺️', color:'#52d68a',
+    desc:'Tu construis la carte avant les détails. Navigation entre sections, plusieurs cours actifs, vision d\'ensemble développée — tu vois les liens entre les notions avant de les maîtriser isolément. C\'est une approche top-down qui fonctionne à condition de revenir ensuite vers le bas.',
+    strengths:['Vision transversale (liens entre cours)','Bonne contextualisation des notions','Pas de blocage sur une notion isolée'],
+    risks:['Maîtrise de surface si on reste en exploration','Peut passer à côté des nuances techniques'],
+    advice:(d,notions)=>`D8 : ${d.D8}/100 — tu explores beaucoup. ${notions.length?`Il est maintenant temps de plonger en profondeur sur : ${notions[0].name}.`:'Tu as ta carte mentale — c\'est le moment de solidifier les zones rouge et orange.'}`,
+    score:d=>clamp(Math.round((d.D8*0.35+d.D3*0.25+d.D5*0.2+d.D2*0.2)),0,100),
+    conditions:d=>d.D8>60,
+  },
+  {
+    id:'passive_reader', label:'Lecteur Passif', emoji:'📖', color:'#ffc890',
+    desc:'Tu lis plus que tu n\'interagis. Dwell élevé, peu de surlignage, peu de quiz — tu traites l\'information mais sans la tester. La lecture passive a un rendement mémoriel 3× inférieur à l\'auto-test actif (études Roediger & Karpicke).',
+    strengths:['Compréhension contextuelle','Peu de stress cognitif','Bon pour la première découverte'],
+    risks:['Illusion de maîtrise','Oubli rapide sans test','Fausse confiance en session'],
+    advice:(d,notions)=>`D2 : ${d.D2}/100 (faible) + D5 : ${d.D5}/100 (faible). Après chaque section, ferme le cours et récite 3 règles à voix haute. ${notions.length?`Commence par : ${notions[0].name}.`:''}`,
+    score:d=>clamp(Math.round(((100-d.D2)*0.32+(100-d.D5)*0.28+d.D6*0.2+(100-d.D11)*0.2)),0,100),
+    conditions:d=>d.D2<40&&d.D5<45,
+  },
+  {
+    id:'burst_learner', label:'Apprenantx en Rafale', emoji:'💥', color:'#ff5f9e',
+    desc:'Tu apprends par pics d\'énergie intense. Périodes d\'activité dense alternées avec des absences — tu n\'es pas irrégulier par manque de motivation mais par mode de fonctionnement cognitif. Ces pics sont très productifs si tu arrives avant que la fatigue s\'installe.',
+    strengths:['Productivité maximale en début de session','Créativité associative élevée sous stimulation'],
+    risks:['Dégradation rapide en fin de pic','Peu de consolidation entre les sessions','Peut sauter des notions sur l\'élan'],
+    advice:(d,notions)=>`Optimise tes pics : travaille les notions les plus difficiles en début de session. ${notions.length?`Maintenant : ${notions[0].name} — c\'est le moment.`:'Pose une alarme à 45 min pour faire une pause avant que la qualité chute.'}`,
+    score:d=>clamp(Math.round((d.D3*0.3+(100-d.D6)*0.3+(100-d.D9)*0.22+d.D5*0.18)),0,100),
+    conditions:d=>d.D6<40&&d.D3>35,
+  },
+  {
+    id:'multi_modal', label:'Apprenant Multi-Modal', emoji:'🔀', color:'#6c63ff',
+    desc:'Tu utilises tous les canaux : quiz, flashcards, cours, interactions, revisites — tu t\'es construit un protocole de révision implicitement optimal. C\'est le profil de l\'étudiant qui finit par s\'améliorer en continu quelle que soit la matière.',
+    strengths:['Aucun point de défaillance systémique','S\'adapte à tous les types de questions','Progression régulière et prévisible'],
+    risks:['Peut se disperser si trop de canaux simultanés'],
+    advice:(d,notions)=>`Profil idéal. ${notions.length?`Le seul point de vigilance : ${notions[0].name} — c\'est ta lacune résiduelle, attaque-la.`:'Continue — concentre l\'énergie sur les zones rouges du tableau.'}`,
+    score:d=>clamp(Math.round((d.D2*0.2+d.D4*0.2+d.D5*0.2+d.D3*0.15+d.D12*0.15+d.D6*0.1)),0,100),
+    conditions:d=>d.D2>50&&d.D4>50&&d.D5>50,
+  },
+  {
+    id:'self_corrector', label:'Auto-Correcteur', emoji:'✅', color:'#52d68a',
+    desc:'Après chaque erreur, tu reviens au cours. C\'est le comportement le plus efficace que l\'on puisse avoir face à une lacune. Tu ne te contentes pas de voir la correction — tu retournes à la source. Très rare.',
+    strengths:['Correction immédiate des lacunes','Compréhension de la règle et non juste de la bonne réponse','Fort D12'],
+    risks:['Peut ralentir la progression globale si fait sur toutes les erreurs'],
+    advice:(d,notions)=>`D12 : ${d.D12}/100 — excellent réflexe de retour au cours. ${notions.length?`Continue avec : ${notions[0].name}.`:'Tu appliques déjà la méthode optimale. Accélère maintenant sur les zones orange.'}`,
+    score:d=>clamp(Math.round((d.D12*0.42+d.D7*0.28+d.D3*0.18+d.D5*0.12)),0,100),
+    conditions:d=>d.D12>60,
+  },
+  {
+    id:'formula_wrestler', label:'Lutteur de Formules', emoji:'⚙️', color:'#a89cff',
+    desc:'Tu bloques sur les formules et règles à conditions multiples. Temps de réponse très élevés sur les notions techniques, dwell long sur les sections denses — tu t\'y bats mais tu ne renonces pas. C\'est un signe d\'apprentissage actif difficile, pas d\'échec.',
+    strengths:['Finit par maîtriser ce qu\'il attaque','Peu d\'abandon devant la difficulté'],
+    risks:['Coût temporel élevé','Peut se décourager si la formule ne vient pas'],
+    advice:(d,notions)=>`D10 : ${d.D10}/100 — fort dwell sur les notions denses. ${notions.length?`Stratégie sur ${notions[0].name} : décompose la règle en sous-conditions numérotées (1. condition → 2. régime → 3. exception). La répétition linéaire ne fonctionne pas sur les formules — il faut une structure.`:'Utilise les schémas SVG du cours — les formules s\'ancrent mieux avec un support visuel.'}`,
+    score:d=>clamp(Math.round((d.D10*0.38+(100-d.D1)*0.28+(100-d.D9)*0.2+d.D3*0.14)),0,100),
+    conditions:d=>d.D10>55&&d.D1<55,
+  },
+  {
+    id:'blocked', label:'Bloqué sur Notion', emoji:'🧱', color:'#ff5f5f',
+    desc:'Tu es face à un mur conceptuel. Erreurs répétées sur les mêmes questions, streak d\'erreurs consécutives, temps de réponse qui augmentent — quelque chose résiste. Ce n\'est pas un problème d\'intelligence, c\'est un problème de formulation : il faut une entrée différente dans la notion.',
+    strengths:['La persistance révèle la lacune exacte','Excellent matériau pour un travail ciblé'],
+    risks:['Découragement', 'Contamination anxieuse sur les notions voisines'],
+    advice:(d,notions)=>`Erreurs répétées détectées. ${notions.length?`Notion exacte en cause : ${notions[0].name}. Stratégie : ignore les autres et travaille uniquement celle-ci pendant 10 minutes. Cherche un exemple concret (jurisprudence, cas pratique).`:'Identifie la question exacte ratée le plus souvent dans le tableau de détail et attaque-la isolément.'}`,
+    score:d=>clamp(Math.round(((100-d.D7)*0.3+(100-d.D11)*0.28+(100-d.D1)*0.22+d.D3*0.2)),0,100),
+    conditions:d=>d.D7<40&&d.D11<40,
+  },
+  {
+    id:'autonomous', label:'Autonome Confirmé', emoji:'🏆', color:'#52d68a',
+    desc:'Tu maîtrises. Scores élevés, temps de réponse rapides, peu de revisites nécessaires, forte progression — tu es dans la phase de consolidation. Les révisions suivantes serviront à maintenir et à travailler les cas complexes.',
+    strengths:['Maîtrise large du programme','Bonne préparation à l\'examen','Peut aider à identifier les véritables pièges'],
+    risks:['Peut relâcher trop tôt','Zones non encore testées potentiellement fragilisées'],
+    advice:(d,notions)=>`D1 : ${d.D1}/100, D7 : ${d.D7}/100, D11 : ${d.D11}/100 — profil solide. ${notions.length?`Seule zone à surveiller : ${notions[0].name}. Ne la laisse pas traîner.`:'Commence à t\'entraîner sur les annales et les cas pratiques — le contenu est là, il faut maintenant le mobiliser sous pression.'}`,
+    score:d=>clamp(Math.round((d.D1*0.28+d.D7*0.25+d.D11*0.22+d.D4*0.15+d.D9*0.1)),0,100),
+    conditions:d=>d.D1>70&&d.D7>65,
+  },
+];
+
+/* ─── Scorer tous les profils et retourner le classement ─── */
+function rankProfiles(dims){
+  return LEARNER_PROFILES
+    .map(p=>({...p, pct:p.score(dims), eligible:p.conditions?p.conditions(dims):true}))
+    .filter(p=>p.eligible||p.id==='balanced')
+    .sort((a,b)=>b.pct-a.pct);
+}
+
+/* ══════════════════ HISTORIQUE DE PROFIL ══════════════════ */
+const PROFILE_HISTORY_KEY='rvision_profile_history';
+function getProfileHistory(){
+  try{return JSON.parse(localStorage.getItem(PROFILE_HISTORY_KEY)||'[]');}catch(e){return [];}
+}
+function saveProfileHistory(arr){
+  try{localStorage.setItem(PROFILE_HISTORY_KEY,JSON.stringify(arr.slice(-20)));}catch(e){}
+}
+function recordProfileChange(profileId,pct){
+  const hist=getProfileHistory();
+  const now=Date.now();
+  const last=hist[hist.length-1];
+  // N'enregistre que si changement ou >15 min
+  if(!last||last.id!==profileId||(now-last.ts)>900000){
+    hist.push({id:profileId,pct,ts:now});
+    saveProfileHistory(hist);
+    return true; // nouveau
+  }
+  return false;
+}
+
+/* ══════════════════ MEMOÏSATION (15 min) ══════════════════ */
+let _memo={dims:null,ranked:null,ts:0};
+function getCachedProfile(allData){
+  const now=Date.now();
+  if(_memo.dims&&(now-_memo.ts)<900000) return _memo; // 15 min
+  const dims=computeDimensions(allData);
+  const ranked=rankProfiles(dims);
+  _memo={dims,ranked,ts:now};
+  recordProfileChange(ranked[0].id,ranked[0].pct);
+  return _memo;
+}
+
+/* ══════════════════ MICRO-PARCELLISATION NOTIONS ══════════════════ */
+function getNotionSignals(allData){
+  /* Retourne un tableau de micro-notions scorées avec signaux détaillés */
+  const results=[];
+
+  INSIGHT_COURSES.forEach(c=>{
+    const d=allData[c.id]; if(!d) return;
+    const sections=d.sections||{};
+    const quiz=d.quiz||{};
+
+    // ── Niveau section ──
+    Object.entries(sections).forEach(([secId,s])=>{
+      const nm=NOTION_MAP[secId];
+      const secL=secLabel(secId);
+      const behavScore=scoreBehaviorSection(s);
+      const visits=s.visits||0;
+      const dwellPerV=(s.activeMs||0)/Math.max(1,visits);
+
+      // ── Niveau micro-notion (si NOTION_MAP disponible) ──
+      if(nm){
+        nm.notions.forEach(notion=>{
+          // Cherche quiz associé (matching approximatif par mot-clé)
+          const notionKey=notion.id.toLowerCase();
+          const matchedTheme=Object.entries(quiz).find(([theme])=>
+            theme.toLowerCase().includes(notionKey)||
+            notionKey.includes(theme.toLowerCase().replace(/\s+/g,'_').substring(0,6))
+          );
+          const themeData=matchedTheme?matchedTheme[1]:null;
+          const themeRes=themeData?scoreThemeFull(themeData,s):null;
+
+          // Calcul score final
+          let score;
+          if(themeRes){
+            score=themeRes.score;
+          } else {
+            // Pas de données quiz — score comportemental pondéré par complexité
+            const complexPenalty=notion.complexity>=4?15:notion.complexity>=3?8:0;
+            score=clamp(behavScore-complexPenalty,0,100);
+          }
+
+          // Signaux spécifiques
+          const signals=[];
+          if(visits>2) signals.push({type:'neg',txt:`${visits} visites — zone revisitée`});
+          if(dwellPerV>300000) signals.push({type:'neu',txt:`${Math.round(dwellPerV/60000)}min/visite — notion dense`});
+          if(s.highlights>1) signals.push({type:'pos',txt:`${s.highlights} surlignages`});
+          if(themeData){
+            const tot=(themeData.correct||0)+(themeData.wrong||0);
+            if(themeData.wrong>0) signals.push({type:'neg',txt:`${themeData.wrong}/${tot} erreurs quiz`});
+            if((themeData.errorStreak||0)>=2) signals.push({type:'neg',txt:`${themeData.errorStreak} erreurs consécutives`});
+            const rtArr=(themeData.responseTimes||[]).filter(r=>r>=300&&r<60000);
+            if(rtArr.length){
+              const avgRT=Math.round(rtArr.reduce((a,b)=>a+b,0)/rtArr.length/1000);
+              if(avgRT>15) signals.push({type:'neg',txt:`${avgRT}s moy. de réponse`});
+            }
+            const dropInfo=detectAttentionDrop(themeData);
+            if(dropInfo.drop) signals.push({type:'neg',txt:`concentration ÷${dropInfo.ratio}`});
+          }
+          if(notion.complexity>=4) signals.push({type:'neu',txt:`complexité ${notion.complexity}/5`});
+
+          // Action recommandée
+          let action='';
+          const isComplex=dwellPerV>240000&&(!themeData||(themeData.wrong||0)/(Math.max(1,(themeData.correct||0)+(themeData.wrong||0)))<0.35);
+          if(score<40) action=`⚡ Lacune — retravailler ${notion.name} maintenant.`;
+          else if(score<55) action=`🔁 Fragilité — relire la règle puis auto-test sur cette notion.`;
+          else if(isComplex) action=`💜 Notion dense — tu y as passé du temps : auto-teste-toi pour valider la compréhension.`;
+          else if(score>=75) action=`✓ Maîtrisé — passe à la suite.`;
+          else action=`📌 À surveiller — reviens y dans la prochaine session.`;
+
+          results.push({
+            notionId:notion.id,
+            name:notion.name,
+            section:secL,
+            sectionId:secId,
+            course:c.name,
+            courseId:c.id,
+            courseColor:c.color,
+            score,
+            cls:masteryClass(score),
+            complexity:notion.complexity,
+            isComplex,
+            partial:!themeData||!themeRes,
+            signals,
+            action,
+            visits,
+            highlights:s.highlights||0,
+            hasDrop:themeData?detectAttentionDrop(themeData).drop:false,
+            wrong:themeData?themeData.wrong||0:0,
+            errorStreak:themeData?themeData.errorStreak||0:0,
+          });
+        });
+      } else {
+        // Section sans NOTION_MAP — signal section générique
+        if(visits>=2&&behavScore<60){
+          results.push({
+            notionId:secId,
+            name:secL,
+            section:secL,
+            sectionId:secId,
+            course:c.name,
+            courseId:c.id,
+            courseColor:c.color,
+            score:behavScore,
+            cls:masteryClass(behavScore),
+            complexity:2,
+            isComplex:false,
+            partial:true,
+            signals:[{type:'neg',txt:`${visits} visites · signal comportemental`}],
+            action:`🔍 Section revisitée fréquemment sans données quiz — assure-toi de comprendre.`,
+            visits,
+            highlights:s.highlights||0,
+            hasDrop:false,
+            wrong:0,
+            errorStreak:0,
+          });
+        }
+      }
+    });
+
+    // ── Thèmes quiz sans section associée ──
+    Object.entries(quiz).forEach(([theme,t])=>{
+      const tot=(t.correct||0)+(t.wrong||0);
+      if(tot<1) return;
+      // Vérifier si déjà couvert par NOTION_MAP
+      const alreadyMapped=results.some(r=>r.courseId===c.id&&r.notionId.includes(theme.toLowerCase().replace(/\s+/g,'_').substring(0,6)));
+      if(alreadyMapped) return;
+
+      const sortedSec=Object.entries(sections).sort((a,b)=>(b[1].visits||0)-(a[1].visits||0));
+      const bestSec=sortedSec[0]?sortedSec[0][1]:null;
+      const res=scoreThemeFull(t,bestSec);
+      if(!res) return;
+      const rtArr=(t.responseTimes||[]).filter(r=>r>=300&&r<60000);
+      const avgRT=rtArr.length?Math.round(rtArr.reduce((a,b)=>a+b,0)/rtArr.length/1000):null;
+      const signals=[];
+      if(t.wrong>0) signals.push({type:'neg',txt:`${t.wrong}/${tot} erreurs`});
+      if((t.errorStreak||0)>=2) signals.push({type:'neg',txt:`${t.errorStreak} erreurs consécutives`});
+      if(avgRT&&avgRT>12) signals.push({type:'neg',txt:`${avgRT}s moy.`});
+      if(t.streak>4) signals.push({type:'pos',txt:`série ${t.streak}`});
+
+      const score=res.score;
+      results.push({
+        notionId:theme,
+        name:theme,
+        section:bestSec?secLabel(sortedSec[0][0]):c.name,
+        sectionId:sortedSec[0]?sortedSec[0][0]:null,
+        course:c.name,courseId:c.id,courseColor:c.color,
+        score,cls:masteryClass(score),complexity:2,isComplex:false,
+        partial:res.partial,signals,
+        action:score<40?`⚡ Revenir au cours sur : ${theme}.`:
+               score<55?`🔁 Consolider : ${theme}.`:
+               score>=75?`✓ Maîtrisé.`:`📌 À surveiller.`,
+        visits:bestSec?bestSec.visits||0:0,
+        highlights:bestSec?bestSec.highlights||0:0,
+        hasDrop:detectAttentionDrop(t).drop,
+        wrong:t.wrong||0,
+        errorStreak:t.errorStreak||0,
+      });
+    });
+  });
+
+  // Trier : lacunes d'abord, puis par score croissant, puis complexité
+  return results.sort((a,b)=>{
+    const cls={red:0,orange:1,blue:2,green:3,unknown:4};
+    const ca=cls[a.cls]??4, cb=cls[b.cls]??4;
+    if(ca!==cb) return ca-cb;
+    if(a.score!==b.score) return a.score-b.score;
+    return b.complexity-a.complexity; // plus complexe d'abord à score égal
+  });
+}
+
+/* ══════════════════ MOTEUR PRINCIPAL v4 ══════════════════ */
+function runInsightAnalysis(){
+  const allData={};
+  let totalActiveMs=0,totalPauses=0;
+  INSIGHT_COURSES.forEach(c=>{
+    const d=readInsight(c.id);
+    allData[c.id]=d;
+    if(d){totalActiveMs+=(d.totalActiveMs||0);totalPauses+=(d.pauseCount||0);}
+  });
+
+  const hasAnyData=Object.values(allData).some(d=>d!==null);
+  const summaryEl=document.getElementById('insight-summary');
+
+  if(!hasAnyData){
+    summaryEl.innerHTML='<div class="insight-empty">Aucune donnée — commence à travailler dans les cours.</div>';
+    ['insight-mastery','insight-reco','insight-themes'].forEach(id=>document.getElementById(id).innerHTML='');
+    document.getElementById('insight-sync').textContent='en attente…';
+    return;
+  }
+
+  // ── Profil ─────────────────────────────────────────────────
+  const {dims,ranked}=getCachedProfile(allData);
+  const profile=ranked[0];
+  const top3=ranked.slice(0,3);
+
+  // ── Notions micro-parcellisées ──────────────────────────────
+  const notionSignals=getNotionSignals(allData);
+  const lacunes=notionSignals.filter(n=>n.cls==='red').slice(0,6);
+  const fragiles=notionSignals.filter(n=>n.cls==='orange').slice(0,5);
+  const complexes=notionSignals.filter(n=>n.isComplex&&n.cls!=='red').slice(0,3);
+
+  // ── Seuils temporels ────────────────────────────────────────
+  const thirtyMin=totalActiveMs>=1800000;
+  const tenMin=totalActiveMs>=600000;
+
+  // ── Décrochage ──────────────────────────────────────────────
+  const dropCourses=[];
+  INSIGHT_COURSES.forEach(c=>{
+    const d=allData[c.id]; if(!d||!d.quiz) return;
+    const drops=Object.entries(d.quiz).filter(([,t])=>detectAttentionDrop(t).drop);
+    if(drops.length>=2) dropCourses.push(c.name);
+  });
+  const slowThemesN=notionSignals.filter(n=>n.signals.some(s=>s.txt.includes('moy. de réponse'))).length;
+  const pauseNeeded=dropCourses.length>0||slowThemesN>=3;
+
+  // ── Summary bar ─────────────────────────────────────────────
+  const totalQs=Object.values(allData).reduce((a,d)=>a+(d?Object.values(d.quiz||{}).reduce((b,t)=>b+(t.correct||0)+(t.wrong||0),0):0),0);
+  const nCourses=Object.values(allData).filter(d=>d&&Object.keys(d.quiz||{}).length>0).length;
+  const _fh=Math.floor(totalActiveMs/3600000),_fm=Math.floor((totalActiveMs%3600000)/60000);
+  const activeLabel=_fh>0?_fh+'h '+(_fm?_fm+'m':''):_fm+'m';
+  const rgb=hex2rgb(profile.color);
+
+  // Historique profil
+  const hist=getProfileHistory();
+  const prevProfiles=hist.slice(-4,-1).reverse();
+  const histHtml=prevProfiles.length
+    ?`<div class="profile-history">Historique : ${prevProfiles.map(h=>{
+        const p=LEARNER_PROFILES.find(x=>x.id===h.id);
+        return p?`${p.emoji} ${p.label} <span style="color:var(--t3)">${new Date(h.ts).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</span>`:h.id;
+      }).join(' → ')}</div>`:'';
+
+  // Dimensions radar
+  const dimLabels={D1:'Vitesse',D2:'Visuel',D3:'Révision',D4:'Flashcard',D5:'Quiz',D6:'Régularité',D7:'Récup.',D8:'Exploration',D9:'Stabilité',D10:'Technique',D11:'Progression',D12:'Auto-correc.'};
+  const dimColors={D1:'#6c63ff',D2:'#ff8c5a',D3:'#ffaa72',D4:'#ff79c6',D5:'#c084fc',D6:'#52d68a',D7:'#4f9eff',D8:'#ffc890',D9:'#a89cff',D10:'#52d68a',D11:'#4f9eff',D12:'#52d68a'};
+
+  summaryEl.innerHTML=`
+    <div class="ins-kpi"><div class="ins-kpi-v">${activeLabel}</div><div class="ins-kpi-l">Temps actif</div></div>
+    <div class="ins-kpi"><div class="ins-kpi-v">${totalQs}</div><div class="ins-kpi-l">Questions</div></div>
+    <div class="ins-kpi"><div class="ins-kpi-v">${nCourses}/${INSIGHT_COURSES.length}</div><div class="ins-kpi-l">Cours actifs</div></div>
+    <div class="ins-kpi"><div class="ins-kpi-v">${notionSignals.filter(n=>n.cls==='red').length}</div><div class="ins-kpi-l">Lacunes</div></div>
+    ${(()=>{
+      // Notion prioritaire = première lacune ou première fragile
+      const topN=notionSignals.find(n=>n.cls==='red')||notionSignals.find(n=>n.cls==='orange')||notionSignals[0]||null;
+      if(!topN) return '';
+      // Trouver la notion dans NOTION_MAP pour avoir file/page/tab
+      let notionRef=null;
+      for(const sec of Object.values(NOTION_MAP)){
+        const found=(sec.notions||[]).find(n=>n.id===topN.notionId||n.name===topN.name);
+        if(found){notionRef=found;break;}
+      }
+      const url=notionRef?buildNotionUrl(notionRef):null;
+      const urgency=topN.cls==='red'?'🔴':'🟡';
+      const label=topN.name.length>55?topN.name.substring(0,55)+'…':topN.name;
+      const courseColor=topN.courseColor||'var(--acc2)';
+      return `<div style="grid-column:1/-1;border-left:2px solid ${topN.cls==='red'?'#ff5f5f':'#ffaa44'};padding:10px 14px;background:rgba(255,255,255,.025);border-radius:0 8px 8px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:${url?'pointer':'default'}" ${url?`onclick="window.open('${url}','_blank')"`:''}>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:.58rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:'Space Mono',monospace;margin-bottom:3px;">À réviser</div>
+          <div style="font-size:.8rem;font-weight:700;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${label}</div>
+          <div style="font-size:.6rem;color:${courseColor};margin-top:2px;font-family:'Space Mono',monospace;">${topN.course} · ${topN.section}</div>
+        </div>
+        ${url?'<div style="font-size:.75rem;color:rgba(240,240,255,.4);flex-shrink:0;">→</div>':''}
+      </div>`;
+    })()}
+    ${pauseNeeded?`<div class="ins-pause" style="color:#ffaa44;grid-column:1/-1">⏸ Décrochage détecté — pause de 15 min recommandée maintenant.</div>`:''}
+    ${thirtyMin?`<div class="ins-pause" style="color:var(--acc2);grid-column:1/-1">✓ Analyse complète disponible (${activeLabel} actif).</div>`:''}`;
+
+  // ── Carte profil ─────────────────────────────────────────────
+  const masteryEl=document.getElementById('insight-mastery');
+
+  // Top 3 profils
+  const profileTop3Html=top3.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;${i<top3.length-1?'border-bottom:1px solid var(--border);':''}">
+      <div style="font-size:${i===0?'1.6rem':'1.1rem'}">${p.emoji}</div>
+      <div style="flex:1">
+        <div style="font-size:${i===0?'.9rem':'.75rem'};font-weight:${i===0?800:600};color:${i===0?p.color:'var(--t2)'}">${p.label}${i===0?'<span class="profile-change">actif</span>':''}</div>
+        ${i===0?`<div style="font-size:.72rem;color:var(--t2);line-height:1.5;margin-top:3px">${p.desc}</div>`:''}
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:${i===0?'.85rem':'.7rem'};color:${p.color};font-weight:700">${p.pct}%</div>
+    </div>`).join('');
+
+  // Dimensions
+  const dimsHtml=Object.entries(dimLabels).map(([k,l])=>`
+    <div class="dim-item">
+      <div class="dim-label">${l}</div>
+      <div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${dims[k]||0}%;background:${dimColors[k]}"></div></div>
+      <div class="dim-val">${dims[k]||0}</div>
+    </div>`).join('');
+
+  // Tags forces/risques
+  const forcesTags=(profile.strengths||[]).map(s=>`<span class="sig-tag pos">${s}</span>`).join('');
+  const risksTags=(profile.risks||[]).map(s=>`<span class="sig-tag neg">${s}</span>`).join('');
+
+  // Conseil personnalisé avec notions réelles
+  const topNotionsForAdvice=lacunes.slice(0,2);
+  const adviceText=typeof profile.advice==='function'
+    ?profile.advice(dims,topNotionsForAdvice)
+    :profile.advice;
+
+  masteryEl.innerHTML=`
+    <div class="profile-table-wrap">
+      <div class="profile-table-header">
+        <span class="profile-table-name" style="color:var(--t2)">Profil d'apprentissage</span>
+        <span class="profile-table-sub">${dims._dataPoints} signaux</span>
+      </div>
+      <div class="profile-dims-table">
+        ${Object.entries(dimLabels).map(([k,l])=>`
+        <div class="pdt-row">
+          <div class="pdt-label">${l}</div>
+          <div class="pdt-bar-wrap">
+            <div class="pdt-bar-fill" style="width:${dims[k]||0}%;background:${dimColors[k]}"></div>
+          </div>
+          <div class="pdt-val" style="color:${dimColors[k]}">${dims[k]||0}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+`;
+  masteryEl.querySelectorAll('.rv').forEach(el=>el.classList.add('on'));
+
+  // ── Recommandations v4 ───────────────────────────────────────
+  const recoEl=document.getElementById('insight-reco');
+  let html='';
+
+  // Pause
+  if(pauseNeeded){
+    html+=`<div style="display:flex;align-items:stretch;gap:0;border-radius:10px;overflow:hidden;background:rgba(255,170,68,.04);border:1px solid rgba(255,170,68,.15);margin-bottom:12px;">
+      <div style="width:3px;background:#ffaa44;border-radius:10px 0 0 10px;flex-shrink:0;"></div>
+      <div style="padding:10px 14px;font-size:.72rem;color:rgba(240,240,255,.55);font-family:'Outfit',sans-serif;">Pause recommandée — 15 min. Tes temps de réponse augmentent.</div>
+    </div>`;
+  }
+
+  html+='<div class="ir-list">';
+
+  let rank=1;
+  const makeNotionItem=(n,label,cls)=>{
+    let notionRef=null;
+    for(const sec of Object.values(NOTION_MAP)){
+      const found=(sec.notions||[]).find(x=>x.id===n.notionId||x.name===n.name);
+      if(found){notionRef=found;break;}
+    }
+    const url=notionRef?buildNotionUrl(notionRef):null;
+    const accent=cls==='red'?'#ff5f5f':cls==='orange'?'#ffaa44':cls==='purple'?'#c084fc':'#52d68a';
+    const badge=cls==='red'?'LACUNE':cls==='orange'?'FRAGILE':cls==='purple'?'DENSE':'✓';
+    return `<div style="display:flex;align-items:stretch;gap:0;border-radius:10px;overflow:hidden;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);transition:border-color .2s;cursor:${url?'pointer':'default'}" ${url?`onclick="window.open('${url}','_blank')" onmouseenter="this.style.borderColor='rgba(255,255,255,.16)'" onmouseleave="this.style.borderColor='rgba(255,255,255,.07)'"`:''}>
+      <div style="width:3px;background:${accent};flex-shrink:0;border-radius:10px 0 0 10px;"></div>
+      <div style="flex:1;min-width:0;padding:11px 14px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="font-size:.52rem;font-weight:700;letter-spacing:.1em;color:${accent};font-family:'Outfit',sans-serif;">${badge}</span>
+          <span style="font-size:.84rem;font-weight:700;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n.name}</span>
+        </div>
+        <div style="font-size:.65rem;color:rgba(240,240,255,.4);">${n.course} · ${n.section}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding:0 14px;gap:4px;flex-shrink:0;">
+        <span style="font-size:.82rem;font-weight:800;color:${masteryColor(n.score)};font-family:'Outfit',sans-serif;">${n.score}</span>
+        ${url?'<span style="font-size:.7rem;color:rgba(240,240,255,.35);">→</span>':''}
+      </div>
+    </div>`;
+  };
+
+  if(lacunes.length){
+    html+='<div style="font-size:.6rem;font-weight:700;letter-spacing:.12em;color:rgba(240,240,255,.35);text-transform:uppercase;margin:0 0 8px;font-family:Outfit,sans-serif;">Lacunes</div>';
+    lacunes.forEach(n=>{ html+=makeNotionItem(n,'lacune','red'); });
+  }
+  if(complexes.length){
+    html+='<div style="font-size:.6rem;font-weight:700;letter-spacing:.12em;color:rgba(240,240,255,.35);text-transform:uppercase;margin:14px 0 8px;font-family:Outfit,sans-serif;">Notions denses</div>';
+    complexes.forEach(n=>{ html+=makeNotionItem(n,'complexe','purple'); });
+  }
+  if(fragiles.length){
+    html+='<div style="font-size:.6rem;font-weight:700;letter-spacing:.12em;color:rgba(240,240,255,.35);text-transform:uppercase;margin:14px 0 8px;font-family:Outfit,sans-serif;">À consolider</div>';
+    fragiles.forEach(n=>{ html+=makeNotionItem(n,'fragile','orange'); });
+  }
+
+  // Forcer recommandation si 10+ min sans lacune identifiée
+  if(tenMin&&rank===1){
+    const worst=notionSignals[0];
+    if(worst){
+      html+='<div style="font-size:.6rem;font-weight:700;letter-spacing:.12em;color:rgba(240,240,255,.35);text-transform:uppercase;margin:14px 0 8px;font-family:Outfit,sans-serif;">À surveiller</div>';
+      html+=makeNotionItem(worst,'watch','blue');
+    } else {
+      html+='<div class="insight-empty" style="padding:20px">Pas encore assez de données — continue à utiliser les quiz et reviens consulter.</div>';
+    }
+  } else if(rank===1){
+    html+='<div class="insight-empty" style="padding:20px">Continue ton travail — les recommandations s\'affinent automatiquement.</div>';
+  }
+
+  // Points forts
+  const strong=notionSignals.filter(n=>n.cls==='green').sort((a,b)=>b.score-a.score).slice(0,3);
+  if(strong.length){
+    html+='<div style="font-size:.6rem;font-weight:700;letter-spacing:.12em;color:rgba(240,240,255,.35);text-transform:uppercase;margin:14px 0 8px;font-family:Outfit,sans-serif;">Points forts</div>';
+    strong.forEach(n=>{
+      html+=`<div style="display:flex;align-items:stretch;gap:0;border-radius:10px;overflow:hidden;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);">
+        <div style="width:3px;background:#52d68a;flex-shrink:0;border-radius:10px 0 0 10px;"></div>
+        <div style="flex:1;min-width:0;padding:11px 14px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span style="font-size:.52rem;font-weight:700;letter-spacing:.1em;color:#52d68a;font-family:'Outfit',sans-serif;">✓</span>
+            <span style="font-size:.84rem;font-weight:700;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n.name}</span>
+          </div>
+          <div style="font-size:.65rem;color:rgba(240,240,255,.4);">${n.course} · ${n.section}</div>
+        </div>
+        <div style="display:flex;align-items:center;padding:0 14px;flex-shrink:0;">
+          <span style="font-size:.82rem;font-weight:800;color:#52d68a;font-family:'Outfit',sans-serif;">${n.score}</span>
+        </div>
+      </div>`;
+    });
+  }
+
+  html+='</div>';
+  recoEl.innerHTML=html;
+  recoEl.querySelectorAll('.rv').forEach(el=>el.classList.add('on'));
+
+  // ── Tableau détail micro-notions ─────────────────────────────
+  const themesEl=document.getElementById('insight-themes');
+  if(notionSignals.length){
+    themesEl.innerHTML=`
+      <div class="it-header">Détail — toutes les notions analysées (${notionSignals.length})</div>
+      <div class="it-row" style="color:var(--t3);font-weight:700;font-size:.62rem;border:none;background:transparent;padding-left:0">
+        <span>Notion · Section · Cours</span><span style="text-align:right">Signaux</span><span style="text-align:right">Score</span>
+      </div>`
+      +notionSignals.map(n=>`
+      <div class="it-row" style="grid-template-columns:1fr auto auto;">
+        <div>
+          <span class="it-name">${n.name.length>50?n.name.substring(0,50)+'…':n.name}</span>
+          ${n.hasDrop?'<span style="font-size:.58rem;color:#ffaa44"> ⚠️</span>':''}
+          ${n.isComplex?'<span style="font-size:.58rem;color:#a89cff"> 💜</span>':''}
+          <br>
+          <span style="font-size:.6rem;color:var(--t3)">📍 ${n.section}</span>
+          <span style="font-size:.6rem;color:${n.courseColor}"> · ${n.course}</span>
+        </div>
+        <div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;max-width:160px">
+          ${n.signals.slice(0,2).map(s=>`<span class="sig-tag ${s.type}" style="font-size:.56rem">${s.txt}</span>`).join('')}
+        </div>
+        <div class="it-score" style="color:${masteryColor(n.score)};min-width:40px;text-align:right">${n.score}</div>
+      </div>`).join('');
+  } else {
+    themesEl.innerHTML='';
+  }
+
+  document.getElementById('insight-sync').textContent='analysé '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
+</script>
+</body>
+</html>
