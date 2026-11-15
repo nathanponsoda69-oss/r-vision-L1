@@ -1,0 +1,13 @@
+R·Vision L1 — organisation des fichiers (version optimisée, novembre 2026)
+
+l1.html            la page : interface, styles, amorce qui télécharge les textures en parallèle
+l1-sw.js           cache hors ligne (à la racine du dépôt, à côté de l1.html) : visites suivantes quasi instantanées
+l1/app.js          code de la scène (jungle, espace d'ambre, portail, qualité adaptative)
+l1/foret.js        forêt de la finance (chargée par app.js à l'approche du portail)
+l1/vendor/three.js moteur 3D (three.js 0.169 + modules utilisés), en local
+l1/tex/            textures (ordinateurs)      l1/tex-sd/  mêmes textures en demi-définition (téléphones)
+
+Pour modifier :
+- le code : remplacer l1/app.js ou l1/foret.js sur GitHub (pris en compte même sans changer le ?v= de l1.html) ;
+- une texture : remplacer le fichier dans l1/tex ET l1/tex-sd, puis changer la valeur V='?v=…' dans l'amorce en haut de l1.html.
+Mesurer la fluidité : ouvrir l1.html?fps (images/s et palier de qualité en haut à droite).
