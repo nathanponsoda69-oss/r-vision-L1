@@ -22,7 +22,7 @@ C.forEach(function(k){get(k,'high');});L.forEach(function(k){get(k,'low');});})(
 {"imports":{"three":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/geometries/RoundedBoxGeometry.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/postprocessing/EffectComposer.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/postprocessing/OutputPass.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/postprocessing/Pass.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/postprocessing/RenderPass.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/postprocessing/ShaderPass.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/postprocessing/UnrealBloomPass.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/utils/BufferGeometryUtils.js":"./l1/vendor/three.js?v=6324f3ea3f"}}
 </script>
 <link rel="modulepreload" href="./l1/vendor/three.js?v=6324f3ea3f">
-<link rel="modulepreload" href="l1/app.js?v=cf78179eb8">
+<link rel="modulepreload" href="l1/app.js?v=cc30171c1e">
 <style>
 :root{--haze:#c3b2a1;--ink:#f7efe6;--ink2:rgba(247,239,230,.72);--ink3:rgba(247,239,230,.45);--mono:'JetBrains Mono',ui-monospace,monospace;--logo:'Unbounded','JetBrains Mono',sans-serif;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -50,13 +50,13 @@ body{color:var(--ink);font-family:var(--mono);-webkit-font-smoothing:antialiased
 .ttl-n{color:#fff;}
 #hud .ttl{transition:opacity .7s ease;}
 #hud.ice .ttl{opacity:0;}
-.h-tr{position:absolute;top:36px;right:40px;width:200px;text-align:right;display:flex;flex-direction:column;gap:8px;}
+.h-tr{position:absolute;top:84px;right:40px;width:200px;text-align:right;display:flex;flex-direction:column;gap:8px;}
 .h-bl{position:absolute;left:40px;bottom:34px;display:flex;flex-direction:column;gap:14px;}
 #snd{display:inline-flex;align-items:center;gap:8px;background:none;border:0;cursor:pointer;padding:0;}
 #snd .snd-on{display:none;}
 #snd[aria-pressed="true"] .snd-on{display:inline;}
 #snd[aria-pressed="true"] .snd-off{display:none;}
-.h-br{position:absolute;right:40px;bottom:34px;display:flex;gap:14px;}
+.h-br{position:absolute;right:40px;top:38px;display:flex;gap:14px;}   /* barre en haut à droite */
 .lvl{text-decoration:none;color:var(--ink3);transition:color .25s;}
 a.lvl:hover{color:#fff;}
 .lvl.on{color:#fff;}
@@ -79,7 +79,10 @@ a.lvl:hover{color:#fff;}
 @media(max-width:700px){
   .h-tl{top:22px;left:20px;}.logo{font-size:22px;}
   .h-tr{top:auto;bottom:90px;right:20px;width:180px;}
-  .h-bl{left:20px;bottom:22px;}.h-br{right:20px;bottom:22px;}
+  .h-bl{left:20px;bottom:22px;}.h-br{right:20px;top:25px;gap:10px;}
+}
+@media(max-width:480px){
+  #prof .pn{display:none;}   /* téléphone : à côté du logo, le profil se réduit à son rond */
 }
 @media (prefers-reduced-motion: reduce){#loader{transition:none;}}
 
@@ -690,7 +693,7 @@ a.lvl:hover{color:#fff;}
     <button id="snd" class="mono" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="snd-on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.6"/><path class="snd-off" d="M16.5 9.5l5 5m0-5l-5 5" stroke="currentColor" stroke-width="1.6"/></svg><span>Son : off</span></button>
   </footer>
   <nav class="h-br">
-    <button id="prof" class="mono" type="button" data-scr><i>?</i>Connexion</button>
+    <button id="prof" class="mono" type="button" data-scr><i>?</i><span class="pn">Connexion</span></button>
     <span class="mono lvl on">[ L1 ]</span>
     <a class="mono lvl" href="l2.html" data-scr>[ L2 ]</a>
     <a class="mono lvl" href="bibliotheque.html" data-scr aria-label="Bibliothèque : collection d'objets" title="Bibliothèque">[ BIB ]</a>
@@ -700,7 +703,7 @@ a.lvl:hover{color:#fff;}
 </div>
 <!-- code de la scène : l1/app.js (la forêt : l1/foret.js, chargée par app.js ; les textures : l1/tex et l1/tex-sd).
      Après une modification de textures, changer le ?v= correspondant (amorce en haut de page) pour vider le cache. -->
-<script type="module" src="l1/app.js?v=cf78179eb8"></script>
+<script type="module" src="l1/app.js?v=cc30171c1e"></script>
 <script>/* cache hors ligne (l1-sw.js) : visites suivantes quasi instantanées */
 if('serviceWorker' in navigator&&(location.protocol==='https:'||/^(localhost|127\.0\.0\.1)$/.test(location.hostname))&&!/[?&]capture/.test(location.search))addEventListener('load',function(){navigator.serviceWorker.register('l1-sw.js').catch(function(){});});</script>
 </body>

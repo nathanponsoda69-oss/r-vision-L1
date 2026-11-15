@@ -9616,7 +9616,7 @@ function buildProfile(onChange){
   const $=s=>m.querySelector(s);
   const st={open:false};
   const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  function label(){const u=profCurrent();chip.innerHTML=u?`<i>${esc(u.charAt(0).toUpperCase())}</i>${esc(u)}`:'<i>?</i>Connexion';chip.title=u?'Profil actif — changer de profil':'Choisir un profil';}
+  function label(){const u=profCurrent();chip.innerHTML=u?`<i>${esc(u.charAt(0).toUpperCase())}</i><span class="pn">${esc(u)}</span>`:'<i>?</i><span class="pn">Connexion</span>';chip.title=u?'Profil actif — changer de profil':'Choisir un profil';}
   function render(){
     const us=profUsers(),cur=profCurrent();
     $('.pm-list').innerHTML=us.length?us.map(u=>`<button type="button" class="pm-u${u===cur?' on':''}" data-u="${esc(u)}"><i>${esc(u.charAt(0).toUpperCase())}</i><span class="pm-n"><b>${esc(u)}</b><span>L1 · ${profXP(u,L1_XP_IDS).toLocaleString('fr-FR')} XP</span></span><em aria-hidden="true">→</em></button>`).join('')
@@ -10761,7 +10761,7 @@ function frameFin(dt,P){
     rect.y0-=40;rect.x0+=rect.x1*0.0;
     SYS.lbl.update(T,dt,rect,{tl:cn(-D.W*0.45,D.H*0.93),tr:cn(D.W*0.46,D.H*0.9),br:cn(D.W*0.42,D.H*0.06)},DATA.totals.mastery*smooth(0.15,3.0,WLp.t||0),0);
   }
-  SYS.lbl.setVisible(Math.max(lv,lvW)*(1-smooth(0,0.12,ck)));
+  SYS.lbl.setVisible(rvfCovered()?0:Math.max(lv,lvW)*(1-smooth(0,0.12,ck)));   // forêt affichée : aucune étiquette (les blocs d'ambre gardent les leurs)
   const ci=Math.round(P)-P_FIN;
   SYS.idx.forEach((e,i)=>e.classList.toggle('on',P>=P_FIN-0.3&&i===SUBJECTS.length+Math.min(ci,FIN_SUBJECTS.length)));
   SYS.car.forEach((e,i)=>e.classList.toggle('on',i===Math.min(ci,FIN_SUBJECTS.length)));
