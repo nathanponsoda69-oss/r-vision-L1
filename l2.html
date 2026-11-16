@@ -9258,7 +9258,7 @@ let WARMING=false;
    Comme la forêt de la L1 : chargé à l'approche du portail, piloté image par image depuis frame(), dessiné
    sur son propre canvas par-dessus la scène. Si le module échoue (WebGL, réseau…), on retombe sur la scène
    de finance d'origine. */
-const RVCH={st:0,dead:false},RVC_URL=new URL('./l2/canyon.js?v=20261116f',import.meta.url).href;
+const RVCH={st:0,dead:false},RVC_URL=new URL('./l2/canyon.js?v=20261116g',import.meta.url).href;
 const rvcCovered=()=>!!(window.RVC&&window.RVC.covers);
 function rvcEnter(i){const F=SYS.fins&&SYS.fins[Math.max(0,Math.min(SYS.fins.length-1,i|0))];if(F&&!CAVE.on&&CAVE.k<0.05)caveEnter(F.sj,'sand',F);}
 function rvcDie(e){console.error('[RVC] canyon indisponible, retour à la scène d\u2019origine',e);RVCH.dead=true;

@@ -1,4 +1,4 @@
-R·Vision L2 — le canyon de la finance (novembre 2026, version 3)
+R·Vision L2 — le canyon de la finance (novembre 2026, version 4)
 
 Fichiers
   l2.html            la page L2 (modifiée : elle charge et pilote le canyon, rien d'autre n'a changé)
@@ -16,8 +16,8 @@ Comment ça marche
     discrètement 15 s après l'ouverture de la page, et se construit quand on approche du portail.
   - Si le canyon ne peut pas démarrer (navigateur sans WebGL 2, réseau…), la L2 retombe d'elle-même sur
     l'ancienne scène de la finance : rien ne casse.
-  - Parcours (chaque marche dure 12 à 15 s) : arrivée par le portail (éblouissement, on lève les yeux vers la
-    fente), marche dans la gorge jusqu'au Trésor (≈ 13 s), flèche / carrousel → marche jusqu'au pavillon
+  - Parcours : arrivée par le portail (éblouissement, on lève les yeux vers la fente), marche de ≈ 8 s dans
+    la gorge, à travers quatre faisceaux de soleil, jusqu'au Trésor, flèche / carrousel → marche jusqu'au pavillon
     (≈ 13,5 s) en traversant la salle des stèles, STATISTIQUES → retour à pied vers les trois stèles, alignées
     contre la paroi de cette salle creusée entre les deux temples. Les sauts du rail (01…06, ∑) arrivent
     directement, sans marcher.
@@ -32,7 +32,10 @@ La lumière
   - Ces images ne valent que pour la forme actuelle de la gorge. Si le tracé ou les parois sont modifiés dans
     canyon.js, le canyon s'en aperçoit tout seul (empreinte giSig) et revient à l'éclairage approché de la
     version 1 : rien ne casse, mais il faut alors refaire le précalcul (me le demander).
-  - Exposition automatique, comme l'œil : la fente sombre s'ouvre, les parvis ensoleillés se referment.
+  - Exposition automatique, comme l'œil, et lente à s'adapter : en débouchant de la fente sombre sur un parvis
+    ensoleillé, on est d'abord ébloui, puis l'œil se fait à la lumière.
+  - Faisceaux : quatre puits de lumière sur le premier trajet, rayons nets et lissés, poussière qui s'y
+    accroche ; parois débarrassées des fines lignes qui les rayaient.
   - Les reliefs des temples (stuc ciselé, zelliges, bois sculpté, frise et tympan du Trésor) sont sculptés
     dans le shader : relief par parallaxe et ombres propres du relief au soleil.
 
@@ -55,10 +58,10 @@ Réglages utiles (dans l'adresse, pour essayer sans toucher au code)
   l2.html?p=7                arriver directement au Trésor (p=8 : pavillon, p=9 / 10 / 11 : stèles 1 / 2 / 3)
   &cq=0 / &cq=1 / &cq=2      forcer la qualité du canyon (0 = téléphone, 2 = ordinateur puissant)
   &cbake=0                   couper la lumière précalculée (pour comparer avec l'éclairage approché)
-  &ckey=0.08                 luminosité visée par l'exposition automatique (plus haut = image plus claire)
-  &csun=2.7                  force du soleil dans la gorge        &cray=7     éclat des faisceaux dans l'air
+  &ckey=0.075                luminosité visée par l'exposition automatique (plus haut = image plus claire)
+  &csun=2.7                  force du soleil dans la gorge        &cray=8.5   éclat des faisceaux dans l'air
   &csig=0.011                quantité de poussière dans l'air     &cgi=1      lumière rebondie sur les parois
-  &cexp=1                    exposition générale du canyon        &cbloom=0.14  halo des lumières
+  &cexp=1                    exposition générale du canyon        &cbloom=0.22  halo des lumières
 
 Pour modifier
   - Le tracé de la gorge : tableau CP en haut de l2/canyon.js (points x, z). Les puits de lumière
@@ -71,6 +74,6 @@ Pour modifier
   - Le Trésor : section 08 (buildTempleA), frise et tympan sculptés dans reliefMat.
   - Les lanternes : addLantern dans buildLanternsA (Trésor et chemin), buildTempleB (pavillon), buildSteles.
   - Les lézards : fonction buildLizards (position sur la paroi, robe bleue ou beige, taille).
-  - La durée des marches : basePose (13 s pour l'arrivée, 13,5 s entre les temples).
+  - La durée des marches : basePose (8 s pour l'arrivée, 13,5 s entre les temples).
   - Après une modification de l2/canyon.js, changer la valeur ?v=… de RVC_URL dans l2.html (section 97)
     pour que les navigateurs ne gardent pas l'ancienne version en cache.

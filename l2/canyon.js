@@ -78,7 +78,7 @@ const kOpen=s=>Math.max(kPlaza(s),kAmph(s),0.8*kStele(s));
 /* direction VERS le soleil : très haut, un peu derrière nous (il frappe les façades des temples) */
 const SUN_D=[0.06,1,0.3],SUN_L=Math.hypot(...SUN_D);
 /* puits de lumière : la fente s'élargit et la gorge se cale sur la direction du soleil ; le faisceau descend jusqu'au sable */
-const WELLS=[[25,3.0,0.34,1],[31.5,2.8,0.46,1],[38,2.6,0.3,1],[61.5,2.6,0.4,0.3],[84,2.4,0.34,0.3],[95.5,2.6,0.62,1]];
+const WELLS=[[24.8,3.0,0.45,1],[30.2,2.8,0.55,1],[35.4,2.6,0.42,1],[40.6,2.4,0.4,1],[61.5,2.6,0.4,0.3],[84,2.4,0.34,0.3],[95.5,2.6,0.62,1]];
 /* le puits suit le faisceau : à la hauteur y, il est centré là où passe la lumière entrée par la fente en s0 */
 function alongSun(s){const p=pathAt(s,_pl);return -(SUN_D[0]*p.tx+SUN_D[2]*p.tz)/SUN_D[1];}
 function wellK(s,y,H){let k=0;for(const w of WELLS){const sb=w[0]+(H-y)*alongSun(w[0]);k=Math.max(k,Math.exp(-(((s-sb)/w[1])**2)));}return k;}
@@ -275,7 +275,7 @@ float rvLam(float st,vec3 P,float sp,out float k){float ph=st*sp+.45*rvN(P*.23+v
   float f=fract(ph);return (smoothstep(0.,.14,f)-smoothstep(.14,1.,f)*.92)*k;}
 float rvLamH(vec3 P,out float lip){float st=rvStrata(P);float sp=2.8+2.4*rvN(vec3(st*.11,.5,.2)),k1,k2;
   float a=rvLam(st,P,sp,k1),b=rvLam(st+.37,P*1.7,sp*(3.1+1.6*rvN(vec3(st*.4,.3,.8))),k2);float m=smoothstep(.3,.75,rvN(vec3(st*.6,.9,.3)+P*.03)),m2=smoothstep(.35,.8,rvN(vec3(st*1.3,.2,.5)+P*.05));
-  lip=a*m;return a*(.35+.65*m)+b*.3*m2;}`;
+  lip=a*m;return a*(.35+.65*m)+b*.12*m2;}`;
 const SANDSTONE_COLOR=`
   float rvSt=rvStrata(vW);
   /* couleur : bandes larges et fines (grès rouge, couches crème, lits lie-de-vin), grain, vernis du désert en coulures */
@@ -286,10 +286,10 @@ const SANDSTONE_COLOR=`
   rvC*=.9+.2*rvB4;
   float rvTa=1.-.8*(1.-smoothstep(uTAc.w*.55,uTAc.w,length(vW.xz-uTAc.xz)));                // falaise du Trésor : lisse, sans lamines serrées
   float rvLip,rvLk=LINEK*mix(1.,.35,clamp(vG.y*1.4-.4,0.,1.))*rvTa;float rvLh=rvLamH(vW,rvLip);
-  rvC*=1.+(.12*rvLip-.045*(1.-rvLh))*rvLk;                                         // lèvres claires, creux plus sombres
-  float rvGr=rvN(vW*31.)*(1.-smoothstep(.004,.02,fwidth(vW.y)));rvC*=.95+.1*rvGr;
+  rvC*=1.+(.05*rvLip-.02*(1.-rvLh))*rvLk;                                         // lèvres claires, creux plus sombres
+  float rvGr=rvN(vW*31.)*(1.-smoothstep(.004,.02,fwidth(vW.y)));rvC*=.97+.06*rvGr;
   rvC*=.92+.16*rvF(vW*.09+1.7);
-  float rvVa=smoothstep(.62,.9,rvN(vec3(vW.x*2.6,vW.y*.05,vW.z*2.6)+11.))*smoothstep(3.,14.,vW.y)*(1.-smoothstep(.3,.8,vG.y));
+  float rvVa=smoothstep(.66,.92,rvN(vec3(vW.x*1.3,vW.y*.04,vW.z*1.3)+11.))*smoothstep(6.,16.,vW.y)*smoothstep(.45,.9,vG.y)*.6;
   rvC*=1.-.38*rvVa*LINEK;                                                          // coulures sombres sous les rebords
   float rvSpl=smoothstep(.74,.8,rvF(vW*.55+4.2))*LINEK;rvC=mix(rvC,rvC*1.12+vec3(.05,.035,.02),rvSpl*.7);   // écailles fraîches, plus claires
   rvC=mix(rvC,rvC*1.08+vec3(.03,.02,.01),(1.-smoothstep(.3,1.8,vW.y))*.6);        // pied poli par le sable
@@ -297,7 +297,7 @@ const SANDSTONE_COLOR=`
   diffuseColor.rgb=rvC*TINT;`;
 const SANDSTONE_NORMAL=`
   {float rvLp;float lk=LINEK*mix(1.,.3,clamp(vG.y*1.4-.4,0.,1.))*(1.-.8*(1.-smoothstep(uTAc.w*.55,uTAc.w,length(vW.xz-uTAc.xz))));
-   float h=.006*rvLamH(vW,rvLp)*lk+.007*rvF(vW*.7)+.0012*rvF(vW*6.)+.0005*rvN(vW*55.)*(1.-smoothstep(.003,.012,fwidth(vW.y)))
+   float h=.0028*rvLamH(vW,rvLp)*lk+.008*rvF(vW*.7)+.0009*rvF(vW*6.)+.0005*rvN(vW*55.)*(1.-smoothstep(.003,.012,fwidth(vW.y)))
      -.0025*smoothstep(.74,.8,rvF(vW*.55+4.2))*LINEK;
    normal=rvBump(-vViewPosition,normal,h,1.);}`;
 function sandstoneMat(key,tint,extra){extra=extra||{};
@@ -430,7 +430,7 @@ uniform sampler2D tDepth,tShadow;uniform highp sampler3D uN;uniform mat4 uInvPro
 float vis(vec3 p){vec4 sc=uShadowM*vec4(p,1.);sc.xyz/=sc.w;if(sc.x<0.||sc.x>1.||sc.y<0.||sc.y>1.||sc.z>1.)return 0.;return step(sc.z-.0015,unpackRGBAToDepth(texture2D(tShadow,sc.xy)));}
 void main(){
   float dz=texture2D(tDepth,vUv).x;vec4 v=uInvProj*vec4(vUv*2.-1.,dz*2.-1.,1.);v/=v.w;vec3 wp=(uCamW*vec4(v.xyz,1.)).xyz;vec3 rd=wp-uCam;float dist=length(rd);rd/=dist;dist=min(dist,uMaxD);
-  float c=max(dot(rd,uSunDir),0.),ph=.5+.9*pow(c,4.)+1.4*pow(c,40.);
+  float c=max(dot(rd,uSunDir),0.),ph=.85+1.1*pow(c,4.)+1.8*pow(c,40.);
   float dt=dist/float(STEPS),j=fract(52.9829189*fract(dot(gl_FragCoord.xy+uFrame*5.588238,vec2(.06711056,.00583715))));
   vec3 acc=vec3(0.);float T=1.;
   for(int i=0;i<STEPS;i++){vec3 p=uCam+rd*(float(i)+j)*dt;
@@ -450,9 +450,9 @@ void main(){
 class AirPass extends Pass{
   constructor(rtScene){super();this.rtScene=rtScene;
     const vs=`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`;
-    this.vol=new THREE.ShaderMaterial({vertexShader:vs,fragmentShader:VOL_FS,defines:{STEPS:[16,28,40][TIER],NLANV:NLAN},depthTest:false,depthWrite:false,
+    this.vol=new THREE.ShaderMaterial({vertexShader:vs,fragmentShader:VOL_FS,defines:{STEPS:[16,32,52][TIER],NLANV:NLAN},depthTest:false,depthWrite:false,
       uniforms:{tDepth:{value:null},tShadow:{value:null},uN:{value:N3},uInvProj:{value:new THREE.Matrix4()},uCamW:{value:new THREE.Matrix4()},uShadowM:{value:new THREE.Matrix4()},uSunDir:{value:SUN},
-        uSunCol:{value:new THREE.Color(1,.86,.66).multiplyScalar(+(PQ.get('cray')||7.0))},uAmbCol:{value:new THREE.Color(.95,.42,.16).multiplyScalar(+(PQ.get('camb')||.6)*(GIB.on?.3:1))},uCam:{value:V3()},uTime:U.uTime,
+        uSunCol:{value:new THREE.Color(1,.84,.62).multiplyScalar(+(PQ.get('cray')||8.5))},uAmbCol:{value:new THREE.Color(.95,.42,.16).multiplyScalar(+(PQ.get('camb')||.6)*(GIB.on?.3:1))},uCam:{value:V3()},uTime:U.uTime,
         uSigma:{value:+(PQ.get('csig')||.011)},uMaxD:{value:90},uNear:{value:2.4},uFrame:{value:0},uRim:U.uRim,uPlume:{value:Array.from({length:4},()=>new THREE.Vector4())},uLanP:U.uLanP,uLanC:U.uLanC,uOpen:{value:[new THREE.Vector4(8,-11,0,14),new THREE.Vector4(38.3,-29,0,13)]}}});
     this.comp=new THREE.ShaderMaterial({vertexShader:vs,depthTest:false,depthWrite:false,uniforms:{tScene:{value:null},tVol:{value:null},tAO:{value:null},tDepth:{value:null},uNearC:{value:.05},uFarC:{value:420},uPx:{value:new THREE.Vector2()}},
       fragmentShader:`uniform sampler2D tScene,tVol,tAO,tDepth;uniform vec2 uPx;uniform float uNearC,uFarC;varying vec2 vUv;
@@ -477,15 +477,23 @@ class AirPass extends Pass{
     /* accumulation dans le temps (la trame du pas aléatoire se fond en grain fin) */
     this.acc=new THREE.ShaderMaterial({vertexShader:vs,depthTest:false,depthWrite:false,uniforms:{tCur:{value:null},tPrev:{value:null},uK:{value:0}},
       fragmentShader:`uniform sampler2D tCur,tPrev;uniform float uK;varying vec2 vUv;void main(){gl_FragColor=mix(texture2D(tCur,vUv),texture2D(tPrev,vUv),uK);}`});
+    this.blur=new THREE.ShaderMaterial({vertexShader:vs,depthTest:false,depthWrite:false,uniforms:{tSrc:{value:null},tDepth:{value:null},uDir:{value:new THREE.Vector2(1,0)},uPx:{value:new THREE.Vector2()},uNearC:{value:.05},uFarC:{value:420}},
+      fragmentShader:`uniform sampler2D tSrc,tDepth;uniform vec2 uDir,uPx;uniform float uNearC,uFarC;varying vec2 vUv;
+        float lz(vec2 uv){float d=texture2D(tDepth,uv).x*2.-1.;return 2.*uNearC*uFarC/(uFarC+uNearC-d*(uFarC-uNearC));}
+        void main(){float z0=lz(vUv);vec4 s=vec4(0.);float ws=0.;for(int i=-4;i<=4;i++){vec2 q=vUv+uDir*uPx*float(i)*.9;float w=exp(-float(i*i)/7.)*exp(-abs(lz(q)-z0)/(.12*z0+.1));s+=texture2D(tSrc,q)*w;ws+=w;}gl_FragColor=s/max(ws,1e-5);}`});
+    this.rtB=[0,1].map(()=>new THREE.WebGLRenderTarget(4,4,{type:THREE.HalfFloatType,depthBuffer:false}));
     this.fsq=new FullScreenQuad(this.vol);this.rt=new THREE.WebGLRenderTarget(4,4,{type:THREE.HalfFloatType,depthBuffer:false});this.rtAO=new THREE.WebGLRenderTarget(4,4,{depthBuffer:false});this.frame=0;
     this.rtA=[new THREE.WebGLRenderTarget(4,4,{type:THREE.HalfFloatType,depthBuffer:false}),new THREE.WebGLRenderTarget(4,4,{type:THREE.HalfFloatType,depthBuffer:false})];this.ai=0;this.lastCam=new THREE.Matrix4();}
-  setSize(w,h){const k=TIER===2?.5:.4;this.rt.setSize(Math.max(2,w*k|0),Math.max(2,h*k|0));this.rtA.forEach(r=>r.setSize(Math.max(2,w*k|0),Math.max(2,h*k|0)));this.rtAO.setSize(Math.max(2,w*.5|0),Math.max(2,h*.5|0));this.comp.uniforms.uPx.value.set(1/this.rt.width,1/this.rt.height);}
+  setSize(w,h){const k=TIER===2?.5:.4;this.rt.setSize(Math.max(2,w*k|0),Math.max(2,h*k|0));this.rtA.forEach(r=>r.setSize(Math.max(2,w*k|0),Math.max(2,h*k|0)));this.rtB.forEach(r=>r.setSize(Math.max(2,w*k|0),Math.max(2,h*k|0)));this.rtAO.setSize(Math.max(2,w*.5|0),Math.max(2,h*.5|0));this.comp.uniforms.uPx.value.set(1/this.rt.width,1/this.rt.height);}
   render(r,writeBuffer){const u=this.vol.uniforms;u.tDepth.value=this.rtScene.depthTexture;u.tShadow.value=sun.shadow.map?sun.shadow.map.texture:null;if(!u.tShadow.value)return;
     u.uInvProj.value.copy(camera.projectionMatrixInverse);u.uCamW.value.copy(camera.matrixWorld);u.uShadowM.value.copy(sun.shadow.matrix);u.uCam.value.copy(camera.position);u.uFrame.value=CAPTURE?0:(this.frame++%8);
     this.fsq.material=this.vol;r.setRenderTarget(this.rt);this.fsq.render(r);
     {const e=camera.matrixWorld.elements,l=this.lastCam.elements;let mv=0;for(let i=0;i<16;i++)mv+=Math.abs(e[i]-l[i]);this.lastCam.copy(camera.matrixWorld);
      const A=this.acc.uniforms,cur=this.rtA[this.ai],prev=this.rtA[1-this.ai];A.tCur.value=this.rt.texture;A.tPrev.value=prev.texture;A.uK.value=CAPTURE?0:(mv>0.5?0.15:mv>0.05?0.45:0.7);
-     this.fsq.material=this.acc;r.setRenderTarget(cur);this.fsq.render(r);this.volTex=cur.texture;this.ai=1-this.ai;}
+     this.fsq.material=this.acc;r.setRenderTarget(cur);this.fsq.render(r);this.volTex=cur.texture;this.ai=1-this.ai;
+     const B=this.blur.uniforms;B.tDepth.value=this.rtScene.depthTexture;B.uNearC.value=camera.near;B.uFarC.value=camera.far;B.uPx.value.set(1/cur.width,1/cur.height);this.fsq.material=this.blur;
+     B.tSrc.value=cur.texture;B.uDir.value.set(1,0);r.setRenderTarget(this.rtB[0]);this.fsq.render(r);
+     B.tSrc.value=this.rtB[0].texture;B.uDir.value.set(0,1);r.setRenderTarget(this.rtB[1]);this.fsq.render(r);this.volTex=this.rtB[1].texture;}
     const ua=this.ao.uniforms;ua.tDepth.value=this.rtScene.depthTexture;ua.uInvProj.value.copy(camera.projectionMatrixInverse);ua.uProj.value.copy(camera.projectionMatrix);this.fsq.material=this.ao;r.setRenderTarget(this.rtAO);this.fsq.render(r);this.comp.uniforms.tAO.value=this.rtAO.texture;
     this.comp.uniforms.tDepth.value=this.rtScene.depthTexture;this.comp.uniforms.uNearC.value=camera.near;this.comp.uniforms.uFarC.value=camera.far;
     this.comp.uniforms.tScene.value=this.rtScene.texture;this.comp.uniforms.tVol.value=this.volTex||this.rt.texture;this.fsq.material=this.comp;r.setRenderTarget(this.renderToScreen?null:writeBuffer);this.fsq.render(r);}
@@ -501,7 +509,7 @@ class ExposurePass extends Pass{
     this.mAvg=new THREE.ShaderMaterial({vertexShader:vs,depthTest:false,depthWrite:false,uniforms:{tSrc:{value:null},tPrev:{value:null},uK:{value:1}},
       fragmentShader:`uniform sampler2D tSrc,tPrev;uniform float uK;void main(){vec2 a=vec2(0.);for(int i=0;i<32;i++)for(int j=0;j<18;j++)a+=texture2D(tSrc,(vec2(float(i),float(j))+.5)/vec2(32.,18.)).rg;
         float l=a.x/a.y;float p=texture2D(tPrev,vec2(.5)).r;gl_FragColor=vec4(mix(p,l,uK),0.,0.,1.);}`});
-    this.mApp=new THREE.ShaderMaterial({vertexShader:vs,depthTest:false,depthWrite:false,uniforms:{tDiffuse:{value:null},tExp:{value:null},uKey:{value:+(PQ.get('ckey')||.08)},uLo:{value:.4},uHi:{value:14}},
+    this.mApp=new THREE.ShaderMaterial({vertexShader:vs,depthTest:false,depthWrite:false,uniforms:{tDiffuse:{value:null},tExp:{value:null},uKey:{value:+(PQ.get('ckey')||.075)},uLo:{value:.35},uHi:{value:12}},
       fragmentShader:`uniform sampler2D tDiffuse,tExp;uniform float uKey,uLo,uHi;varying vec2 vUv;void main(){float l=exp(texture2D(tExp,vec2(.5)).r);
         vec3 c=texture2D(tDiffuse,vUv).rgb*clamp(uKey/l,uLo,uHi);if(any(isnan(c)))c=vec3(0.);gl_FragColor=vec4(clamp(c,0.,6e4),1.);}`});
     const o={type:THREE.HalfFloatType,depthBuffer:false};this.r32=new THREE.WebGLRenderTarget(32,18,o);this.r1=[new THREE.WebGLRenderTarget(1,1,{type:THREE.FloatType,depthBuffer:false}),new THREE.WebGLRenderTarget(1,1,{type:THREE.FloatType,depthBuffer:false})];
@@ -509,7 +517,7 @@ class ExposurePass extends Pass{
   render(r,writeBuffer,readBuffer){
     this.mLum.uniforms.tSrc.value=readBuffer.texture;this.fsq.material=this.mLum;r.setRenderTarget(this.r32);this.fsq.render(r);
     const cur=this.r1[this.i],prev=this.r1[1-this.i];const A=this.mAvg.uniforms;A.tSrc.value=this.r32.texture;A.tPrev.value=prev.texture;
-    A.uK.value=(CAPTURE||this.first)?1:1-Math.exp(-this.dt*1.6);this.first=false;this.fsq.material=this.mAvg;r.setRenderTarget(cur);this.fsq.render(r);this.i=1-this.i;
+    A.uK.value=(CAPTURE||this.first)?1:1-Math.exp(-this.dt*(this.dt>0?0.65:1));this.first=false;this.fsq.material=this.mAvg;r.setRenderTarget(cur);this.fsq.render(r);this.i=1-this.i;
     const P=this.mApp.uniforms;P.tDiffuse.value=readBuffer.texture;P.tExp.value=cur.texture;this.fsq.material=this.mApp;r.setRenderTarget(this.renderToScreen?null:writeBuffer);this.fsq.render(r);}
 }
 let rtScene,composer,air,bloom,grade,expo;
@@ -518,7 +526,7 @@ function buildPost(){
   composer=new EffectComposer(renderer,new THREE.WebGLRenderTarget(4,4,{type:THREE.HalfFloatType}));
   air=new AirPass(rtScene);composer.addPass(air);
   expo=new ExposurePass();composer.addPass(expo);
-  bloom=new UnrealBloomPass(new THREE.Vector2(256,256),+(PQ.get('cbloom')||.14),.7,2.2);composer.addPass(bloom);
+  bloom=new UnrealBloomPass(new THREE.Vector2(256,256),+(PQ.get('cbloom')||.22),.75,1.7);composer.addPass(bloom);
   composer.addPass(new OutputPass());
   grade=new ShaderPass({uniforms:{tDiffuse:{value:null},uTime:U.uTime},
     vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
@@ -574,7 +582,7 @@ function basePose(P,dt){
   const G=STA[g];
   if(G&&P>API.P_FIN-.3){const dist=G.s-WALK.s;
     /* chaque trajet dure 12 à 15 s, quelle que soit sa longueur (13 s pour l'arrivée, 13,5 s entre les temples) */
-    if(!WALK.vm)WALK.vm=Math.max(0.6,fitV(Math.abs(dist),Math.min(WALK.first?13:13.5,2.2+Math.abs(dist)*0.9)));
+    if(!WALK.vm)WALK.vm=Math.max(0.6,fitV(Math.abs(dist),Math.min(WALK.first?8:13.5,2.2+Math.abs(dist)*0.9)));
     const vmax=WALK.vm,vt=Math.abs(dist)<0.01?0:Math.sign(dist)*Math.min(vmax,Math.sqrt(2*W_ACC*Math.abs(dist))+0.04);
     WALK.v+=(vt-WALK.v)*(1-Math.exp(-dt*W_K));WALK.s+=WALK.v*dt;if((dist>0&&WALK.s>G.s)||(dist<0&&WALK.s<G.s)){WALK.s=G.s;WALK.v=0;}}
   else WALK.v=0;
