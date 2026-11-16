@@ -10152,14 +10152,20 @@ function buildHudExtras(){
 /* ═══ Rayons de soleil de la jungle : réglage par ambiance ═══
    multiplicateur appliqué aux faisceaux de la canopée et aux rayons volumétriques (jungle de l'accueil seulement, la forêt n'est pas concernée).
    Deux passes successives des mêmes baisses (AUBE −10 % · JOUR −30 % · COUCHANT −55 %), d'où, par rapport à l'origine :
-   AUBE ×0,81 (−19 %) · JOUR ×0,49 (−51 %) · COUCHANT ×0,2025 (−80 %) · CRÉPUSCULE inchangé · NUIT intensité d'origine.
-   NUIT : plus d'arc-en-ciel ; la couleur naturelle du clair de lune, à moitié blanchie, à luminosité égale à l'origine.
+   AUBE ×0,81 (−19 %) · JOUR ×0,49 (−51 %) · COUCHANT ×0,2025 (−80 %) · CRÉPUSCULE inchangé · NUIT ×0,5 (tous les rayons à 50 %, nov. 2026).
+   NUIT : plus d'arc-en-ciel ; la couleur naturelle du clair de lune, à moitié blanchie.
+   BEAM_BY_TOD : réglage propre aux faisceaux de la canopée. Au couchant, le soleil rasant les couche presque à
+   l'horizontale : vus de l'accueil, ils traversent le lagon devant le pied du temple et le voilent — COUCHANT ×0,25
+   (ramenés à 25 %, nov. 2026). Les rayons volumétriques, eux, ne passent pas devant le temple : inchangés.
    Fondu lent (≈ 30 s) quand l'heure change d'ambiance. */
-const RAY_BY_TOD=[0.90*0.90,0.70*0.70,0.45*0.45,1,1];
-const RAYTUNE={k:null,n:null};
+const RAY_BY_TOD=[0.90*0.90,0.70*0.70,0.45*0.45,1,0.5];
+const BEAM_BY_TOD=[1,1,0.25,1,1];
+const RAYTUNE={k:null,n:null,b:null};
 const _rayGray=new THREE.Color();
 function rayTune(dt){const t=RAY_BY_TOD[TOD.i],k=t===undefined?1:t,n=TOD.i===4?1:0,a=1-Math.exp(-Math.max(0,dt)/30);
-  RAYTUNE.k=RAYTUNE.k===null?k:RAYTUNE.k+(k-RAYTUNE.k)*a;RAYTUNE.n=RAYTUNE.n===null?n:RAYTUNE.n+(n-RAYTUNE.n)*a;return RAYTUNE;}
+  const tb=BEAM_BY_TOD[TOD.i],bm=tb===undefined?1:tb;
+  RAYTUNE.k=RAYTUNE.k===null?k:RAYTUNE.k+(k-RAYTUNE.k)*a;RAYTUNE.n=RAYTUNE.n===null?n:RAYTUNE.n+(n-RAYTUNE.n)*a;
+  RAYTUNE.b=RAYTUNE.b===null?bm:RAYTUNE.b+(bm-RAYTUNE.b)*a;return RAYTUNE;}
 
 let ZONE='';
 function applyZone(z,force){
@@ -10341,7 +10347,7 @@ function frameDesert(dt,P){
   SYS.clouds.update(smooth(0.25,0.47,P),camera);
   // faisceaux dans les trouées de la canopée : visibles à hauteur d'homme, effacés pendant la génération et l'envol
   const RT=rayTune(dt);SYS.beams.BU.uNight.value=RT.n;
-  SYS.beams.update((TOD.cur.beams||0)*RT.k*smooth(INTRO_END-1.5,INTRO_END+1.5,T)*(1-smooth(0.04,0.14,P))*Math.min(1.6,TOD.cur.sunI/3.0),TOD.cur.sunDir,TOD.cur.sunCol);
+  SYS.beams.update((TOD.cur.beams||0)*RT.k*RT.b*smooth(INTRO_END-1.5,INTRO_END+1.5,T)*(1-smooth(0.04,0.14,P))*Math.min(1.6,TOD.cur.sunI/3.0),TOD.cur.sunDir,TOD.cur.sunCol);
   if(VIEW){camera.position.set(VIEW[0],VIEW[1],VIEW[2]);camTgt.set(VIEW[3],VIEW[4],VIEW[5]);camera.up.set(0,1,0);camera.lookAt(camTgt);}
   if(Q.has('follow')&&SYS.fauna.agents.length){const FK=Q.get('fk');let ag=SYS.fauna.agents.filter(a=>FK?a.kind===FK:a.script);if(!ag.length)ag=SYS.fauna.agents.slice(-1);let cx=0,cz=0;ag.forEach(a=>{cx+=a.pos.x;cz+=a.pos.y;});cx/=ag.length;cz/=ag.length;
     const F=+(Q.get('follow')||9);camTgt.set(cx,duneH(cx,cz)+0.3,cz);camera.position.set(cx+F*0.25,camTgt.y+F*0.38,cz+F);camera.up.set(0,1,0);camera.lookAt(camTgt);}
