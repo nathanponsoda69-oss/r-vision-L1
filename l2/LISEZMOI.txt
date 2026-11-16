@@ -1,0 +1,76 @@
+R·Vision L2 — le canyon de la finance (novembre 2026, version 3)
+
+Fichiers
+  l2.html            la page L2 (modifiée : elle charge et pilote le canyon, rien d'autre n'a changé)
+  l2/canyon.js       le canyon : gorge de grès, Trésor (Droit des affaires), salle des stèles des statistiques,
+                     pavillon mudéjar (Analyse financière) et son bassin, lanternes, lézards, sable, vent
+  l2/gi.json         \
+  l2/gi_parois.png    > la lumière rebondie précalculée (voir plus bas) : environ 1 Mo en tout
+  l2/gi_volume.png   /
+
+Mise en ligne sur GitHub : déposer l2.html à la racine du dépôt (à la place de l'ancien) et les quatre fichiers
+du dossier l2/ à côté de lui. Aucune photo, aucune texture extérieure : tout le reste est dessiné par le code.
+
+Comment ça marche
+  - Comme la forêt de la L1 : le canyon a son propre rendu, posé par-dessus la scène. Il se télécharge
+    discrètement 15 s après l'ouverture de la page, et se construit quand on approche du portail.
+  - Si le canyon ne peut pas démarrer (navigateur sans WebGL 2, réseau…), la L2 retombe d'elle-même sur
+    l'ancienne scène de la finance : rien ne casse.
+  - Parcours (chaque marche dure 12 à 15 s) : arrivée par le portail (éblouissement, on lève les yeux vers la
+    fente), marche dans la gorge jusqu'au Trésor (≈ 13 s), flèche / carrousel → marche jusqu'au pavillon
+    (≈ 13,5 s) en traversant la salle des stèles, STATISTIQUES → retour à pied vers les trois stèles, alignées
+    contre la paroi de cette salle creusée entre les deux temples. Les sauts du rail (01…06, ∑) arrivent
+    directement, sans marcher.
+  - Clic sur un temple (ou toucher, sur téléphone) → le donjon de lave de la matière, comme avant.
+  - Les écrans de statistiques sont les mêmes que sur le mur de glace : ils sont projetés sur les stèles.
+
+La lumière
+  - Lumière rebondie précalculée : la lumière du soleil et du ciel a été suivie d'une paroi à l'autre
+    (14 rebonds, plusieurs millions de rayons). C'est elle qui fait rougeoyer la roche, du jaune près des
+    faisceaux au rouge profond dans les creux. Les deux images gi_*.png la contiennent : un atlas pour les
+    parois et le sable, un volume de « sondes » pour les temples, les stèles, les lézards…
+  - Ces images ne valent que pour la forme actuelle de la gorge. Si le tracé ou les parois sont modifiés dans
+    canyon.js, le canyon s'en aperçoit tout seul (empreinte giSig) et revient à l'éclairage approché de la
+    version 1 : rien ne casse, mais il faut alors refaire le précalcul (me le demander).
+  - Exposition automatique, comme l'œil : la fente sombre s'ouvre, les parvis ensoleillés se referment.
+  - Les reliefs des temples (stuc ciselé, zelliges, bois sculpté, frise et tympan du Trésor) sont sculptés
+    dans le shader : relief par parallaxe et ombres propres du relief au soleil.
+
+Le son (bouton « Son » de la page)
+  - Tout est synthétisé en direct, aucun fichier audio : vent qui gronde et siffle dans la fente (plus fort
+    là où elle se resserre, avec les rafales), sable qui ruisselle des rebords, crépitement et souffle des
+    lanternes proches, pas dans le sable pendant la marche, eau du bassin, cris des martinets au-dessus.
+  - Les sons sont placés dans l'espace (casque conseillé) et passent dans la réverbération de la page.
+  - Ils s'effacent dans les donjons, où les sons de la page prennent le relais. Code : section 16 (sndTick).
+
+Les détails vivants
+  - Sable : rides de vent en relief, crêtes claires et creux plus grossiers, traces de pas sur le chemin,
+    cailloux tombés des parois, grains qui scintillent.
+  - Au-dessus : nuages qui passent dans la fente, buissons secs agités par le vent sur le rebord,
+    martinets qui battent des ailes ou planent.
+  - Lanternes : leur lumière s'accroche à la poussière de l'air (halo).
+  - Derrière la grande porte du pavillon : une salle décorée, traversée pendant la plongée vers le donjon.
+
+Réglages utiles (dans l'adresse, pour essayer sans toucher au code)
+  l2.html?p=7                arriver directement au Trésor (p=8 : pavillon, p=9 / 10 / 11 : stèles 1 / 2 / 3)
+  &cq=0 / &cq=1 / &cq=2      forcer la qualité du canyon (0 = téléphone, 2 = ordinateur puissant)
+  &cbake=0                   couper la lumière précalculée (pour comparer avec l'éclairage approché)
+  &ckey=0.08                 luminosité visée par l'exposition automatique (plus haut = image plus claire)
+  &csun=2.7                  force du soleil dans la gorge        &cray=7     éclat des faisceaux dans l'air
+  &csig=0.011                quantité de poussière dans l'air     &cgi=1      lumière rebondie sur les parois
+  &cexp=1                    exposition générale du canyon        &cbloom=0.14  halo des lumières
+
+Pour modifier
+  - Le tracé de la gorge : tableau CP en haut de l2/canyon.js (points x, z). Les puits de lumière
+    (faisceaux qui touchent le sable) : tableau WELLS (abscisse, longueur, largeur de la fente).
+    Attention : toucher à la forme de la gorge périme la lumière précalculée (voir plus haut).
+  - La salle des stèles : S_ST (abscisses des trois stèles), kStele (étendue de la salle), ST_LAND
+    (inclinaison de la salle vers le soleil).
+  - Le pavillon : section 10 (PAV_ARCS : position, ouverture et nombre de lobes des cinq arcs ; pvZone : quel
+    décor sur quelle partie de la façade ; hSebka, hAtau, hKufic, hZel, hLac : les motifs sculptés).
+  - Le Trésor : section 08 (buildTempleA), frise et tympan sculptés dans reliefMat.
+  - Les lanternes : addLantern dans buildLanternsA (Trésor et chemin), buildTempleB (pavillon), buildSteles.
+  - Les lézards : fonction buildLizards (position sur la paroi, robe bleue ou beige, taille).
+  - La durée des marches : basePose (13 s pour l'arrivée, 13,5 s entre les temples).
+  - Après une modification de l2/canyon.js, changer la valeur ?v=… de RVC_URL dans l2.html (section 97)
+    pour que les navigateurs ne gardent pas l'ancienne version en cache.

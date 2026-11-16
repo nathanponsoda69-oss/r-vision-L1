@@ -8538,6 +8538,8 @@ async function boot(){
   applyZone(zoneOf(SC.p),true);
   if(REDUCED){T=Math.max(T,INTRO_END);}
   started=true;RV_BOOT.push(['start',Math.round(performance.now())]);
+  // canyon de la finance : module téléchargé quand tout est calme (le portail s'ouvre ensuite sans attente)
+  if(!CAPTURE)setTimeout(()=>{if(RVCH.st)return;fetch(RVC_URL,{priority:'low'}).catch(()=>{});},15000);
   if(BG.lite){BG.done=false;bgWarm(tick);}
   // comme sur la L1 : aucun profil enregistré sur cet appareil → la fenêtre de profil s'ouvre à l'arrivée
   if(!CAPTURE&&!profCurrent())setTimeout(()=>{if(SYS.prof)SYS.prof.open();},900);
@@ -9252,6 +9254,25 @@ const FX={fade:0,glitch:0};
 const FLASH=new THREE.Color('#fff4e6');
 
 let WARMING=false;
+/* ═══ 97 · Le canyon de la finance (module RVC, fichier l2/canyon.js) ═══
+   Comme la forêt de la L1 : chargé à l'approche du portail, piloté image par image depuis frame(), dessiné
+   sur son propre canvas par-dessus la scène. Si le module échoue (WebGL, réseau…), on retombe sur la scène
+   de finance d'origine. */
+const RVCH={st:0,dead:false},RVC_URL=new URL('./l2/canyon.js?v=20261116f',import.meta.url).href;
+const rvcCovered=()=>!!(window.RVC&&window.RVC.covers);
+function rvcEnter(i){const F=SYS.fins&&SYS.fins[Math.max(0,Math.min(SYS.fins.length-1,i|0))];if(F&&!CAVE.on&&CAVE.k<0.05)caveEnter(F.sj,'sand',F);}
+function rvcDie(e){console.error('[RVC] canyon indisponible, retour à la scène d\u2019origine',e);RVCH.dead=true;
+  if(window.RVC)window.RVC.covers=false;const c=document.getElementById('rvc');if(c)c.style.display='none';}
+function rvcLoad(){
+  if(RVCH.st)return;RVCH.st=1;
+  import(RVC_URL).then(m=>m.init({canvas,P_FIN,P_STATS,P_CUT,enter:rvcEnter,audio:()=>AUDIO})).then(()=>{RVCH.st=2;}).catch(rvcDie);
+}
+function rvcFrame(dt,P,draw){
+  if(RVCH.dead||WARMING&&RVCH.st!==2)return;
+  if(RVCH.st===0){if(P>=P_PORTAL-2||ZONE==='fin')rvcLoad();return;}
+  if(RVCH.st!==2||!window.RVC||!window.RVC.tick)return;
+  try{window.RVC.tick(dt,P,ZONE,CAVE.cv===SYS.sandCave?CAVE.k:0,WARMING,NAV.veil,!draw);}catch(e){rvcDie(e);}
+}
 function frame(dt,draw=true){
   T+=dt;
   navTick(dt);
@@ -9278,6 +9299,7 @@ function frame(dt,draw=true){
   finalPass.uniforms.uFade.value=Math.max(FX.fade,NAV.veil);
   if(ZONE!=='desert'){fogBlur.enabled=false;godRay.enabled=false;flarePass.enabled=false;sanePass.uniforms.uRayCol.value.setRGB(0,0,0);}
   if(ZONE==='desert') frameDesert(dt,P); else if(ZONE==='ice') frameIce(dt,P); else frameFin(dt,P);
+  rvcFrame(dt,P,draw);
   if(!WARMING){
     if(!hudShown&&T>INTRO_END-2){hudShown=true;hudStart(T);}
     hudUpdate(T);
@@ -9286,7 +9308,7 @@ function frame(dt,draw=true){
   trailsFlush(dt);
   const inCaveR=!!(CAVE.cv&&CAVE.k>=0.5);renderPass.scene=inCaveR?CAVE.cv.scene:scene;
   perfSwitch(inCaveR?'cave':ZONE==='desert'?'desert':'scene');
-  if(draw) composer.render(dt);
+  if(draw&&!rvcCovered()) composer.render(dt);
 }
 
 function frameDesert(dt,P){
@@ -9694,7 +9716,8 @@ function frameFin(dt,P){
     hov=_ray.intersectsBox(bx);
   }
   FINST.hover+=((hov?1:0)-FINST.hover)*Math.min(1,dt*(hov?4:2));
-  if(!CAPTURE) canvas.style.cursor=hov?'pointer':'';
+  if(rvcCovered())hov=false;   // canyon affiché : ce sont ses temples qui se cliquent
+  if(!CAPTURE&&!rvcCovered()) canvas.style.cursor=hov?'pointer':'';
   if(hov&&!FINST.wasHov) SYS.lbl.rescramble(T,[0,1,5]);
   FINST.wasHov=hov;FINST.hov=hov;
 
@@ -9729,7 +9752,7 @@ function frameFin(dt,P){
     rect.y0-=40;rect.x0+=rect.x1*0.0;
     SYS.lbl.update(T,dt,rect,{tl:cn(-D.W*0.45,D.H*0.93),tr:cn(D.W*0.46,D.H*0.9),br:cn(D.W*0.42,D.H*0.06)},DATA.totals.mastery*smooth(0.15,3.0,WLp.t||0),0);
   }
-  SYS.lbl.setVisible(Math.max(lv,lvW)*(1-smooth(0,0.12,ck)));
+  SYS.lbl.setVisible(rvcCovered()?0:Math.max(lv,lvW)*(1-smooth(0,0.12,ck)));   // canyon affiché : aucune étiquette reliée par des traits
   const ci=Math.round(P)-P_FIN;
   SYS.idx.forEach((e,i)=>e.classList.toggle('on',P>=P_FIN-0.3&&i===SUBJECTS.length+Math.min(ci,FIN_SUBJECTS.length)));
   SYS.car.forEach((e,i)=>e.classList.toggle('on',i===Math.min(ci,FIN_SUBJECTS.length)));
@@ -9749,7 +9772,7 @@ canvas.addEventListener('click',()=>{
   if(CAVE.on){if(CAVE.hov>=0&&CAVE.cv){const c=CAVE.cv.books[CAVE.hov].c;if(c&&c.url)window.location.href=c.url;}return;}
   if(CAVE.k>0.02)return;
   if(ZONE==='ice'&&ICEST.hov){const b=activeBlock();if(b)caveEnter(b.sj,'ice',b);}
-  else if(ZONE==='fin'&&FINST.hov){const F=SYS.fins[FINST.idx];if(F)caveEnter(F.sj,'sand',F);}
+  else if(ZONE==='fin'&&FINST.hov&&!rvcCovered()){const F=SYS.fins[FINST.idx];if(F)caveEnter(F.sj,'sand',F);}
 });
 
 /* si la carte graphique coupe le rendu : message, puis rechargement quand elle revient */
