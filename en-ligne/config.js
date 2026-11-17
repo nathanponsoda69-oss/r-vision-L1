@@ -17,4 +17,11 @@
 
    Ces valeurs ne sont pas secrètes (elles identifient le projet, elles n'y donnent aucun droit) : ce sont les
    règles de sécurité (firestore.rules) qui protègent les données. On peut donc les publier sur GitHub. */
-export default null;
+export default {
+  apiKey: "AIzaSyAE76q4smq1tcvBHfNx9roFCuJasQ9MJ_o",
+  authDomain: "r-vision-31773.firebaseapp.com",
+  projectId: "r-vision-31773",
+  storageBucket: "r-vision-31773.firebasestorage.app",
+  messagingSenderId: "1095195008867",
+  appId: "1:1095195008867:web:0f9d521885690d8fd8bd56"
+};
