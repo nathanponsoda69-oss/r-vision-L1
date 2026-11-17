@@ -1,0 +1,101 @@
+R·Vision — MODE EN LIGNE (novembre 2026)
+Compte Google · synchronisation gratuite entre appareils · classement de la semaine · tournoi du mois · amis
+
+══════════════════════════════════════════════════════════════════════════════
+FICHIERS
+══════════════════════════════════════════════════════════════════════════════
+  bibliotheque.html          + la salle du Classement (bouton « Classement » en bas, ou bibliotheque.html?salle=classement)
+                             + les coupes gagnées sous les cloches de la tablette des trophées (collection)
+  l1.html, l1/app.js         + une ligne de script, l'entrée « Classement en ligne » dans le Menu, le rafraîchissement après synchro
+  l2.html                    + les mêmes ajouts
+  en-ligne/config.js         ← LA SEULE CHOSE À REMPLIR (étape 3)
+  en-ligne/rvision-online.js le module : compte, synchro, scores, classements, amis, tournoi
+  en-ligne/vendor/           Firebase 13.3.0 (app, auth, firestore-lite), embarqué comme three.js pour la L1
+  firestore.rules            les règles de sécurité, à coller dans la console (étape 2)
+
+Les sites de cours ne sont PAS modifiés : ils écrivent dans le navigateur comme avant, et c'est l'ouverture d'un
+accueil (L1, L2 ou BIB) qui envoie et reçoit les données.
+
+Tant que en-ligne/config.js contient « null », rien ne change : aucun téléchargement, aucun envoi. La salle du
+Classement s'ouvre quand même et explique comment activer le mode en ligne.
+
+══════════════════════════════════════════════════════════════════════════════
+MISE EN ROUTE (≈ 10 minutes, gratuit, sans carte bancaire)
+Les intitulés de la console Firebase peuvent varier un peu d'une version à l'autre.
+══════════════════════════════════════════════════════════════════════════════
+1. CRÉER LE PROJET
+   console.firebase.google.com → « Créer un projet » → nom : rvision → Google Analytics : désactivé (inutile) → Créer.
+   Rester sur la formule gratuite « Spark ».
+
+2. BASE DE DONNÉES + RÈGLES
+   Menu de gauche → Firestore Database → « Créer une base de données »
+   → emplacement européen (par exemple europe-west9, Paris) → mode « production ».
+   Onglet « Règles » → tout effacer → coller le contenu de firestore.rules → « Publier ».
+
+3. CONNEXION GOOGLE + CONFIGURATION
+   a) Authentication → « Commencer » → Google → Activer → choisir ton adresse d'assistance → Enregistrer.
+   b) Authentication → Paramètres → Domaines autorisés → « Ajouter un domaine » → ton-pseudo-github.github.io
+      (sans https:// ni chemin). Sans cela, la fenêtre de connexion refuse de s'ouvrir.
+   c) Roue dentée → Paramètres du projet → « Vos applications » → icône </> (Web) → nom : R·Vision
+      → Enregistrer (pas besoin de Firebase Hosting) → copier l'objet firebaseConfig.
+   d) Dans en-ligne/config.js, remplacer « export default null; » par « export default { …ce que tu as copié… }; »
+      Ces valeurs ne sont pas secrètes : on peut les publier sur GitHub. Ce sont les règles qui protègent les données.
+
+4. METTRE EN LIGNE SUR GITHUB
+   Déposer à la racine du dépôt : bibliotheque.html, l1.html, l2.html, firestore.rules (facultatif),
+   le fichier l1/app.js (à sa place dans le dossier l1/), et tout le dossier en-ligne/.
+   Rien d'autre ne change (textures, l1-sw.js, l2/canyon.js… restent tels quels).
+
+5. ESSAYER
+   bibliotheque.html → bouton « Classement » → [ Registre ] (ou le pupitre à droite de la salle)
+   → « Se connecter avec Google » → choisir son pseudo en ligne (@max) et sa visibilité → Valider.
+   Sur un autre appareil : même compte Google → la progression arrive (et le profil est recréé à l'identique).
+
+══════════════════════════════════════════════════════════════════════════════
+COMMENT ÇA MARCHE
+══════════════════════════════════════════════════════════════════════════════
+SYNCHRONISATION
+  · Un compte suit UN profil : celui qui était actif à l'inscription. Toutes ses données voyagent : XP, succès, quiz,
+    temps, frises d'activité, analyses INSIGHT, bibliothèque (coffres, objets, orbes), trophées, registre des scores.
+  · Fusion clé par clé à trois voies : ce qui n'a changé que d'un côté est repris ; si les deux appareils ont révisé
+    hors ligne, on fusionne (maximum des compteurs, union des succès, fusion jour par jour des frises). La
+    bibliothèque est fusionnée d'un bloc : les objets des deux côtés sont gardés, sans coffre ni orbe en double.
+  · Quand : à l'ouverture d'un accueil, toutes les 2 minutes s'il y a du nouveau, en quittant la page, après une
+    ouverture de coffre, et sur [ Synchroniser ] dans le Registre.
+  · Garde-fous : un effacement massif sur un appareil (stockage vidé par le navigateur…) n'est jamais recopié dans le
+    cloud — l'appareil est restauré. Un profil supprimé exprès sur un appareil n'est ni effacé du cloud, ni recréé.
+  · Firebase n'est téléchargé qu'APRÈS la scène 3D, et seulement si l'on s'est déjà connecté sur l'appareil :
+    les accueils ne chargent pas plus lentement.
+
+SCORE (le « score mixte » retenu : temps + progression + régularité), par journée :
+  · temps        1 point par minute de révision active, 180 au plus (3 h)
+  · progression  1 000 points pour un cours entier (XP gagnée ÷ XP maximale du cours), 250 au plus
+  · régularité   40 points si la journée est active (15 min ou 15 réponses, la règle des quêtes)
+  Semaine (lundi → dimanche) et mois = somme des journées. Le comptage démarre le jour où le mode en ligne est activé.
+  Réglages : constante SCORE en haut de la section 05 de en-ligne/rvision-online.js
+  (ATTENTION : les bornes de firestore.rules — 3 300 par semaine, 14 600 par mois — doivent suivre si on les augmente).
+
+VISIBILITÉ (au choix de chacun, modifiable dans le Registre)
+  · Public : classement général de la semaine, tournoi du mois, fiche visible de tous.
+  · Amis seulement : n'apparaît que dans l'onglet Amis de ses amis, fiche visible d'eux seuls, ne concourt pas au tournoi.
+  · Les autres ne voient jamais le nom ni l'adresse Google : uniquement le pseudo et le @pseudo en ligne.
+
+AMIS : par @pseudo, demande puis acceptation (Registre). Onglet « Amis » du tableau d'honneur.
+
+TOURNOI DU MOIS : classement mensuel des profils publics. Il reste ouvert jusqu'au 2 du mois suivant (pour les
+révisions arrivées en retard), puis il est figé. Le premier reçoit la Coupe du mois : elle s'ajoute à sa collection
+(cloches de la tablette des trophées, les trois plus récentes) et à sa fiche. Le podium du mois précédent est gravé
+sur les marches du podium, au centre de la salle.
+
+══════════════════════════════════════════════════════════════════════════════
+LIMITES À CONNAÎTRE
+══════════════════════════════════════════════════════════════════════════════
+  · Triche : sans serveur payant, c'est le navigateur qui calcule et envoie le score. Les règles bornent chaque valeur
+    et vérifient score = temps + progression + régularité, mais un étudiant qui s'y connaît pourrait tricher dans ces
+    bornes. Classement fondé sur la confiance.
+  · Quota gratuit Spark (à vérifier sur la page Tarifs de Firebase, il peut évoluer) : environ 50 000 lectures et 20 000
+    écritures par jour pour TOUT le projet. Une classe de quelques dizaines d'étudiants reste très en dessous.
+  · Une révision faite sur un site de cours part au cloud la prochaine fois qu'un accueil est ouvert sur cet appareil.
+  · Les règles n'ont pas pu être exécutées ici (pas d'émulateur Firebase disponible). Pour les éprouver : console →
+    Firestore → Règles → « Terrain de jeu des règles » (Rules Playground), ou simplement l'essai de l'étape 5 :
+    toute règle trop stricte s'affiche dans le Registre (« Accès refusé par le serveur… »).

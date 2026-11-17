@@ -201,7 +201,98 @@ body{color:var(--ink);font-family:var(--mono);-webkit-font-smoothing:antialiased
   .c-n{font-size:17px;margin:8px 0 6px;}.c-d{font-size:11px;line-height:1.55;}
   #drop{bottom:70px;width:92vw;}
 }
-@media (prefers-reduced-motion: reduce){#hud,#card,#drop{transition:none;}}
+/* ── salle du classement (mode en ligne) ── */
+#fade{position:fixed;inset:0;z-index:40;background:#05040a;opacity:0;pointer-events:none;transition:opacity .4s ease;}
+#fade.on{opacity:1;pointer-events:auto;}
+#onl{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);display:none;flex-direction:column;align-items:center;gap:7px;max-width:calc(100vw - 24px);}
+#onl.on{display:flex;}
+#onl .tabs,#onl .acts{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;}
+#onl .tabs button{position:relative;font-size:10.5px;font-weight:700;letter-spacing:.1em;color:rgba(255,255,255,.5);background:rgba(10,8,14,.4);border:0;cursor:pointer;padding:8px 14px;text-transform:uppercase;transition:color .3s;}
+#onl .tabs button:hover,#onl .tabs button.on{color:#fff;}
+#onl .tabs button.on::before,#onl .tabs button.on::after{content:'';position:absolute;top:0;bottom:0;width:7px;border:1px solid #ffc24a;}
+#onl .tabs button.on::before{left:0;border-right:0;}#onl .tabs button.on::after{right:0;border-left:0;}
+.ob{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);background:none;border:0;cursor:pointer;padding:5px 3px;}
+.ob:hover,.ob:focus-visible{color:#fff;}
+.ob[disabled]{opacity:.5;cursor:default;}
+#o-st{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);text-shadow:0 1px 10px rgba(0,0,0,.8);text-align:center;}
+#hud.hall #tip{bottom:170px;}
+.op{position:absolute;right:38px;top:50%;width:min(380px,calc(100vw - 36px));max-height:calc(100vh - 150px);overflow:auto;overscroll-behavior:contain;transform:translate(14px,-50%);opacity:0;pointer-events:none;
+  transition:opacity .45s ease,transform .55s cubic-bezier(.2,.8,.2,1);padding:20px 22px 18px;background:linear-gradient(180deg,rgba(16,12,24,.88),rgba(9,7,14,.94));
+  backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);border:1px solid rgba(255,255,255,.1);font-size:11px;line-height:1.6;color:var(--ink2);--rc:#ffc24a;scrollbar-width:thin;}
+.op.on{opacity:1;transform:translate(0,-50%);pointer-events:auto;}
+.op::before{content:'';position:absolute;left:-1px;top:-1px;bottom:-1px;width:2px;background:var(--rc);box-shadow:0 0 18px var(--rc);}
+#olist{right:auto;left:38px;transform:translate(-14px,-50%);}#olist.on{transform:translate(0,-50%);}
+.op-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.op-h b{font-family:var(--logo);font-weight:800;font-size:17px;color:#fff;}
+.op-h em{font-style:normal;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);flex:1;}
+#ocard .op-h em{text-transform:none;letter-spacing:.04em;font-size:10.5px;}
+.op-x{font:inherit;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);background:none;border:0;cursor:pointer;padding:4px 0 4px 10px;margin-left:auto;}
+.op-x:hover{color:#fff;}
+.op-k{font-size:9.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--rc);margin:16px 0 6px;}
+.op-m{font-size:12px;color:var(--ink);margin:8px 0;white-space:pre-line;}
+.op-n{font-size:10px;color:var(--ink3);margin:6px 0;}
+.op-e{font-size:10.5px;color:#ff9a8a;margin:6px 0;}
+.op-e:empty,.op-n:empty{display:none;}
+.op ul{margin:6px 0 14px 16px;}.op li{margin:3px 0;}
+.op .btn{margin:8px 0 4px;width:100%;}
+.op-f label{display:block;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin:14px 0 6px;}
+.op-in{width:100%;min-width:0;font:500 13px var(--mono);color:#fff;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);border-radius:0;padding:9px 10px;outline:none;}
+.op-in:focus{border-color:var(--rc);}
+.op-at{display:flex;align-items:center;gap:6px;}.op-at span{font:700 14px var(--mono);color:var(--rc);}
+.op-vis{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.op-vis button{text-align:left;font:inherit;color:var(--ink2);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);padding:9px 10px;cursor:pointer;}
+.op-vis button b{display:block;font-size:11px;color:#fff;letter-spacing:.06em;}
+.op-vis button small{display:block;font-size:9.5px;color:var(--ink3);line-height:1.45;margin-top:2px;}
+.op-vis button.on{border-color:var(--rc);background:rgba(255,194,74,.08);color:#fff;}
+.op-vis.sm button{padding:7px 10px;text-align:center;}
+.op-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.op-w{border:1px solid rgba(255,194,74,.35);background:rgba(255,194,74,.06);padding:10px 12px;margin:6px 0 10px;}
+.op-id{display:flex;align-items:center;gap:12px;margin:4px 0;}
+.op-id i{font-style:normal;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--rc);color:#fff;font:800 15px var(--logo);flex:none;}
+.op-id b{display:block;color:#fff;font-size:13px;}.op-id small{color:var(--ink3);font-size:10px;}
+.op-sc{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.op-sc>div{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);padding:9px 10px;}
+.op-sc small{display:block;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);}
+.op-sc b{display:block;font:800 18px var(--logo);color:#fff;margin:2px 0 4px;}
+.op-sc span{font-size:9.5px;color:var(--ink3);}
+.op-stk{display:flex;height:4px;background:rgba(255,255,255,.08);margin:4px 0 5px;}
+.op-stk i{display:block;height:100%;}.op-stk .kt{background:#4f9eff;}.op-stk .kp{background:#b06bff;}.op-stk .kr{background:#ffc24a;}
+.op-add{display:flex;gap:8px;}.op-add .ob{white-space:nowrap;border:1px solid rgba(255,255,255,.16);padding:0 12px;}
+.op-fr{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid rgba(255,255,255,.07);}
+.op-fr span{flex:1;}.op-fr.in{color:#fff;}
+.op-fn{flex:1;min-width:0;text-align:left;font:inherit;color:var(--ink);background:none;border:0;cursor:pointer;padding:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.op-fn b{color:#fff;font-size:11.5px;margin-right:6px;}.op-fn small{color:var(--ink3);}
+.op-fn:hover b{color:var(--rc);}
+.op-fr em{font-style:normal;color:#fff;font-variant-numeric:tabular-nums;}
+.op-out{margin-top:16px;color:var(--ink3);}
+.op-af{display:block;margin-top:10px;color:var(--rc);}
+.op-rk{font:800 13px var(--logo);color:var(--rc);letter-spacing:.06em;margin-bottom:8px;}
+.op-wk{display:flex;align-items:flex-end;gap:5px;height:46px;margin:8px 0 4px;}
+.op-wk i{flex:1;background:rgba(79,158,255,.45);min-height:3px;}.op-wk i.on{background:#ffc24a;}
+.op-cl>div{display:grid;grid-template-columns:1fr 64px 36px;align-items:center;gap:8px;padding:4px 0;}
+.op-cl span{font-size:10.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.op-cl em{font-style:normal;font-size:8.5px;color:var(--ink3);margin-left:6px;}
+.op-cl i{display:block;height:3px;background:rgba(255,255,255,.1);}.op-cl i b{display:block;height:100%;background:linear-gradient(90deg,#4f9eff,#bfe6ff);}
+.op-cl small{font-size:9.5px;text-align:right;color:var(--ink3);}
+.ol-r{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;color:var(--ink);background:none;border:0;border-top:1px solid rgba(255,255,255,.07);padding:9px 4px;cursor:pointer;}
+.ol-r .rk{font:800 13px var(--logo);color:var(--ink3);text-align:center;}
+.ol-r.top .rk{color:#ffc24a;}
+.ol-r .nm{color:#fff;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.ol-r .nm small{color:var(--ink3);font-size:9.5px;margin-left:6px;}
+.ol-r .sc{font:800 13px var(--logo);color:#fff;font-variant-numeric:tabular-nums;}
+.ol-r.me{background:rgba(176,107,255,.13);}
+.ol-r:hover .nm{color:var(--rc);}
+@media(max-width:760px){
+  #onl{bottom:56px;gap:5px;}#onl .tabs button{padding:7px 9px;font-size:9.5px;letter-spacing:.05em;}
+  #hud.hall #tip{bottom:152px;}
+  #onl .acts{flex-wrap:nowrap;gap:2px;}#onl .acts .ob{font-size:8.5px;letter-spacing:.02em;padding:4px 2px;white-space:nowrap;}
+  #o-st{font-size:8.5px;letter-spacing:.06em;max-width:calc(100vw - 30px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #hud.hall .h-bl,#hud.hall .h-br{display:none;}   /* salle du classement sur téléphone : la place va aux onglets */
+  .op,#olist{left:50%;right:auto;top:auto;bottom:150px;transform:translate(-50%,14px);max-height:calc(100vh - 320px);width:calc(100vw - 24px);padding:16px 16px 14px;}
+  .op.on,#olist.on{transform:translate(-50%,0);}
+  #nav button{padding:9px 7px;}
+}
+@media(max-width:420px){#nav button{font-size:9px;padding:9px 5px;letter-spacing:.02em;}#nav button .n{margin-left:3px;}}
+@media (prefers-reduced-motion: reduce){#hud,#card,#drop,.op,#fade{transition:none;}}
 </style>
 </head>
 <body>
@@ -284,7 +375,7 @@ body{color:var(--ink);font-family:var(--mono);-webkit-font-smoothing:antialiased
   <nav class="h-br"><a class="mono lvl" href="l1.html">[ L1 ]</a><a class="mono lvl" href="l2.html">[ L2 ]</a></nav>
   <div id="tip" aria-hidden="true"></div>
   <div id="nav" role="navigation" aria-label="Lieux">
-    <button type="button" data-v="nef">Nef</button><button type="button" data-v="vitrine">Collection</button><button type="button" data-v="coffre">Coffre<span class="n" id="n-chest">0</span></button><button type="button" data-v="crypte" id="b-crypte" disabled>???</button>
+    <button type="button" data-v="nef">Nef</button><button type="button" data-v="vitrine">Collection</button><button type="button" data-v="coffre">Coffre<span class="n" id="n-chest">0</span></button><button type="button" data-v="crypte" id="b-crypte" disabled>???</button><button type="button" data-v="classement">Classement</button>
   </div>
   <aside id="card" aria-live="polite">
     <div class="c-r"><span id="c-r"></span><em id="c-i"></em></div>
@@ -298,8 +389,18 @@ body{color:var(--ink);font-family:var(--mono);-webkit-font-smoothing:antialiased
     <div class="d-s" id="d-s"></div>
     <div class="d-b"><button class="btn" type="button" id="d-ok">Continuer</button><button class="btn" type="button" id="d-again">Ouvrir un autre</button></div>
   </div>
+  <!-- salle du classement (mode en ligne : en-ligne/rvision-online.js) -->
+  <div id="onl" aria-label="Classement en ligne">
+    <div class="tabs" role="tablist"><button type="button" data-k="week">Semaine</button><button type="button" data-k="month">Tournoi du mois</button><button type="button" data-k="friends">Amis</button></div>
+    <div class="acts"><button type="button" class="ob" id="o-reg">[ Registre ]</button><button type="button" class="ob" id="o-cup">[ Coupe ]</button><button type="button" class="ob" id="o-lst">[ Liste ]</button><button type="button" class="ob" id="o-all">[ Vue d’ensemble ]</button></div>
+    <p id="o-st"></p>
+  </div>
+  <aside id="reg" class="op" aria-live="polite" aria-label="Registre"></aside>
+  <aside id="ocard" class="op" aria-live="polite" aria-label="Fiche d’un étudiant"></aside>
+  <aside id="olist" class="op" aria-label="Classement"></aside>
 </div>
 <div id="flash" aria-hidden="true"></div>
+<div id="fade" aria-hidden="true"></div>
 <div id="err"></div>
 <script type="module">
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -646,7 +747,7 @@ function buildWindow(R,zc,gl,k){
     ab.subVectors(v[tri[1]],v[tri[0]]);ac.subVectors(v[tri[2]],v[tri[0]]);nn.crossVectors(ab,ac);cc.copy(v[tri[0]]).add(v[tri[1]]).add(v[tri[2]]).multiplyScalar(1/3).sub(cen);
     if(nn.dot(cc)<0)idx.push(tri[0],tri[2],tri[1]);else idx.push(tri[0],tri[1],tri[2]);}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v.flatMap(p=>[p.x,p.y,p.z]),3));g.setIndex(idx);
-  const L=(Y0+H)/(-SUN.y)+1.5,M=new THREE.Matrix4().makeBasis(V3().subVectors(wbr,wbl),V3().subVectors(wtl,wbl),SUN.clone().multiplyScalar(L)).setPosition(wbl);
+  const L=(Y0+H)/(-SUN.y)+1.5,M=new THREE.Matrix4().makeBasis(V3().subVectors(wbr,wbl),V3().subVectors(wtl,wbl),SUN.clone().multiplyScalar(L)).setPosition(wbl.clone().add(R.position));   // R.position : la salle du classement est une copie décalée
   const sm=new THREE.ShaderMaterial({vertexShader:SHAFT_VS,fragmentShader:SHAFT_FS,defines:{STEPS:[10,18,26][TIER]},
     uniforms:{uGlass:{value:gl.sharp},uN:{value:TEXS.n3},uInv:{value:M.clone().invert()},uTime:U.uTime,uI:{value:.085}},
     blending:THREE.AdditiveBlending,transparent:true,depthWrite:false,side:THREE.BackSide,fog:false});
@@ -659,15 +760,16 @@ function buildWindow(R,zc,gl,k){
   bookcase(R,-5.72,0,zc,2.3,1.45,.42,PI/2,2);
 }
 
-function buildRoom(){
-  const R=new THREE.Group();scene.add(R);SYS.room=R;
+/* off : décalage d'une copie de la salle (la salle du classement reprend la même architecture, vierge) */
+function buildRoom(off){
+  const R=new THREE.Group();if(off)R.position.copy(off);scene.add(R);const main=!off;if(main)SYS.room=R;
   /* dallage (et son miroir) */
   const fm=new THREE.MeshStandardMaterial({map:TEXS.floor.map,normalMap:TEXS.floor.normalMap,roughness:.17,metalness:.05,transparent:REFLECT,opacity:REFLECT?.76:1,envMapIntensity:1.15});
   TEXS.floor.map.repeat.set(4.8,8);TEXS.floor.normalMap.repeat.set(4.8,8);fm.normalScale.set(.7,.7);   // dalles de 1,25 m
-  const fl=mesh(new THREE.PlaneGeometry(12,20),fm);fl.rotation.x=-PI/2;fl.position.set(0,0,-1);fl.renderOrder=1;R.add(fl);SYS.floor=fl;
+  const fl=mesh(new THREE.PlaneGeometry(12,20),fm);fl.rotation.x=-PI/2;fl.position.set(0,0,-1);fl.renderOrder=1;R.add(fl);SYS[main?'floor':'floor2']=fl;
   if(REFLECT){try{const sc=TIER===2?.5:.34;
     const mir=new Reflector(new THREE.PlaneGeometry(12,20),{textureWidth:Math.round(innerWidth*sc),textureHeight:Math.round(innerHeight*sc),color:0x9a9a9a,clipBias:.003});
-    mir.rotation.x=-PI/2;mir.position.set(0,-.008,-1);R.add(mir);SYS.mirror=mir;}catch(e){fm.transparent=false;fm.opacity=1;}}
+    mir.rotation.x=-PI/2;mir.position.set(0,-.008,-1);R.add(mir);SYS[main?'mirror':'mirror2']=mir;}catch(e){fm.transparent=false;fm.opacity=1;}}
   const med=mesh(new THREE.PlaneGeometry(4.4,4.4),new THREE.MeshStandardMaterial({map:TEXS.medal,transparent:true,roughness:.22,metalness:.25,depthWrite:false,envMapIntensity:1.2}));
   med.rotation.x=-PI/2;med.position.set(0,.006,2.6);med.renderOrder=2;R.add(med);
   /* murs */
@@ -687,11 +789,13 @@ function buildRoom(){
   const pals=[['#1b2f6b','#a3122a','#c98a12','#1f4fb5','#2a8f6a','#e0b93a','#f4e6b8'],
               ['#3a1058','#0f6a55','#c9a012','#7a2bb8','#b0204a','#e8c24a','#f6ead0'],
               ['#5a0f18','#1a3f9a','#d08a1a','#b31a2e','#d2691e','#f0c040','#fbefc8']];
-  [[-6,0],[-1,1],[4,2]].forEach((a,i)=>buildWindow(R,a[0],texGlass(900+i*17,pals[i],i),i));
+  SYS.GL=SYS.GL||[];   // vitraux dessinés une fois, partagés par les deux salles
+  [[-6,0],[-1,1],[4,2]].forEach((a,i)=>buildWindow(R,a[0],SYS.GL[i]||(SYS.GL[i]=texGlass(900+i*17,pals[i],i)),i));
   /* rayonnages */
   for(const z of[-8.5,-3.5,1.5,6.6])bookcase(R,-5.7,0,z,2.3,7.2,.5,PI/2,8);
   bookcase(R,-4.25,0,-10.72,3.1,7.2,.5,0,8);bookcase(R,4.25,0,-10.72,3.1,7.2,.5,0,8);
   bookcase(R,-3.6,0,8.72,4.4,7.2,.5,PI,8);bookcase(R,3.6,0,8.72,4.4,7.2,.5,PI,8);
+  if(!main)return R;
   /* lumière d'ambiance : aucune ombre dynamique, tout le reste est simulé (faisceaux, taches, halos) */
   const hemi=new THREE.HemisphereLight(0x8d86a8,0x2c1e14,1.25);scene.add(hemi);
   const d1=new THREE.DirectionalLight(0xc9d4ff,1.15);d1.position.copy(SUN).multiplyScalar(-10);scene.add(d1);
@@ -789,6 +893,111 @@ function buildAmbience(){
       vA=.35+.65*sin(uTime*(.6+aS.w)+aS.x*40.);vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=uPx*(.012+.02*aS.z)/max(.5,-mv.z);}`,
     fragmentShader:`varying float vA;void main(){float d=1.-smoothstep(0.,.5,length(gl_PointCoord-.5));gl_FragColor=vec4(vec3(1.,.9,.74)*d*d*vA*.55,1.);}`});
   const pts=new THREE.Points(g,dm);pts.frustumCulled=false;scene.add(pts);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   02 bis · la salle du classement (mode en ligne)
+   Même architecture que la nef — dallage miroir, vitraux et faisceaux, plafond à caissons, rayonnages — vidée de la
+   collection, bâtie à l'écart de la première (on y passe par un fondu). Au fond, dans la baie : le tableau
+   d'honneur (semaine, tournoi du mois, amis), une toile dessinée par le code, nette et cliquable. Au centre, sur le
+   médaillon : le podium du mois dernier et la coupe en jeu. À droite : le pupitre du Registre (compte, synchro, amis).
+   ═══════════════════════════════════════════════════════════════════════════════ */
+const HALL=V3(40,0,0);
+const BD={W:4.1,H:3.075,CW:2048,CH:1536,cv:null,x:null,tex:null,mesh:null,off:0,hit:[],msg:'',sub:'',foot:'',data:null,grain:null};
+const PODIUM={plq:[],cup:null};
+/* coupe : pied, nœud, vasque évasée, anses, socle de bois cerclé de laiton */
+function itCup(M){
+  M=M||MAT.gold;
+  const cup=lathe([[0,0],[.15,0],[.155,.03],[.11,.05],[.065,.09],[.042,.15],[.038,.25],[.062,.285],[.06,.3],[.095,.33],[.15,.39],[.19,.48],[.21,.58],[.215,.64],[.222,.655],[.21,.66],[.2,.6],[.182,.5],[.14,.42],[.085,.37],[0,.355]],40,M);
+  const g=G(cup,at(rot(tor(.066,.012,M),PI/2,0,0),0,.29,0));
+  for(const s of[-1,1])g.add(tube([[s*.2,.6,0],[s*.31,.62,0],[s*.335,.53,0],[s*.27,.44,0],[s*.13,.385,0]],.016,M,20));
+  g.position.y=.158;
+  return G(at(bx(.4,.14,.4,MAT.blackwood,.5),0,.07,0),at(box(.42,.018,.42,MAT.brass),0,.149,0),g);
+}
+/* plaque de bois et de laiton gravée (podium) : numéro et nom */
+function plaqueTex(num,name,score){
+  const c=cv(512,192),x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,0,192);g.addColorStop(0,'#3a2a1a');g.addColorStop(1,'#1e150d');x.fillStyle=g;x.fillRect(0,0,512,192);
+  x.strokeStyle='#c9a24a';x.lineWidth=6;x.strokeRect(10,10,492,172);x.lineWidth=1.5;x.strokeRect(22,22,468,148);
+  x.textAlign='center';x.fillStyle='#e8c46a';x.font='800 58px Unbounded, sans-serif';x.fillText(num,256,86);
+  x.font='700 30px "JetBrains Mono", monospace';x.fillStyle=name?'#f4eefc':'rgba(244,238,252,.4)';
+  let s=name||'—';while(s.length>1&&x.measureText(s).width>440)s=s.slice(0,-1);if(name&&s!==name)s+='…';x.fillText(s,256,134);
+  if(score!==undefined&&score!==null){x.font='500 22px "JetBrains Mono", monospace';x.fillStyle='rgba(244,238,252,.55)';x.fillText(score+' pts',256,164);}
+  return ctex(c);
+}
+function buildHall(){
+  const R=buildRoom(HALL);SYS.hall=R;R.visible=false;
+  const hall=o=>{o.userData.hall=true;return o;};
+  /* — mur de droite : rayonnages comme à gauche, étendards entre eux — */
+  for(const z of[-8.5,-3.5,1.5,6.6])bookcase(R,5.7,0,z,2.3,7.2,.5,-PI/2,8);
+  const T1=bannerTex('#6a1620','#3a0c14'),T2=bannerTex('#1c2f5c','#0e1836');
+  [[-6,T2],[-1,T1],[4,T2]].forEach(([z,t])=>{const bg=G();bg.position.set(5.8,0,z);bg.rotation.y=-PI/2;R.add(bg);banner(bg,0,6.3,0,.86,3.4,t);});
+  /* — au fond, dans la baie : le tableau d'honneur — */
+  BD.cv=cv(BD.CW,BD.CH);BD.x=BD.cv.getContext('2d');BD.tex=ctex(BD.cv);BD.tex.anisotropy=TIER?8:4;
+  { const n=256,gc=cv(n,n),gx=gc.getContext('2d'),im=gx.createImageData(n,n),r=mulberry(31);for(let i=0;i<n*n;i++){const v=150+r()*105|0;im.data[i*4]=im.data[i*4+1]=im.data[i*4+2]=v;im.data[i*4+3]=255;}gx.putImageData(im,0,0);BD.grain=gc; }
+  R.add(at(wallPlane(4.4,5.6,MAT.stoneDark),0,2.8,-11.5));                                   // la baie est fermée derrière le tableau
+  R.add(at(bx(4.4,.02,.6,MAT.stoneDark),0,.01,-11.25));
+  /* console à tiroirs sous le tableau */
+  R.add(at(bx(4.34,1.0,.5,MAT.darkwood,.8),0,.5,-11.2),at(bx(4.42,.06,.58,MAT.blackwood),0,1.03,-11.18),at(bx(4.42,.12,.56,MAT.blackwood),0,.06,-11.18));
+  for(let i=0;i<4;i++){const x=-1.62+i*1.08;R.add(at(bx(.98,.36,.02,MAT.wood,.6),x,.66,-10.94),at(sph(.022,MAT.brass,8,6),x,.66,-10.92),at(bx(.98,.3,.02,MAT.wood,.6),x,.27,-10.94),at(sph(.022,MAT.brass,8,6),x,.27,-10.92));}
+  const F=G();F.position.set(0,2.95,-11.32);R.add(F);
+  F.add(at(bx(4.62,3.6,.16,MAT.darkwood,.8),0,0,0));
+  F.add(at(bx(4.8,.18,.28,MAT.darkwood),0,1.86,.06),at(bx(4.8,.18,.28,MAT.darkwood),0,-1.86,.06),at(bx(.18,3.9,.28,MAT.darkwood),-2.31,0,.06),at(bx(.18,3.9,.28,MAT.darkwood),2.31,0,.06));
+  F.add(at(box(4.3,.022,.03,MAT.brass),0,1.6,.1),at(box(4.3,.022,.03,MAT.brass),0,-1.6,.1),at(box(.022,3.22,.03,MAT.brass),-2.12,0,.1),at(box(.022,3.22,.03,MAT.brass),2.12,0,.1));
+  for(const sx of[-1,1])for(const sy of[-1,1])F.add(at(rot(box(.09,.09,.04,MAT.gold),0,0,PI/4),sx*2.31,sy*1.86,.21));
+  /* fronton : soleil de laiton entre deux volutes */
+  const crest=G(at(rot(cyl(.32,.32,.06,MAT.brass,32),PI/2,0,0),0,0,0),at(rot(cyl(.22,.22,.08,MAT.gold,32),PI/2,0,0),0,0,.01));
+  for(let i=0;i<16;i++){const a=i/16*TAU;crest.add(at(rot(box(.04,i%2?.16:.26,.02,MAT.gold),0,0,-a),Math.sin(a)*(i%2?.4:.45),Math.cos(a)*(i%2?.4:.45),.0));}
+  crest.position.set(0,2.25,.08);F.add(crest);
+  for(const s of[-1,1])F.add(tube([[s*.42,2.06,.1],[s*.9,2.12,.1],[s*1.4,2.0,.1],[s*1.7,1.96,.1]],.035,MAT.darkwood,16));
+  const bm=new THREE.MeshStandardMaterial({map:BD.tex,emissive:0xffffff,emissiveMap:BD.tex,emissiveIntensity:.44,roughness:.84,metalness:0});
+  const b=hall(mesh(new THREE.PlaneGeometry(BD.W,BD.H),bm));b.position.set(0,0,.095);b.userData.board=true;F.add(b);BD.mesh=b;SYS.hit.push(b);
+  /* appliques : une bougie de chaque côté du tableau, sa lumière balaie la toile */
+  for(const s of[-1,1]){const x=s*2.72;R.add(at(box(.06,.5,.06,MAT.iron),x,2.3,-10.86),at(rot(box(.04,.04,.34,MAT.iron),0,0,0),x,2.1,-10.72),at(cyl(.07,.05,.04,MAT.brass,12),x,2.56,-10.86));
+    candle(R,x,2.58,-10.86,.2,true);}
+  candle(R,-1.9,1.06,-11.05,.18,false);candle(R,-1.72,1.06,-11.12,.12,false);candle(R,1.85,1.06,-11.08,.22,false);
+  bookPile(R,1.35,1.06,-11.1,3,.3);try{const sk=skull(R,-1.25,1.06,-11.05,.4);sk.scale.setScalar(1.2);}catch(e){}
+  /* — au centre, sur le médaillon : podium du mois dernier et coupe en jeu — */
+  const P=G();P.position.set(0,0,2.6);R.add(P);
+  [[0,.62,'I'],[-1.02,.42,'II'],[1.02,.28,'III']].forEach(([x,h,num],i)=>{
+    P.add(at(bx(.98,h,.98,MAT.stone,.9),x,h/2,0),at(box(1.0,.03,1.0,MAT.brass),x,h+.015,0),at(bx(1.04,.06,1.04,MAT.stoneDark),x,.03,0));
+    const pm=new THREE.MeshStandardMaterial({map:plaqueTex(num,''),emissive:0xffffff,emissiveMap:null,emissiveIntensity:0,roughness:.6,metalness:.2});
+    const pl=mesh(new THREE.PlaneGeometry(.72,.27),pm);pl.position.set(x,Math.max(.17,h*.55),.495);P.add(pl);PODIUM.plq.push({m:pl.material,num});});
+  const cup=fitObj(itCup(MAT.gold),[.6,.9]);cup.position.set(0,.635,0);P.add(cup);empower(cup,3);PODIUM.cup=cup;
+  P.add(at(sprite(TEXS.glow,0xffc24a,2.2,2.2,.28),0,1.15,-.25));
+  if(TIER>0){const pl=new THREE.PointLight(0xffc878,6,5.5,2);pl.position.set(0,2.3,.9);P.add(pl);}
+  const circ=mesh(new THREE.PlaneGeometry(3.6,3.6),MAT.add({map:TEXS.rune,color:0xffc24a,opacity:.13}));circ.rotation.x=-PI/2;circ.position.y=.03;circ.renderOrder=3;P.add(circ);PODIUM.circ=circ;
+  const ph=hall(box(3.2,2.0,1.4,MAT.ghost));ph.position.set(HALL.x,1.0,HALL.z+2.6);ph.visible=false;ph.userData.podium=true;scene.add(ph);SYS.hit.push(ph);
+  candle(R,-1.8,0,3.5,.3,true);candle(R,-1.66,0,3.62,.2,false);candle(R,1.85,0,1.7,.26,false);
+  /* — à droite : le pupitre du Registre — */
+  const L=G();L.position.set(3.15,0,5.0);L.rotation.y=-.76;R.add(L);
+  L.add(lathe([[0,0],[.3,0],[.3,.05],[.22,.08],[.14,.12],[.11,.2],[0,.2]],20,MAT.stoneDark),at(cyl(.07,.09,.92,MAT.darkwood,14),0,.62,0),at(cyl(.12,.08,.08,MAT.brass,14),0,1.08,0));
+  const desk=G();desk.position.set(0,1.18,0);desk.rotation.x=.42;L.add(desk);
+  desk.add(at(bx(.78,.05,.56,MAT.darkwood,.6),0,0,0),at(box(.8,.035,.04,MAT.brass),0,.03,.29));
+  { const pm=new THREE.MeshStandardMaterial({color:0xf0e6c8,roughness:.8,emissive:0xffcf70,emissiveMap:TEXS.glyph,emissiveIntensity:.9,side:THREE.DoubleSide}),lea=new THREE.MeshStandardMaterial({color:0x2a1840,roughness:.5});
+    for(const s of[-1,1]){desk.add(surf(10,2,(u,v)=>[s*(.01+u*.33),.045+Math.sin(u*PI)*.045-u*.015,(v-.5)*.44],pm),at(rot(box(.35,.014,.47,lea),0,0,s*.06),s*.18,.03,0));
+      for(let k=1;k<3;k++)desk.add(surf(8,1,(u,v)=>[s*(.01+u*(.33-k*.01)),.045+Math.sin(u*PI)*(.045-k*.012)-u*.015-k*.004,(v-.5)*.43],MAT.paper));}
+    desk.add(at(box(.012,.004,.3,new THREE.MeshStandardMaterial({color:0xa01828,roughness:.6})),.03,.09,.18)); }
+  try{const q=fitObj(itQuill(),[.14,.2]);q.position.set(.3,.03,-.12);desk.add(q);}catch(e){}
+  L.add(at(bx(.26,.03,.24,MAT.darkwood),-.38,1.045,.1),at(rot(box(.3,.03,.04,MAT.brass),0,.3,0),-.2,1.02,.05));   // tablette de la bougie
+  candle(L,-.4,1.06,.1,.14,true);
+  L.add(at(sprite(TEXS.glow,0xffcf70,.9,.9,.22),0,1.35,.05));
+  const lh=hall(box(1.0,1.6,1.0,MAT.ghost));lh.position.set(HALL.x+3.15,.8,HALL.z+5.0);lh.visible=false;lh.userData.lectern=true;scene.add(lh);SYS.hit.push(lh);
+  /* — ambiance : bougies flottantes et poussière, comme dans la nef — */
+  const n=TIER?10:6,im=new THREE.InstancedMesh(new THREE.CylinderGeometry(.03,.034,.3,8),MAT.wax,n),C=[];
+  for(let i=0;i<n;i++){const p=V3((rnd()-.5)*8,4.8+rnd()*2.6,-9+rnd()*15);const fl=sprite(TEXS.flame,0xffd9a0,.11,.24),ha=sprite(TEXS.glow,0xffa040,1.25,1.25,.5);fl.userData.fx=ha.userData.fx=false;R.add(fl,ha);C.push({p,ph:rnd()*TAU,fl,ha});}
+  R.add(im);const m4=new THREE.Matrix4();
+  const N=TIER?380:160,pos=new Float32Array(N*3),sd=new Float32Array(N*4);
+  for(let i=0;i<N;i++){pos[i*3]=(rnd()-.5)*11;pos[i*3+1]=.3+rnd()*8;pos[i*3+2]=-10.5+rnd()*19;for(let k=0;k<4;k++)sd[i*4+k]=rnd();}
+  const dg=new THREE.BufferGeometry();dg.setAttribute('position',new THREE.BufferAttribute(pos,3));dg.setAttribute('aS',new THREE.BufferAttribute(sd,4));
+  const dust=scene.children.find(o=>o.isPoints&&o.material&&o.material.uniforms&&o.material.uniforms.uPx&&!o.material.uniforms.uCol);
+  if(dust){const pts=new THREE.Points(dg,dust.material);pts.frustumCulled=false;R.add(pts);}
+  SYS.tick.push((t)=>{if(!R.visible)return;
+    for(let i=0;i<n;i++){const c=C[i],y=c.p.y+Math.sin(t*.6+c.ph)*.12;m4.makeTranslation(c.p.x,y,c.p.z);im.setMatrixAt(i,m4);
+      const fk=.85+.15*Math.sin(t*11+c.ph*7)+.08*Math.sin(t*23+c.ph);c.fl.position.set(c.p.x,y+.27,c.p.z);c.fl.scale.set(.11*fk,.24*fk,1);c.ha.position.set(c.p.x,y+.25,c.p.z);c.ha.material.opacity=.42*fk;}
+    im.instanceMatrix.needsUpdate=true;
+    if(PODIUM.cup){PODIUM.cup.rotation.y=t*.32;PODIUM.cup.position.y=.635+.035*(1+Math.sin(t*1.1));}
+    PODIUM.circ.rotation.z=t*.05;});
 }
 
 
@@ -907,7 +1116,8 @@ function buildShowcase(){
     const sy=2.36;g.add(at(bx(2.0,.045,.3,MAT.darkwood),lx,sy-.022,-.15));for(const sx of [-1,1])g.add(at(bx(.04,.2,.24,MAT.blackwood),lx+sx*.85,sy-.14,-.18));
     const dg=new THREE.SphereGeometry(.13,18,10,0,TAU,0,PI/2);
     for(let i=-1;i<=1;i++){g.add(at(cyl(.07,.085,.04,MAT.brass,16),lx+i*.6,sy+.02,-.14),at(mesh(dg,CM.glass),lx+i*.6,sy+.04,-.14),at(box(.12,.03,.008,MAT.brass),lx+i*.6,sy-.022,.004));}
-    const hit=box(2.0,.5,.4,MAT.ghost);hit.position.set(lx,sy+.15,-.12);hit.visible=false;hit.userData.note='Tablette des trophées — elle se remplira avec le mode multijoueur.';g.add(hit);SYS.hit.push(hit); }
+    const hit=box(2.0,.5,.4,MAT.ghost);hit.position.set(lx,sy+.15,-.12);hit.visible=false;hit.userData.trophy=true;g.add(hit);SYS.hit.push(hit);
+    SYS.troph={g,pos:[-1,0,1].map(i=>V3(lx+i*.6,sy+.04,-.14)),objs:[]}; }   // les coupes du tournoi du mois s'exposent sous ces cloches
   /* 5 · bibliothèque de droite */
   const E=tall(7.1,2.6,4.6,6,[[12,2,-.62,.52,0],[13,1,.55,.5,2]],[[1,-.55,.5],[2,.45,.5],[3,-.2,.5],[3,.8,.4]]);
   { const y1=E.userData.shelfY(1),y2=E.userData.shelfY(2),y3=E.userData.shelfY(3);
@@ -1459,8 +1669,11 @@ const CAM={p:V3(0,2.6,9.4),t:V3(0,2.7,-4),gp:V3(0,2.3,8.3),gt:V3(0,2.7,-4),view:
 const $=id=>document.getElementById(id);
 function setView(v,keepFocus){
   if(v==='crypte'&&!ST.door)v='porte';
+  const room=HALLV.has(v)?2:1;if(room!==CAM.room){roomSwitch(room,v);return;}   // l'autre salle : fondu au noir
   CAM.view=v;if(!keepFocus)closeCard();
-  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v||(v==='porte'&&b.dataset.v==='crypte')));
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v||(v==='porte'&&b.dataset.v==='crypte')||(room===2&&b.dataset.v==='classement')));
+  if(v==='classement')tip(MOBILE?'Touche une ligne pour voir la fiche · glisse pour faire défiler':'Clique une ligne pour voir la fiche · molette pour faire défiler',4800);
+  else if(v==='salle')tip('Au fond le tableau d’honneur · au centre la coupe du mois · à droite le Registre',5200);
   if(v==='coffre')tip(chests()>0?'Clique sur le coffre pour l’ouvrir':(TEST?'':'Aucun coffre pour l’instant — '+orbNext()+' / '+ORB_PER_CHEST+' orbes · voir [ Quêtes ]'),4200);
   else if(v==='vitrine')tip(MOBILE?'Glisse pour longer les rayons — touche un objet':'Fais glisser (ou molette, flèches) pour longer les rayons — clique un objet',5200);
   else if(v==='porte'&&!ST.door)tip('Un courant d’air passe sous ce rayonnage… '+ownedBase()+' / 20',4200);
@@ -1480,7 +1693,7 @@ function camTick(dt,t){
   if(CAM.focus){const s=CAM.focus,h=s.group.userData.h,d=!s.niche?2.5:s.floor?(1.5+h*.9)*(camera.aspect<.8?1.35:1):(camera.aspect<.8?2.0:1.25);
     gp.copy(s.pos).addScaledVector(s.fd,d);gp.y+=s.floor?h*.6:.22;gt.copy(s.pos);gt.y+=h*.5;
     if(s.owned&&!s.lean&&!s.still){s.spin+=dt*.5;s.group.rotation.y=s.ry+s.spin;}}
-  else{const v=VIEWS[CAM.view];gp.set(v.p[0],v.p[1],v.p[2]);gt.set(v.t[0],v.t[1],v.t[2]);
+  else{const v=VIEWS[CAM.view],vp=camera.aspect<.8&&v.pm?v.pm:v.p;gp.set(vp[0],vp[1],vp[2]);gt.set(v.t[0],v.t[1],v.t[2]);
     if(v.pan){const k=v.pan*CAM.pan;gp.z+=k;gt.z+=k;if(camera.aspect<1)gp.x=1.3;}
     if(CAM.view==='coffre'){if(CAM.push>0)gp.lerp(gt,CAM.push*.2);   // la caméra se rapproche pendant le suspens…
       if(CAM.lift>0){gt.y+=CAM.lift*.8;gp.y+=CAM.lift*.3;gp.z+=CAM.lift*1.25;gp.x+=CAM.lift*.35;}}   // …puis recule et lève les yeux pour suivre l'objet
@@ -1515,7 +1728,8 @@ document.querySelectorAll('#nav button').forEach(b=>b.addEventListener('click',(
 $('c-x').addEventListener('click',()=>setView(CAM.back));
 $('d-ok').addEventListener('click',()=>dismiss(false));$('d-again').addEventListener('click',()=>dismiss(true));
 if(TEST)document.querySelectorAll('#test [data-ri]').forEach(b=>b.addEventListener('click',()=>openChest(+b.dataset.ri)));
-addEventListener('keydown',e=>{if(e.key==='Escape'){if(SEQ.wait)dismiss(false);else if(CAM.focus)setView(CAM.back);else setView('nef');}
+addEventListener('keydown',e=>{if(e.target&&e.target.closest&&e.target.closest('input,textarea'))return;
+  if(e.key==='Escape'){if(onlEsc())return;if(SEQ.wait)dismiss(false);else if(CAM.focus)setView(CAM.back);else if($('card').classList.contains('on')&&CAM.room===2){closeCard();setView('classement');}else if(CAM.room===2&&CAM.view!=='classement')setView('classement');else setView('nef');}
   else if((e.key==='Enter'||e.key===' ')&&SEQ.wait){e.preventDefault();dismiss(false);}});
 if(TEST){$('test').classList.add('on');
   $('t-all').addEventListener('click',()=>{if(SEQ.run||DOOR.run)return;for(let i=0;i<20;i++){const id=ITEMS[i].id;if(!ST.owned[id])ST.owned[id]=1;}save();refreshSlots();hud();if(!ST.door)openDoor();});
@@ -1527,7 +1741,8 @@ function refreshSlots(){for(const s of SYS.slots)placeItem(s,!!ST.owned[ITEMS[s.
 const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
 const PT={down:false,x0:0,pan0:0,moved:0,dirty:false,cx:0,cy:0};
 function pick(cx,cy){ndc.set(cx/innerWidth*2-1,-(cy/innerHeight)*2+1);ray.setFromCamera(ndc,camera);const h=ray.intersectObjects(SYS.hit,false);
-  for(const i of h){const u=i.object.userData;if(u.slot&&!u.slot.niche&&!ST.door)continue;return u;}return null;}
+  for(const i of h){const u=i.object.userData;if(!!u.hall!==(CAM.room===2))continue;if(u.slot&&!u.slot.niche&&!ST.door)continue;LASTHIT=i;return u;}return null;}
+let LASTHIT=null;
 canvas.addEventListener('pointermove',e=>{CAM.mx=e.clientX/innerWidth*2-1;CAM.my=-(e.clientY/innerHeight*2-1);PT.cx=e.clientX;PT.cy=e.clientY;PT.dirty=true;
   if(PT.down){const dx=e.clientX-PT.x0;PT.moved=Math.max(PT.moved,Math.abs(dx));if(CAM.view==='vitrine'&&!CAM.focus)CAM.pan=clamp(PT.pan0-dx/innerWidth*.45,-1,1);}});   // on tire la vue comme une feuille : elle ne bouge plus toute seule
 canvas.addEventListener('wheel',e=>{if(CAM.view!=='vitrine'||CAM.focus)return;e.preventDefault();CAM.pan=clamp(CAM.pan+(Math.abs(e.deltaY)>Math.abs(e.deltaX)?e.deltaY:e.deltaX)*.0007,-1,1);},{passive:false});
@@ -1537,6 +1752,10 @@ addEventListener('pointerup',e=>{if(!PT.down)return;PT.down=false;if(PT.moved>8|
   const u=pick(e.clientX,e.clientY);
   if(!u){if(CAM.focus)setView(CAM.back);return;}
   if(u.note){tip(u.note,4200);return;}
+  if(u.trophy){tip(trophyNote(),6500);return;}
+  if(u.board){boardClick();return;}
+  if(u.podium){setView('podium',true);podiumCard();return;}
+  if(u.lectern){setView('registre');openReg();return;}
   if(u.slot)focusSlot(u.slot);
   else if(u.chest){if(CAM.view==='coffre')openChest();else setView('coffre');}
   else if(u.door)setView(ST.door?'crypte':'porte');});
@@ -1578,7 +1797,8 @@ function openChest(forceRi){
   closeCard();setView('coffre',true);tip('');
   Object.assign(SEQ,{run:true,wait:false,t:0,res:roll(TEST?forceRi:undefined),obj:null,aura:null,closing:0,again:false,revealed:false,shown:false});hud();sfxCreak();sfxSuspense(DROP[SEQ.res.ri].pre);
 }
-function dismiss(again){if(!SEQ.wait)return;SEQ.wait=false;SEQ.closing=.0001;SEQ.again=again&&chests()>0;$('drop').classList.remove('on');}
+function dismiss(again){if(!SEQ.wait)return;SEQ.wait=false;SEQ.closing=.0001;SEQ.again=again&&chests()>0;$('drop').classList.remove('on');
+  try{const R=window.RVO;if(R&&R.state().uid&&!TEST)setTimeout(()=>R.syncNow(),2500);}catch(e){}}   // la collection part vers le cloud
 function disposeObj(o){o.traverse(m=>{if(m.geometry)m.geometry.dispose();});scene.remove(o);}
 function seqTick(dt,t){
   const C=SYS.chest,live=SEQ.run&&!SEQ.closing,target=live&&SEQ.t>.12?DROP[SEQ.res.ri].dim:1;
@@ -1650,6 +1870,311 @@ function doorTick(dt,t){
   else{D.g.position.x=4.75;D.leak.visible=false;DOOR.run=false;ST.door=true;save();hud();setView('crypte');tip('La crypte est ouverte — cinq objets mythiques t’attendent',6000);}
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   05 · salle du classement : tableau d'honneur, podium, Registre, fiches (interface du mode en ligne)
+   Tout passe par window.RVO (en-ligne/rvision-online.js). Sans configuration Firebase, la salle s'ouvre quand même
+   et le tableau explique comment activer le mode en ligne. Les textes venus d'autres étudiants (pseudos) ne sont
+   jamais injectés comme HTML : textContent uniquement.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+const HALLV=new Set(['salle','classement','podium','registre']);
+Object.assign(VIEWS,{salle:{p:[40,2.3,8.3],t:[40,2.6,-4]},classement:{p:[40,2.55,-5.0],t:[40,2.95,-11.2],pm:[40,2.75,-2.6]},
+  podium:{p:[41.75,1.8,5.9],t:[40,1.12,2.6]},registre:{p:[40.9,1.95,7.35],t:[43.6,1.02,4.6]}});
+CAM.room=1;
+const ONL={kind:'week',tok:0,open:'',fr:new Set(),scr:'',sk:'',busy:false};
+const RV=()=>window.RVO||null;
+function E(tag,cls,txt,par){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined&&txt!==null)e.textContent=txt;if(par)par.appendChild(e);return e;}
+function Bt(txt,cls,fn,par){const b=E('button',cls===undefined?'ob':cls,txt,par);b.type='button';if(fn)b.addEventListener('click',fn);return b;}
+const fmtMin=m=>{m=Math.round(m||0);const h=Math.floor(m/60),r=m%60;return h?h+' h '+String(r).padStart(2,'0'):r+' min';};
+const nf=n=>Math.round(n||0).toLocaleString('fr-FR');
+const MOISL=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const monthLbl=m=>MOISL[(m%100)-1]+' '+Math.floor(m/100);
+const prevM=m=>m%100===1?(Math.floor(m/100)-1)*100+12:m-1;
+function ago(ms){if(!ms)return 'pas encore';const s=(Date.now()-ms)/1000;return s<60?'à l’instant':s<3600?'il y a '+Math.round(s/60)+' min':s<86400?'il y a '+Math.round(s/3600)+' h':'il y a '+Math.round(s/86400)+' j';}
+
+/* ── le tableau d'honneur (toile 2048 × 1536) ── */
+const GOLDS=['#f6dc93','#d9a441','#a8762a'];
+function fitText(c,t,x,y,max){t=String(t||'');if(c.measureText(t).width<=max){c.fillText(t,x,y);return c.measureText(t).width;}
+  let s=t;while(s.length>1&&c.measureText(s+'…').width>max)s=s.slice(0,-1);c.fillText(s+'…',x,y);return c.measureText(s+'…').width;}
+function wrapText(c,t,x,y,max,lh){const lines=[];String(t||'').split('\n').forEach(par=>{let cur='';par.split(' ').forEach(w=>{const tr=cur?cur+' '+w:w;if(c.measureText(tr).width>max&&cur){lines.push(cur);cur=w;}else cur=tr;});lines.push(cur);});
+  lines.forEach((l,i)=>c.fillText(l,x,y+i*lh));return lines.length;}
+function bdTexts(){
+  const R=RV(),P=R&&R.periods?R.periods():null;if(!P){BD.sub='';BD.foot='';return;}
+  if(ONL.kind==='month'){BD.sub='Tournoi de '+P.month.label+' · '+(P.month.left>1?'fin dans '+P.month.left+' jours':'dernier jour');
+    BD.foot='Le premier du mois remporte la Coupe de '+P.month.label+' : elle rejoint la tablette des trophées de sa collection. Seuls les profils publics concourent.';}
+  else if(ONL.kind==='friends'){BD.sub='Entre amis · '+P.week.label.charAt(0).toLowerCase()+P.week.label.slice(1);BD.foot='Ajoute tes amis depuis le Registre, sur le pupitre à droite de la salle.';}
+  else{BD.sub=P.week.label;BD.foot='Score = temps (1 pt par minute, 180 par jour) + progression (1 000 pts pour un cours entier) + régularité (40 pts par jour actif)';}
+}
+function bdDraw(){
+  if(!BD.x)return;const c=BD.x,W=BD.CW,H=BD.CH,d=BD.data;
+  c.save();c.setTransform(1,0,0,1,0,0);c.textBaseline='alphabetic';
+  let g=c.createRadialGradient(W/2,H*.4,60,W/2,H*.5,W*.72);g.addColorStop(0,'#211a33');g.addColorStop(.6,'#120e1c');g.addColorStop(1,'#07060b');c.fillStyle=g;c.fillRect(0,0,W,H);
+  if(BD.grain){c.globalAlpha=.06;c.drawImage(BD.grain,0,0,W,H);c.globalAlpha=1;}
+  const gg=c.createLinearGradient(0,0,W,H);gg.addColorStop(0,GOLDS[0]);gg.addColorStop(.5,GOLDS[1]);gg.addColorStop(1,GOLDS[2]);
+  c.strokeStyle=gg;c.lineWidth=7;c.strokeRect(42,42,W-84,H-84);c.lineWidth=2;c.strokeRect(62,62,W-124,H-124);
+  const dia=(x,y,s)=>{c.beginPath();c.moveTo(x,y-s);c.lineTo(x+s,y);c.lineTo(x,y+s);c.lineTo(x-s,y);c.closePath();c.fill();};
+  c.fillStyle=gg;[[42,42],[W-42,42],[42,H-42],[W-42,H-42]].forEach(p=>dia(p[0],p[1],18));
+  /* titre */
+  c.textAlign='center';c.font='800 96px Unbounded, sans-serif';try{c.letterSpacing='10px';}catch(e){}
+  c.shadowColor='rgba(255,194,74,.35)';c.shadowBlur=26;c.fillStyle=gg;c.fillText('TABLEAU D’HONNEUR',W/2,186);c.shadowBlur=0;
+  try{c.letterSpacing='2px';}catch(e){}
+  c.font='500 40px "JetBrains Mono", monospace';c.fillStyle='rgba(244,238,252,.74)';fitText(c,BD.sub,W/2,252,W-300);
+  c.strokeStyle='rgba(217,164,65,.55)';c.lineWidth=2;c.beginPath();c.moveTo(300,292);c.lineTo(W/2-34,292);c.moveTo(W/2+34,292);c.lineTo(W-300,292);c.stroke();c.fillStyle=gg;dia(W/2,292,13);
+  const Y0=362,RH=94,X={rk:156,nm:250,t:1330,p:1545,r:1725,s:1935};
+  c.font='700 26px "JetBrains Mono", monospace';try{c.letterSpacing='5px';}catch(e){}c.fillStyle='rgba(244,238,252,.42)';
+  c.textAlign='center';c.fillText('RANG',X.rk,Y0);c.textAlign='left';c.fillText('ÉTUDIANT',X.nm,Y0);
+  c.textAlign='right';c.fillText('TEMPS',X.t,Y0);c.fillText('PROGR.',X.p,Y0);c.fillText('JOURS',X.r,Y0);c.fillText('SCORE',X.s,Y0);
+  try{c.letterSpacing='0px';}catch(e){}
+  BD.hit=[];
+  if(BD.msg||!d){
+    c.textAlign='center';c.font='500 46px "JetBrains Mono", monospace';c.fillStyle='rgba(244,238,252,.84)';wrapText(c,BD.msg||'…',W/2,H*.5,W-420,66);
+  }else{
+    const rows=d.rows,meIn=rows.find(r=>r.me),pin=d.me&&!meIn?d.me:null,top=Math.max(1,...rows.map(r=>r.s),pin?pin.s:0);
+    let vis=rows.slice(BD.off,BD.off+10),pinned=pin||(meIn&&vis.indexOf(meIn)<0?meIn:null);
+    if(pinned)vis=vis.slice(0,9);
+    const row=(r,y,i)=>{
+      const cy=y+RH/2+16;
+      if(r.me){c.fillStyle='rgba(176,107,255,.17)';c.fillRect(84,y+6,W-168,RH-12);c.fillStyle='#b06bff';c.fillRect(84,y+6,6,RH-12);}
+      else if(i%2){c.fillStyle='rgba(255,255,255,.028)';c.fillRect(84,y+6,W-168,RH-12);}
+      if(r.rank&&r.rank<=3){const mc=[['#fff3c4','#e3a93a','#7a4d10'],['#ffffff','#b9c2cc','#59616b'],['#ffd9b8','#c4793e','#5e3214']][r.rank-1],rg=c.createRadialGradient(X.rk-10,y+RH/2-10,4,X.rk,y+RH/2,36);
+        rg.addColorStop(0,mc[0]);rg.addColorStop(.55,mc[1]);rg.addColorStop(1,mc[2]);c.fillStyle=rg;c.beginPath();c.arc(X.rk,y+RH/2,33,0,TAU);c.fill();
+        c.fillStyle='#1a1206';c.font='800 32px Unbounded, sans-serif';c.textAlign='center';c.fillText(String(r.rank),X.rk,y+RH/2+12);}
+      else{c.fillStyle='rgba(244,238,252,.62)';c.font='700 40px "JetBrains Mono", monospace';c.textAlign='center';c.fillText(r.rank?String(r.rank):'—',X.rk,cy);}
+      c.textAlign='left';c.font='700 46px "JetBrains Mono", monospace';c.fillStyle='#fff';const nw=fitText(c,r.n,X.nm,cy,690);
+      if(r.h&&nw<640){c.font='500 30px "JetBrains Mono", monospace';c.fillStyle='rgba(244,238,252,.42)';fitText(c,'@'+r.h,X.nm+nw+18,cy,1080-(X.nm+nw+18));}
+      c.textAlign='right';c.font='500 38px "JetBrains Mono", monospace';c.fillStyle='rgba(244,238,252,.78)';
+      c.fillText(fmtMin(r.t),X.t,cy);c.fillText('+'+nf(r.p),X.p,cy);c.fillText((r.d||0)+' j',X.r,cy);
+      c.font='800 50px Unbounded, sans-serif';c.fillStyle=r.rank&&r.rank<=3?gg:'#fff';c.fillText(nf(r.s),X.s,cy+2);
+      c.fillStyle='rgba(217,164,65,.38)';c.fillRect(X.nm,y+RH-16,Math.max(2,(1090-X.nm)*Math.min(1,r.s/top)),3);
+      BD.hit.push({y0:y,y1:y+RH,r});};
+    vis.forEach((r,i)=>row(r,Y0+28+i*RH,i));
+    if(pinned){const y=Y0+28+9*RH;c.fillStyle='rgba(244,238,252,.35)';c.font='700 40px "JetBrains Mono", monospace';c.textAlign='center';c.fillText('· · ·',W/2,y-4);row(pinned,y+6,1);}
+    c.fillStyle='rgba(244,238,252,.55)';c.font='700 34px "JetBrains Mono", monospace';c.textAlign='center';
+    c.font='700 26px "JetBrains Mono", monospace';if(BD.off>0)c.fillText('▲',W-84,Y0+64);if(BD.off+10<rows.length)c.fillText('▼',W-84,Y0+28+10*RH-36);
+  }
+  c.font='500 29px "JetBrains Mono", monospace';c.fillStyle='rgba(244,238,252,.5)';c.textAlign='center';wrapText(c,BD.foot,W/2,H-122,W-340,40);
+  c.restore();if(BD.tex)BD.tex.needsUpdate=true;
+}
+function bdScroll(n){const R=BD.data?BD.data.rows.length:0,o=clamp(BD.off+n,0,Math.max(0,R-10));if(o!==BD.off){BD.off=o;bdDraw();}}
+async function bdLoad(force){
+  const tok=++ONL.tok,R=RV();bdTexts();
+  if(!R||!R.ready){BD.data=null;BD.msg='Le mode en ligne n’est pas encore activé sur ce site.\nPour l’activer : LISEZMOI-EN-LIGNE.txt (projet Firebase gratuit, une dizaine de minutes).';bdDraw();listRender();return;}
+  if(force||!BD.data||BD.data.kind!==ONL.kind){BD.data=null;BD.msg='Lecture du classement…';bdDraw();listRender();}
+  try{
+    await R.ensure();if(tok!==ONL.tok)return;
+    const st=R.state();
+    if(st.sdk==='error'){BD.data=null;BD.msg=st.err||'Service en ligne injoignable.';}
+    else if(ONL.kind==='friends'&&!st.uid){BD.data=null;BD.msg='Connecte-toi au Registre (le pupitre, à droite) pour retrouver tes amis.';}
+    else if(ONL.kind==='friends'&&!st.onboarded){BD.data=null;BD.msg='Termine ton inscription au Registre pour ajouter des amis.';}
+    else{const v=await R.board(ONL.kind);if(tok!==ONL.tok)return;
+      BD.data=v;BD.off=Math.min(BD.off,Math.max(0,v.rows.length-10));
+      BD.msg=v.rows.length||v.me?'':ONL.kind==='friends'?'Aucun ami pour l’instant — ajoute-les depuis le Registre.':ONL.kind==='month'?'Personne n’est encore inscrit au tournoi de ce mois.\nSois le premier : ouvre le Registre.':'Personne au classement cette semaine pour l’instant.\nSois le premier : ouvre le Registre.';}
+  }catch(e){if(tok!==ONL.tok)return;BD.data=null;BD.msg='Classement indisponible pour l’instant.\n'+((e&&(e.code||e.message))||e);}
+  bdDraw();listRender();
+}
+function boardClick(){
+  if(CAM.view!=='classement'){setView('classement');return;}
+  const uv=LASTHIT&&LASTHIT.uv;if(!uv)return;const y=(1-uv.y)*BD.CH,h=BD.hit.find(o=>y>=o.y0&&y<o.y1);
+  if(h)cardOpen(h.r);
+  else if(uv.x>.92&&BD.data)bdScroll(y<BD.CH*.5?-5:5);
+}
+
+/* ── panneaux : un seul ouvert à la fois ── */
+function panel(id){ONL.open=id;['reg','ocard','olist'].forEach(k=>{const e=$(k);if(e)e.classList.toggle('on',k===id);});}
+function onlEsc(){if(ONL.open){panel('');return true;}return false;}
+function listRender(){
+  const el=$('olist');if(!el)return;el.textContent='';
+  const h=E('div','op-h',null,el);E('b',null,{week:'Semaine',month:'Tournoi du mois',friends:'Amis'}[ONL.kind],h);E('em',null,BD.sub,h);Bt('Fermer ✕','op-x',()=>panel(''),h);
+  if(BD.msg||!BD.data){E('p','op-m',BD.msg||'…',el);return;}
+  const rows=BD.data.rows.slice();if(BD.data.me)rows.push(BD.data.me);
+  rows.forEach(r=>{const b=Bt('','ol-r'+(r.me?' me':'')+(r.rank&&r.rank<=3?' top':''),()=>cardOpen(r),el);E('span','rk',r.rank?String(r.rank):'—',b);
+    const n=E('span','nm',r.n,b);if(r.h)E('small',null,'@'+r.h,n);E('span','sc',nf(r.s),b);});
+}
+
+/* ── fiche d'un étudiant ── */
+async function cardOpen(r){
+  const R=RV(),el=$('ocard');if(!R||!el)return;el.textContent='';panel('ocard');
+  const h=E('div','op-h',null,el);E('b',null,r.n||'',h);E('em',null,r.h?'@'+r.h:'',h);Bt('Fermer ✕','op-x',()=>panel(MOBILE?'olist':''),h);
+  const body=E('div',null,null,el);E('p','op-m','Lecture de la fiche…',body);
+  const st=R.state(),mine=!!(r.uid&&st.uid===r.uid);let p=null;
+  try{if(mine){const sc=R.myScores();p={n:st.pseudo,h:st.handle,vis:st.vis,w:sc.week,m:sc.month,st:R.myStats(),tr:R.trophies()};}else p=await R.profileOf(r.uid);}
+  catch(e){body.textContent='';E('p','op-m','Cette fiche est réservée à ses amis.',body);friendBtn(body,r);return;}
+  body.textContent='';if(!p){E('p','op-m','Fiche introuvable.',body);return;}
+  const P=R.periods(),z={s:0,t:0,p:0,r:0,d:0},w=p.w&&p.w.id===P.week.id?p.w:z,m=p.m&&p.m.id===P.month.id?p.m:z;
+  if(r.rank)E('p','op-rk',(ONL.kind==='month'?'Tournoi du mois · ':ONL.kind==='friends'?'Entre amis · ':'Semaine · ')+r.rank+(r.rank===1?'ᵉʳ':'ᵉ'),body);
+  if(p.vis==='friends')E('p','op-n','Profil réservé aux amis',body);
+  const g=E('div','op-sc',null,body);
+  [['Cette semaine',w],['Ce mois',m]].forEach(([t,x])=>{const c=E('div',null,null,g);E('small',null,t,c);E('b',null,nf(x.s)+' pts',c);
+    const tot=Math.max(1,x.s),sb=E('div','op-stk',null,c);[['kt',x.t],['kp',x.p],['kr',x.r]].forEach(([k,v])=>{E('i',k,null,sb).style.width=(v/tot*100).toFixed(1)+'%';});
+    E('span',null,fmtMin(x.t)+' · +'+nf(x.p)+' · '+(x.d||0)+' j',c);});
+  E('p','op-n','Bleu : temps · violet : progression des cours · or : régularité',body);
+  const s=p.st||{};E('p','op-k','Rythme',body);
+  E('p',null,'Série en cours : '+(s.st||0)+' jour'+((s.st||0)>1?'s':'')+' · temps total : '+fmtMin(s.tt||0),body);
+  if(Array.isArray(s.wk)&&s.wk.length){const sp=E('div','op-wk',null,body),mx=Math.max(30,...s.wk);
+    s.wk.forEach((v,i)=>{const b=E('i',i===s.wk.length-1?'on':'',null,sp);b.style.height=Math.max(4,v/mx*100).toFixed(0)+'%';b.title=fmtMin(v);});
+    E('p','op-n','Temps de révision des huit dernières semaines (la dernière en or)',body);}
+  if(Array.isArray(s.c)&&s.c.length){E('p','op-k','Avancement des cours',body);const cl=E('div','op-cl',null,body);
+    s.c.slice(0,16).forEach(co=>{const row=E('div',null,null,cl),t=E('span',null,co.n,row);if(co.lv)E('em',null,co.lv,t);
+      const bar=E('i',null,null,row);E('b',null,null,bar).style.width=Math.round((co.m||0)*100)+'%';E('small',null,Math.round((co.m||0)*100)+' %',row);});}
+  if(Array.isArray(p.tr)&&p.tr.length){E('p','op-k','Trophées',body);E('p',null,p.tr.map(t=>'Coupe de '+monthLbl(t.m)).join(' · '),body);}
+  if(!mine)friendBtn(body,r);
+}
+function friendBtn(el,r){const R=RV(),st=R.state();if(!st.onboarded||!r.h||ONL.fr.has(r.uid)||r.uid===st.uid)return;
+  const m=E('p','op-n',null,el);Bt('Ajouter @'+r.h+' en ami','ob op-af',async()=>{m.textContent='…';try{const x=await R.requestFriend(r.h);m.textContent=x==='accepted'?'Vous êtes maintenant amis.':'Demande envoyée.';}catch(err){m.textContent=err&&err.message||String(err);}},el);}
+
+/* ── Registre : connexion, inscription, visibilité, synchro, amis ── */
+function regScreen(st){return !st||!st.cfg?'off':st.sdk==='error'?'err':!st.uid&&st.sdk!=='ready'?'load':!st.uid?'in':!st.onboarded?'ob':'main';}
+function openReg(){const R=RV();panel('reg');ONL.scr='';regRender();if(R&&R.ready)R.ensure().then(()=>regRender());}
+function regRender(){
+  const el=$('reg'),R=RV(),st=R?R.state():null,scr=regScreen(st);if(!el)return;
+  if(scr==='main'&&ONL.scr==='main'&&ONL.link===!!st.needLink){regLive(st);return;}   // même écran : on ne touche qu'aux valeurs vivantes (on ne casse pas une saisie en cours)
+  if(scr==='ob'&&ONL.scr==='ob')return;
+  ONL.scr=scr;ONL.link=!!(st&&st.needLink);el.textContent='';
+  const h=E('div','op-h',null,el);E('b',null,'Registre',h);E('em',null,'compte · synchro · amis',h);Bt('Fermer ✕','op-x',()=>panel(''),h);
+  if(scr==='off'){E('p','op-m','Le mode en ligne n’est pas encore activé sur ce site.',el);
+    E('p','op-n','Pour l’activer : créer le projet Firebase (gratuit) et coller sa configuration dans en-ligne/config.js. Tout est expliqué pas à pas dans LISEZMOI-EN-LIGNE.txt.',el);return;}
+  if(scr==='err'){E('p','op-e',st.err||'Service injoignable.',el);Bt('Réessayer','btn',()=>{R.ensure().then(()=>{ONL.scr='';regRender();});},el);return;}
+  if(scr==='load'){E('p','op-m','Ouverture du registre…',el);return;}
+  if(st.err)E('p','op-e',st.err,el);
+  if(scr==='in'){
+    E('p',null,'Inscris-toi au registre pour :',el);const ul=E('ul',null,null,el);
+    ['retrouver ta progression sur tous tes appareils (synchronisation gratuite)','entrer au classement de la semaine et au tournoi du mois','ajouter des amis et suivre leur avancement'].forEach(t=>E('li',null,t,ul));
+    Bt('Se connecter avec Google','btn',async()=>{try{await R.signIn();}catch(e){}ONL.scr='';regRender();},el);
+    E('p','op-n','Ton compte Google sert seulement à te reconnaître : les autres étudiants ne voient ni ton nom ni ton adresse, uniquement ton pseudo.',el);return;}
+  if(scr==='ob'){
+    const f=E('form','op-f',null,el);f.autocomplete='off';E('p','op-n','Connecté : '+(st.user&&st.user.email||''),f);
+    const local=st.pseudo||st.local;let pin=null;
+    if(local)E('p',null,'Profil suivi par ce compte : « '+local+' ». Ses données seront synchronisées.',f);
+    else{E('label',null,'Prénom ou pseudo (ton profil R·Vision)',f);pin=E('input','op-in',null,f);pin.maxLength=20;pin.placeholder='Max…';}
+    E('label',null,'Pseudo en ligne — unique, sert à t’ajouter en ami',f);
+    const hw=E('div','op-at',null,f);E('span',null,'@',hw);const hin=E('input','op-in',null,hw);hin.maxLength=20;hin.placeholder='max';hin.value=R.slug(local||'');
+    if(pin)pin.addEventListener('input',()=>{hin.value=R.slug(pin.value);});
+    E('label',null,'Qui voit ton avancement ?',f);
+    const vs=E('div','op-vis',null,f);let vis='public';const vb=[];
+    [['public','Public','Classement général et tournoi du mois'],['friends','Amis seulement','Seuls tes amis te voient · pas de tournoi']].forEach(([k,t,dd])=>{
+      const b=Bt('',k==='public'?'on':'',()=>{vis=k;vb.forEach(x=>x.classList.toggle('on',x===b));},vs);E('b',null,t,b);E('small',null,dd,b);vb.push(b);});
+    const msg=E('p','op-e',null,f),go=Bt('Valider','btn',null,f);go.type='submit';
+    f.addEventListener('submit',async e=>{e.preventDefault();msg.textContent='';go.disabled=true;go.textContent='…';
+      try{await R.onboard({handle:hin.value,vis,pseudo:pin?pin.value:''});ONL.scr='';regRender();bdLoad(true);podiumLoad();}
+      catch(err){msg.textContent=err&&err.message||String(err);go.disabled=false;go.textContent='Valider';}});
+    return;}
+  /* écran principal */
+  if(st.needLink){const k=E('div','op-w',null,el);E('p',null,'Ton compte suit le profil « '+st.needLink.account+' ». Sur cet appareil, le profil actif est « '+st.needLink.local+' ».',k);
+    const r=E('div','op-row',null,k);Bt('Passer sur « '+st.needLink.account+' »','ob',()=>{R.link('use');},r);Bt('Verser « '+st.needLink.local+' » dedans','ob',()=>{R.link('merge');},r);}
+  const id=E('div','op-id',null,el);E('i',null,(st.pseudo||'?').charAt(0).toUpperCase(),id);const nm=E('div',null,null,id);E('b',null,st.pseudo,nm);E('small',null,'@'+st.handle,nm);
+  E('p','op-n',st.user&&st.user.email?'Compte Google : '+st.user.email+' (jamais montré)':'',el);
+  E('p','op-k','Visibilité',el);const vr=E('div','op-vis sm',null,el);
+  [['public','Public'],['friends','Amis seulement']].forEach(([k,t])=>{const b=Bt(t,st.vis===k?'on':'',async()=>{if(R.state().vis===k)return;vr.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+    try{await R.setVis(k);}catch(e){}bdLoad(true);},vr);b.dataset.v=k;});
+  E('p','op-n','Public : tu apparais au classement général et tu concours au tournoi du mois. Amis seulement : seuls tes amis voient ton avancement.',el);
+  E('p','op-k','Synchronisation',el);const sy=E('div','op-row',null,el);E('span','op-sy',null,sy);
+  Bt('Synchroniser','ob',async()=>{await R.syncNow();bdLoad(true);},sy);
+  E('p','op-k','Cette semaine · ce mois',el);E('div','op-sc op-me',null,el);
+  E('p','op-k','Amis',el);
+  const af=E('form','op-add',null,el),ain=E('input','op-in',null,af);ain.placeholder='@pseudo d’un ami';ain.maxLength=21;Bt('Ajouter','ob',null,af).type='submit';
+  const am=E('p','op-n',null,el),fl=E('div','op-fl',null,el);
+  af.addEventListener('submit',async e=>{e.preventDefault();am.textContent='…';try{const x=await R.requestFriend(ain.value);am.textContent=x==='accepted'?'Vous êtes maintenant amis.':'Demande envoyée — elle apparaîtra chez ton ami dans son Registre.';ain.value='';friendsRender(fl);}
+    catch(err){am.textContent=err&&err.message||String(err);}});
+  friendsRender(fl);
+  const tr=E('div','op-tr',null,el);
+  Bt('Se déconnecter','ob op-out',async()=>{await R.signOut();ONL.scr='';regRender();bdLoad(true);},el);
+  regLive(st);
+}
+function regLive(st){const el=$('reg');if(!el)return;const R=RV();
+  const sy=el.querySelector('.op-sy');if(sy)sy.textContent=st.sync.busy?'Synchronisation…':st.sync.err?st.sync.err:'Synchronisé '+ago(st.sync.last);
+  el.querySelectorAll('.op-vis.sm button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.vis));
+  const me=el.querySelector('.op-me');if(me&&R){me.textContent='';const sc=R.myScores();
+    [['Semaine',sc.week],['Mois',sc.month]].forEach(([t,x])=>{const c=E('div',null,null,me);E('small',null,t,c);E('b',null,nf(x.s)+' pts',c);E('span',null,fmtMin(x.t)+' · +'+nf(x.p)+' · '+(x.d||0)+' j',c);});}
+  const tr=el.querySelector('.op-tr');if(tr){tr.textContent='';if(st.trophies&&st.trophies.length){E('p','op-k','Trophées',tr);E('p',null,st.trophies.map(t=>'Coupe de '+monthLbl(t.m)+' ('+nf(t.s)+' pts)').join(' · '),tr);}}}
+async function friendsRender(el){
+  const R=RV();el.textContent='';E('p','op-n','Lecture de tes amis…',el);let F;
+  try{F=await R.friends(true);}catch(e){el.textContent='';E('p','op-e','Amis indisponibles : '+((e&&(e.code||e.message))||e),el);return;}
+  el.textContent='';ONL.fr=new Set(F.friends.map(f=>f.uid));const wk=R.periods().week.id;
+  F.incoming.forEach(f=>{const r=E('div','op-fr in',null,el);E('span',null,(f.n||f.h)+' (@'+f.h+') veut être ton ami',r);
+    Bt('Accepter','ob',async()=>{await R.acceptFriend(f.id).catch(()=>{});friendsRender(el);if(ONL.kind==='friends')bdLoad(true);},r);Bt('Refuser','ob',async()=>{await R.removeFriend(f.id).catch(()=>{});friendsRender(el);},r);});
+  F.friends.forEach(f=>{const r=E('div','op-fr',null,el),n=Bt('','op-fn',()=>cardOpen({uid:f.uid,n:f.n,h:f.h}),r);E('b',null,f.n||f.h,n);E('small',null,'@'+f.h,n);
+    const w=f.prof&&f.prof.w;E('em',null,w&&w.id===wk?nf(w.s)+' pts':'—',r);
+    const x=Bt('Retirer','ob',async()=>{if(x.dataset.ok!=='1'){x.dataset.ok='1';x.textContent='Sûr ?';setTimeout(()=>{x.dataset.ok='';x.textContent='Retirer';},3000);return;}await R.removeFriend(f.id).catch(()=>{});friendsRender(el);if(ONL.kind==='friends')bdLoad(true);},r);});
+  F.outgoing.forEach(f=>{const r=E('div','op-fr out',null,el);E('span',null,'Demande envoyée à @'+f.h,r);Bt('Annuler','ob',async()=>{await R.removeFriend(f.id).catch(()=>{});friendsRender(el);},r);});
+  if(!F.friends.length&&!F.incoming.length&&!F.outgoing.length)E('p','op-n','Aucun ami pour l’instant. Demande-leur leur pseudo en ligne (@…) et ajoute-les ci-dessus.',el);
+}
+
+/* ── podium du mois dernier, coupe en jeu ── */
+async function podiumLoad(){
+  const R=RV();if(!R||!R.ready)return;const pm=prevM(R.periods().month.id);let rows=[];
+  try{await R.ensure();if(R.state().sdk!=='ready')return;const v=await R.board('month',pm);rows=v.rows.slice(0,3);}catch(e){return;}
+  PODIUM.prev={m:pm,rows};
+  PODIUM.plq.forEach((q,i)=>{const r=rows[i],old=q.m.map;q.m.map=plaqueTex(q.num,r?r.n:'',r?nf(r.s):null);q.m.needsUpdate=true;if(old)old.dispose();});
+}
+function podiumCard(){
+  const R=RV(),P=R?R.periods():null,c=$('card');CAM.back='classement';
+  c.style.setProperty('--rc','#ffc24a');$('c-r').textContent='Tournoi du mois';$('c-i').textContent=P?P.month.label:'';$('c-n').textContent=P?'Coupe de '+P.month.label:'Coupe du mois';
+  let d='Le premier du classement mensuel la remporte : elle rejoint alors la tablette des trophées de sa collection. Le classement est figé le 3 du mois suivant. Seuls les profils publics concourent.';
+  if(PODIUM.prev&&PODIUM.prev.rows.length)d+=' Podium de '+monthLbl(PODIUM.prev.m)+' : '+PODIUM.prev.rows.map((r,i)=>(i+1)+'. '+r.n+' ('+nf(r.s)+' pts)').join(', ')+'.';
+  $('c-d').textContent=d;const st=R&&R.state();$('c-c').textContent=st&&st.onboarded?'Ton score du mois : '+nf(R.myScores().month.s)+' pts':'Inscris-toi au Registre pour concourir';c.classList.add('on');
+}
+
+/* ── coupes gagnées, sous les cloches de la tablette des trophées (collection) ── */
+function myTrophies(){try{const t=JSON.parse(localStorage.getItem('rvision_'+(USER?USER+'_':'')+'trophees')||'[]');return Array.isArray(t)?t:[];}catch(e){return [];}}
+function placeTrophies(){
+  const T=SYS.troph;if(!T)return;T.objs.forEach(o=>{T.g.remove(o);disposeObj(o);});T.objs=[];
+  const L=myTrophies().slice(-3),slots=L.length===1?[1]:L.length===2?[0,2]:[0,1,2];
+  L.forEach((t,i)=>{const o=fitObj(itCup(MAT.gold),[.15,.115]);o.position.copy(T.pos[slots[i]]);T.g.add(o);empower(o,3);T.objs.push(o);});
+}
+function trophyNote(){const L=myTrophies();return L.length?'Tablette des trophées — '+L.map(t=>'Coupe de '+monthLbl(t.m)+' ('+nf(t.s)+' pts)').join(' · ')
+  :'Tablette des trophées — remporte le tournoi du mois (salle du Classement) pour y exposer ta coupe.';}
+
+/* ── passage d'une salle à l'autre : fondu au noir ── */
+function viewGoal(v,gp,gt){const V=VIEWS[v],vp=camera.aspect<.8&&V.pm?V.pm:V.p;gp.set(vp[0],vp[1],vp[2]);gt.set(V.t[0],V.t[1],V.t[2]);}
+function showRoom(r){
+  CAM.room=r;if(SYS.room)SYS.room.visible=r===1;if(SYS.hall)SYS.hall.visible=r===2;
+  $('hud').classList.toggle('hall',r===2);const t=document.querySelector('.ttl');if(t)t.textContent=r===2?'CLASSEMENT':'BIBLIOTHÈQUE';
+  $('onl').classList.toggle('on',r===2);if(r!==2)panel('');
+}
+let ROOMSW=false;
+function roomSwitch(room,v){
+  if(ROOMSW)return;ROOMSW=true;closeCard();panel('');tip('');const f=$('fade');f.classList.add('on');
+  setTimeout(async()=>{
+    showRoom(room);viewGoal(v,CAM.gp,CAM.gt);CAM.p.copy(CAM.gp);CAM.t.copy(CAM.gt);camera.position.copy(CAM.p);camera.lookAt(CAM.t);
+    if(room===2&&!SYS.hallReady){SYS.hallReady=true;try{if(renderer.compileAsync)await renderer.compileAsync(scene,camera);}catch(e){}}   // premier passage : shaders préparés pendant le noir
+    ROOMSW=false;setView(v);f.classList.remove('on');if(room===2)onlEnter();
+  },REDUCED?60:420);
+}
+function onlEnter(){bdTexts();bdLoad(false);podiumLoad();onlHud();if(MOBILE&&!ONL.open)panel('olist');}
+function onlHud(){
+  const R=RV(),st=R?R.state():null,el=$('o-st');
+  if(el)el.textContent=!st||!st.cfg?'Mode en ligne non activé':st.sdk==='error'?'Service en ligne injoignable':!st.uid?'Non connecté · ouvre le Registre':
+    !st.onboarded?'Inscription à terminer au Registre':'@'+st.handle+' · '+(st.sync.busy?'synchronisation…':'synchronisé '+ago(st.sync.last));
+  document.querySelectorAll('#onl .tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===ONL.kind));
+}
+function onlWire(){
+  const R=RV();if(!R){setTimeout(onlWire,400);return;}
+  R.on('state',st=>{onlHud();if(ONL.open==='reg')regRender();const k=(st.uid||'')+'|'+st.onboarded+'|'+st.vis;if(k!==ONL.sk){const was=ONL.sk;ONL.sk=k;if(was&&CAM.room===2){bdLoad(true);podiumLoad();}}});
+  R.on('trophy',()=>{placeTrophies();tip('Tu as remporté la coupe du mois — elle est exposée dans ta collection',7000);});
+}
+document.querySelectorAll('#onl .tabs button').forEach(b=>b.addEventListener('click',()=>{if(ONL.kind===b.dataset.k)return;ONL.kind=b.dataset.k;BD.off=0;onlHud();if(CAM.view!=='classement')setView('classement');bdLoad(true);}));
+$('o-reg').addEventListener('click',()=>{if(CAM.view!=='registre')setView('registre');openReg();});
+$('o-cup').addEventListener('click',()=>{setView('podium',true);podiumCard();});
+$('o-lst').addEventListener('click',()=>{if(ONL.open==='olist')panel('');else{listRender();panel('olist');}});
+$('o-all').addEventListener('click',()=>setView(CAM.view==='salle'?'classement':'salle'));
+canvas.addEventListener('wheel',e=>{if(CAM.view!=='classement'||!BD.data)return;e.preventDefault();bdScroll(e.deltaY>0?1:-1);},{passive:false});
+addEventListener('keydown',e=>{if(CAM.view!=='classement'||(e.target&&e.target.closest&&e.target.closest('input,textarea')))return;if(e.key==='ArrowDown')bdScroll(1);else if(e.key==='ArrowUp')bdScroll(-1);});
+canvas.addEventListener('pointerdown',e=>{PT.y0=e.clientY;PT.sc=0;});
+canvas.addEventListener('pointermove',e=>{if(!PT.down||CAM.view!=='classement'||PT.y0===undefined)return;const dy=e.clientY-PT.y0;PT.moved=Math.max(PT.moved,Math.abs(dy));const s=Math.trunc(-dy/42);if(s!==PT.sc){bdScroll(s-PT.sc);PT.sc=s;}});
+/* données reçues d'un autre appareil : on recharge ce qui a changé (jamais pendant une ouverture de coffre) */
+function onlSynced(ks){
+  if(SEQ.run||DOOR.run){setTimeout(()=>onlSynced(ks),1500);return;}
+  if(curUser()!==USER){location.reload();return;}   // profil créé ou changé par la synchro : la page repart sur le bon profil
+  if(ks.indexOf('@biblio')>=0||ks.indexOf('*')>=0){const d0=ST.door;load();if(ST.door&&!d0&&SYS.door){SYS.door.g.position.x=4.75;SYS.door.leak.visible=false;}refreshSlots();qRefresh();hud();}
+  placeTrophies();if(CAM.room===2)bdLoad(true);
+}
+addEventListener('rvision:synced',e=>{onlSynced((e.detail&&e.detail.keys)||[]);});
+function onlBoot(h0){
+  placeTrophies();onlWire();
+  if(h0){showRoom(2);SYS.hallReady=true;CAM.view='classement';viewGoal('classement',CAM.gp,CAM.gt);CAM.p.copy(CAM.gp);CAM.t.copy(CAM.gt);setView('classement');setTimeout(onlEnter,0);}
+  else{showRoom(1);setView('nef');}
+  setInterval(()=>{if(CAM.room===2&&!document.hidden&&!ONL.open)bdLoad(false);},60000);
+}
+
 /* ─────────────── reflets d'ambiance : la salle se reflète sur le verre, le métal, le dallage ─────────────── */
 function captureEnv(){
   const rt=new THREE.WebGLCubeRenderTarget(TIER?256:128,{type:THREE.HalfFloatType}),cc=new THREE.CubeCamera(.1,60,rt);cc.position.set(0,2.4,0);
@@ -1676,19 +2201,21 @@ function frame(now){
   composer.render();
   /* qualité adaptative : si l'image saccade, on réduit la définition, puis on coupe le miroir du sol */
   if(started&&!CAPTURE){PERF.acc+=dt;if(++PERF.n>=90){const avg=PERF.acc/PERF.n;PERF.acc=0;PERF.n=0;
-    if(avg>1/27&&PERF.drops<4){PERF.drops++;PERF.scale*=.84;if(PERF.drops===2&&SYS.mirror){SYS.mirror.visible=false;SYS.floor.material.transparent=false;SYS.floor.material.opacity=1;SYS.floor.material.needsUpdate=true;}resize();}}}
+    if(avg>1/27&&PERF.drops<4){PERF.drops++;PERF.scale*=.84;if(PERF.drops===2&&SYS.mirror){SYS.mirror.visible=false;SYS.floor.material.transparent=false;SYS.floor.material.opacity=1;SYS.floor.material.needsUpdate=true;
+      if(SYS.mirror2){SYS.mirror2.visible=false;SYS.floor2.material.transparent=false;SYS.floor2.material.opacity=1;SYS.floor2.material.needsUpdate=true;}}resize();}}}
 }
 const nextTick=()=>new Promise(r=>requestAnimationFrame(()=>setTimeout(r,0)));
 async function boot(){
   load();qRefresh();const P=p=>{if(window.RVL)window.RVL.set(p);const e=$('ld-pct');if(e)e.textContent=String(Math.round(p*100)).padStart(3,'0');};
-  const steps=[[buildTextures,.2],[buildMaterials,.24],[buildRoom,.5],[buildShowcase,.56],[buildChest,.6],[buildVault,.68],[buildAmbience,.72],[refreshSlots,.9]];
+  const steps=[[buildTextures,.2],[buildMaterials,.24],[buildRoom,.5],[buildShowcase,.56],[buildChest,.6],[buildVault,.68],[buildAmbience,.72],[buildHall,.8],[refreshSlots,.9]];
   P(.06);await nextTick();
   for(const s of steps){s[0]();P(s[1]);await nextTick();}
   if(ST.door){SYS.door.g.position.x=4.75;SYS.door.leak.visible=false;}
   resize();camera.position.copy(CAM.p);camera.lookAt(CAM.t);
-  captureEnv();P(.95);await nextTick();
+  if(SYS.hall)SYS.hall.visible=false;captureEnv();P(.95);await nextTick();
+  const H0=/[?&]salle=classement/.test(location.search);if(H0)showRoom(2);   // arrivée directe dans la salle du classement (lien du menu L1 / L2)
   try{if(renderer.compileAsync)await renderer.compileAsync(scene,camera);}catch(e){}
-  hud();setView('nef');P(1);
+  hud();onlBoot(H0);P(1);
   last=performance.now();requestAnimationFrame(frame);
   await new Promise(r=>setTimeout(r,CAPTURE?0:650));
   const L=$('loader');L.style.opacity=0;setTimeout(()=>{L.style.display='none';},950);$('hud').classList.add('on');started=true;
@@ -1704,5 +2231,7 @@ window.BIB.ready=boot().catch(e=>{console.error(e);fail('La bibliothèque n’a 
 
 
 </script>
+<!-- mode en ligne : compte Google, synchronisation, classements, amis, tournoi (rien ne se charge tant que en-ligne/config.js est vide) -->
+<script type="module" src="en-ligne/rvision-online.js"></script>
 </body>
 </html>

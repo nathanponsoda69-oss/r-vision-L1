@@ -5177,6 +5177,7 @@ const COURSES_L1=[
   {id:'aj',    key:'aj',    subject:'l1_aj', name:'American Political Institutions',url:'anglais_juridique.html',maxXp:8000,maxSuc:60,sharedKey:'rvision_aj_shared'},
   {id:'mk',    key:'mk',    subject:'l1_eco',name:'Marchés & marchandisation',url:'marches_marchandisation_vF2.html',maxXp:2611,maxSuc:91},
 ];
+window.RV_CATALOG_L1=COURSES_L1;   // lu par le mode en ligne (en-ligne/rvision-online.js) pour le score et les fiches
 
 const SUBJ_INFO={
   l1_civ:{resume:"Droit des personnes et de la famille : la personnalité juridique et ses attributs, les droits de la personnalité, les incapacités et la protection des majeurs, le mariage et le divorce, la filiation et l'autorité parentale.",
@@ -9804,6 +9805,7 @@ function stepsL1(){
       SYS.lbl=buildLabels(SUBJECTS[0]);
       buildHudExtras();
       SYS.prof=buildProfile(profileApply);
+      addEventListener('rvision:synced',()=>{try{if(SYS.prof)SYS.prof.label();if(ZONE==='desert'&&SC.p<=0.45&&!CAVE.on)profileApply();}catch(e){console.error(e);}});   // données reçues d'un autre appareil (mode en ligne) : on les affiche si l'on est encore à l'accueil
       SYS.iceObjs=[SYS.space.root,SYS.space.bg,SYS.drips.mesh];
       SYS.finObjs=[];}],
   ];
@@ -10094,6 +10096,7 @@ function menuBuild(){
   bt('Accueil','Retour au début du parcours',()=>menuGo(0));
   bt('Statistiques','Progression, activité, analyse',()=>menuGo(P_STATS));
   lk('Bibliothèque','Coffres et collection d’objets','bibliotheque.html');
+  lk('Classement en ligne','Tournoi du mois, amis, synchronisation','bibliotheque.html?salle=classement');
   lk('Licence 2','Changer de niveau','l2.html');
   const o=menuEl('div','mm-o',null,a);
   const grp=(title,key,vals)=>{menuEl('p',null,title,o);const d=menuEl('div',null,null,o);

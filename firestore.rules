@@ -1,0 +1,112 @@
+rules_version = '2';
+// R·Vision en ligne — règles de sécurité Firestore
+// À copier dans la console Firebase : Firestore Database → onglet « Règles » → tout remplacer → Publier.
+//
+//   users/{uid}/sync/…          sauvegarde du profil (synchro)        : lisible et modifiable par son seul propriétaire
+//   profiles/{uid}              fiche publique (scores, avancement)    : lisible par tous si « public », sinon par les amis
+//   handles/{pseudo}            pseudos uniques (@max)                 : réservés une fois, au nom de celui qui les crée
+//   weeks/{semaine}/e/{uid}     classement de la semaine               : lisible par tous ; chacun n'écrit que sa ligne,
+//   months/{mois}/e/{uid}       tournoi du mois                          pendant la période, avec un score plausible
+//   friendships/{uidA_uidB}     demandes d'amis et amitiés             : visibles et modifiables par les deux concernés
+//
+// Limite assumée : sans serveur payant, c'est le navigateur qui calcule le score. Les règles bornent chaque valeur
+// (score d'une journée ≤ 470, d'une semaine ≤ 3 300, d'un mois ≤ 14 600, score = temps + progression + régularité),
+// mais un étudiant qui s'y connaît pourrait tricher dans ces bornes.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isMe(uid) { return signedIn() && request.auth.uid == uid; }
+    function pairId(a, b) { return a < b ? a + '_' + b : b + '_' + a; }
+    function isFriend(uid) {
+      return signedIn()
+        && get(/databases/$(database)/documents/friendships/$(pairId(request.auth.uid, uid))).data.st == 'accepted';
+    }
+
+    // semaine = jour (depuis le 1er janvier 1970) de son lundi ; écriture possible pendant la semaine et le lundi suivant
+    function weekOpen(w) {
+      let d = int(w);
+      let now = request.time.toMillis();
+      return (d + 3) % 7 == 0 && now >= d * 86400000 && now < (d + 8) * 86400000;
+    }
+    // mois = AAAAMM ; écriture possible pendant le mois et les deux premiers jours du suivant (heure UTC)
+    function monthOpen(m) {
+      let id = int(m);
+      let y = request.time.year();
+      let mo = request.time.month();
+      let prev = mo == 1 ? (y - 1) * 100 + 12 : y * 100 + mo - 1;
+      return id == y * 100 + mo || (id == prev && request.time.day() <= 2);
+    }
+    function entryOk(max) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['n', 'h', 's', 't', 'p', 'r', 'd', 'u'])
+        && d.n is string && d.n.size() <= 24
+        && d.h is string && d.h.size() <= 20
+        && d.s is int && d.s >= 0 && d.s <= max
+        && d.t is int && d.t >= 0 && d.p is int && d.p >= 0 && d.r is int && d.r >= 0
+        && d.s == d.t + d.p + d.r
+        && d.d is int && d.d >= 0 && d.d <= 31
+        && d.u is int;
+    }
+
+    // ── sauvegarde du profil ──
+    match /users/{uid}/sync/{doc} {
+      allow read, write: if isMe(uid);
+    }
+
+    // ── fiche publique ──
+    match /profiles/{uid} {
+      allow get: if resource == null || resource.data.vis == 'public' || isMe(uid) || isFriend(uid);
+      allow create, update: if isMe(uid)
+        && request.resource.data.keys().hasOnly(['n', 'h', 'vis', 'w', 'm', 'st', 'tr', 'u'])
+        && request.resource.data.vis in ['public', 'friends']
+        && request.resource.data.n is string && request.resource.data.n.size() <= 24
+        && request.resource.data.h is string
+        && get(/databases/$(database)/documents/handles/$(request.resource.data.h)).data.uid == request.auth.uid;
+      allow delete: if isMe(uid);
+    }
+
+    // ── pseudos uniques ──
+    match /handles/{h} {
+      allow get: if true;
+      allow create: if signedIn()
+        && h.matches('^[a-z0-9_]{3,20}$')
+        && request.resource.data.keys().hasOnly(['uid', 't'])
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // ── classements ──
+    match /weeks/{w}/e/{uid} {
+      allow read: if true;
+      allow create, update: if isMe(uid) && weekOpen(w) && entryOk(3300);
+      allow delete: if isMe(uid);
+    }
+    match /months/{m}/e/{uid} {
+      allow read: if true;
+      allow create, update: if isMe(uid) && monthOpen(m) && entryOk(14600);
+      allow delete: if isMe(uid);
+    }
+
+    // ── amis ──
+    match /friendships/{id} {
+      allow get: if resource == null
+        || (signedIn() && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid));
+      allow list: if signedIn() && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['m', 'from', 'to', 'st', 'fn', 'fh', 'tn', 'th', 't'])
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.to is string
+        && request.resource.data.to != request.auth.uid
+        && request.resource.data.st == 'pending'
+        && id == pairId(request.auth.uid, request.resource.data.to)
+        && exists(/databases/$(database)/documents/profiles/$(request.auth.uid));
+      allow update: if signedIn()
+        && resource.data.to == request.auth.uid
+        && resource.data.st == 'pending'
+        && request.resource.data.st == 'accepted'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['st', 'at']);
+      allow delete: if signedIn() && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+    }
+  }
+}

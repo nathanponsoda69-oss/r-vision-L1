@@ -4394,6 +4394,7 @@ const COURSES_L2=[
   {id:"aff_2",key:"aff_2",subject:"l2_aff",name:"Droit des affaires · Partie 2",url:"af2_droit_des_affaires_partie2_v5.html",maxXp:4000,maxSuc:62},
   {id:"aff_3",key:"aff_3",subject:"l2_aff",name:"Droit des affaires · Partie 3",url:"af3_droit_des_affaires_partie3_v5.html",maxXp:4000,maxSuc:62}
 ];
+window.RV_CATALOG_L2=COURSES_L2;   // lu par le mode en ligne (en-ligne/rvision-online.js) pour le score et les fiches
 
 const SUBJ_INFO={
   l2_civ:{resume:"Droit des obligations : la formation, la validité et l'exécution du contrat, puis la responsabilité civile — fait personnel, fait des choses, fait d'autrui — et le régime général de l'obligation.",
@@ -8508,6 +8509,7 @@ async function boot(){
       SYS.dev=buildDevMenu(DEV);
       buildHudExtras();
       SYS.prof=buildProfile(profileApply);
+      addEventListener('rvision:synced',()=>{try{if(SYS.prof)SYS.prof.label();if(ZONE==='desert'&&SC.p<=0.45&&!CAVE.on)profileApply();}catch(e){console.error(e);}});   // données reçues d'un autre appareil (mode en ligne) : on les affiche si l'on est encore à l'accueil
       SYS.iceObjs=[SYS.space.root,SYS.space.bg,SYS.drips.mesh];
       SYS.finObjs=[SYS.fin.root,SYS.fin.bg];
       normalizeLights();
@@ -9133,6 +9135,7 @@ function menuBuild(){
   bt('Accueil','Retour au début du parcours',()=>menuGo(0));
   bt('Statistiques','Progression, activité, analyse',()=>menuGo(P_STATS));
   lk('Bibliothèque','Coffres et collection d’objets','bibliotheque.html');
+  lk('Classement en ligne','Tournoi du mois, amis, synchronisation','bibliotheque.html?salle=classement');
   lk('Licence 1','Changer de niveau','l1.html');
   const o=menuEl('div','mm-o',null,a);
   const grp=(title,key,vals)=>{menuEl('p',null,title,o);const d=menuEl('div',null,null,o);
@@ -9870,5 +9873,7 @@ window.RV={
 if(!CAPTURE) requestAnimationFrame(loop);
 
 </script>
+<!-- mode en ligne : compte Google, synchronisation, classements, amis, tournoi (rien ne se charge tant que en-ligne/config.js est vide) -->
+<script type="module" src="en-ligne/rvision-online.js"></script>
 </body>
 </html>
