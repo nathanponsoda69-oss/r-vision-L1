@@ -448,15 +448,24 @@ const trophies=()=>{const p=S.pseudo||curUser();const t=p?J(LS.get('rvision_'+p+
 async function settle(){
   if(!S.onboarded||!FB)return;
   const td=today(),cm=monthOf(td),day=+td.slice(8,10),joined=monthOf(dayOf((S.meta&&S.meta.c)||Date.now())),sk='rvo_settled_'+S.uid,done=J(LS.get(sk),[])||[];
-  let m=prevMonth(cm);const todo=[];
+  let m=prevMonth(cm);const todo=[],res=[];
   for(let i=0;i<3&&m>=joined;i++,m=prevMonth(m)){if(m===prevMonth(cm)&&day<3)continue;if(!done.includes(m))todo.push(m);}
   for(const mm of todo){
     const qs=await FB.fs.getDocs(FB.fs.query(Col('months',String(mm),'e'),FB.fs.orderBy('s','desc'),FB.fs.limit(3))),pod=[];
     qs.forEach(d=>pod.push({uid:d.id,n:d.data().n,h:d.data().h,s:d.data().s}));
     LS.set('rvo_podium_'+mm,JSON.stringify(pod));
-    if(pod[0]&&pod[0].uid===S.uid&&pod[0].s>0){const k='rvision_'+S.pseudo+'_trophees',t=trophies();
+    const won=!!(pod[0]&&pod[0].uid===S.uid&&pod[0].s>0);
+    if(won){const k='rvision_'+S.pseudo+'_trophees',t=trophies();
       if(!t.some(x=>x.m===mm)){t.push({m:mm,s:pod[0].s});t.sort((a,b)=>a.m-b.m);LS.set(k,JSON.stringify(t));emitT('trophy',{m:mm,s:pod[0].s});}}
+    /* ma place : seulement si j'ai concouru (ligne publique avec des points) */
+    let mine=null;try{const d=await FB.fs.getDoc(D('months',String(mm),'e',S.uid));if(d.exists())mine=d.data();}catch(e){}
+    if(mine&&mine.s>0){let rank=won?1:(pod.findIndex(x=>x.uid===S.uid)+1)||null;
+      if(!rank){try{const c=await FB.fs.getCount(FB.fs.query(Col('months',String(mm),'e'),FB.fs.where('s','>',mine.s)));rank=c.data().count+1;}catch(e){}}
+      res.push({m:mm,won,rank,s:mine.s,w:pod[0]||null});}
     done.push(mm);}
+  /* résultat du tournoi : animation spéciale, une seule fois par mois clôturé */
+  const last=res.sort((a,b)=>b.m-a.m)[0],sk2='rvo_mres_'+S.uid;
+  if(last&&LS.get(sk2)!==String(last.m)){LS.set(sk2,String(last.m));setTimeout(()=>monthShow(last),900);}
   if(todo.length){LS.set(sk,JSON.stringify(done.slice(-24)));await publish(true);sync('trophée');}
 }
 const podium=m=>J(LS.get('rvo_podium_'+m),null);
@@ -604,13 +613,83 @@ function accWatch(){
   const ob=new MutationObserver(()=>{if(accMount())ob.disconnect();});ob.observe(document.body,{childList:true});
 }
 
+
+/* ─────────────── 16 · fin du tournoi du mois : animation de victoire ou de défaite ───────────────
+   Jouée une fois, sur le premier accueil ouvert après la clôture (le 3 du mois suivant). Victoire : rayons d'or,
+   la coupe surgit dans un éclat, gerbe d'étincelles. Défaite : la coupe d'argent se dissout en poussière, la place
+   obtenue et le nom du vainqueur, puis l'invitation au tournoi suivant. */
+const CUP_SVG='<svg viewBox="0 0 200 240" aria-hidden="true"><defs><linearGradient id="rvoM" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--m0)"/><stop offset=".45" stop-color="var(--m1)"/><stop offset=".75" stop-color="var(--m2)"/><stop offset="1" stop-color="var(--m1)"/></linearGradient>'
+ +'<linearGradient id="rvoS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+ +'<clipPath id="rvoC"><path d="M52 22h96v18c0 46-20 76-48 82-28-6-48-36-48-82z"/><path d="M92 120h16v34h-16z"/><path d="M70 156h60l10 18H60z"/><path d="M54 176h92v22H54z"/></clipPath></defs>'
+ +'<path d="M52 34c-26 0-34 12-34 26 0 20 18 32 40 36" fill="none" stroke="url(#rvoM)" stroke-width="9"/><path d="M148 34c26 0 34 12 34 26 0 20-18 32-40 36" fill="none" stroke="url(#rvoM)" stroke-width="9"/>'
+ +'<g fill="url(#rvoM)"><path d="M52 22h96v18c0 46-20 76-48 82-28-6-48-36-48-82z"/><path d="M92 120h16v34h-16z"/><path d="M70 156h60l10 18H60z"/><path d="M54 176h92v22H54z"/></g>'
+ +'<path d="M66 30h12v14c0 30 8 52 20 62-20-6-32-30-32-62z" fill="#fff" opacity=".28"/><path d="M84 92l16-30 16 30z" fill="#fff" opacity=".12"/>'
+ +'<g clip-path="url(#rvoC)"><rect class="rvo-shine" x="-120" y="0" width="70" height="240" fill="url(#rvoS)" transform="skewX(-18)"/></g></svg>';
+function monthCss(){
+  if(document.getElementById('rvo-mres-css'))return;const st=document.createElement('style');st.id='rvo-mres-css';
+  st.textContent='#rvo-mres{position:fixed;inset:0;z-index:300;display:grid;place-items:center;font-family:"JetBrains Mono",monospace;color:#f6f1ea;opacity:0;transition:opacity .7s ease;}'
+  +'#rvo-mres.on{opacity:1;}#rvo-mres canvas{position:absolute;inset:0;width:100%;height:100%;}'
+  +'#rvo-mres .bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,var(--bg0),#030207 72%);}'
+  +'#rvo-mres .in{position:relative;text-align:center;padding:24px;max-width:min(560px,92vw);}'
+  +'#rvo-mres .cup{width:min(190px,40vw);margin:0 auto 18px;opacity:0;transform:scale(.55) translateY(30px);filter:blur(8px) drop-shadow(0 0 0 transparent);transition:transform 1.4s cubic-bezier(.16,1,.3,1),opacity 1s ease,filter 1.2s ease;}'
+  +'#rvo-mres.go .cup{opacity:1;transform:none;filter:blur(0) drop-shadow(0 0 34px var(--glow));}'
+  +'#rvo-mres.lost.dust .cup{opacity:0;transform:translateY(-26px) scale(1.04);filter:blur(10px);transition:opacity 2.6s ease,transform 2.6s ease,filter 2.6s ease;}'
+  +'#rvo-mres .rvo-shine{animation:rvoShine 3.2s 1.6s ease-in-out infinite;}@keyframes rvoShine{0%{transform:skewX(-18deg) translateX(0)}60%,100%{transform:skewX(-18deg) translateX(420px)}}'
+  +'#rvo-mres .k{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--acc);opacity:0;transform:translateY(8px);transition:all .8s ease 1.1s;}'
+  +'#rvo-mres h2{font-family:Cinzel,"Times New Roman",serif;font-weight:700;font-size:clamp(30px,6vw,54px);letter-spacing:.08em;line-height:1.05;margin:10px 0 12px;'
+  +'background:linear-gradient(180deg,var(--m0),var(--m1) 55%,var(--m2));-webkit-background-clip:text;background-clip:text;color:transparent;opacity:0;transform:translateY(10px);transition:all .9s ease 1.35s;}'
+  +'#rvo-mres p{font-size:12.5px;line-height:1.7;color:rgba(246,241,234,.78);opacity:0;transform:translateY(8px);transition:all .8s ease 1.7s;}'
+  +'#rvo-mres p b{color:#fff;}#rvo-mres p.s2{transition-delay:2.1s;margin-top:4px;}'
+  +'#rvo-mres button{margin-top:22px;font:inherit;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#fff;background:transparent;border:1px solid rgba(255,255,255,.4);padding:11px 22px;cursor:pointer;opacity:0;transition:opacity .8s ease 2.6s,background .25s,color .25s;}'
+  +'#rvo-mres button:hover{background:var(--acc);color:#120d07;border-color:var(--acc);}'
+  +'#rvo-mres.go .k,#rvo-mres.go h2,#rvo-mres.go p,#rvo-mres.go button{opacity:1;transform:none;}'
+  +'@media (prefers-reduced-motion:reduce){#rvo-mres *{transition:none!important;animation:none!important;}}';
+  document.head.appendChild(st);
+}
+function monthShow(r){
+  if(document.getElementById('rvo-mres'))return;monthCss();
+  const win=!!r.won,lab=monthLabel(r.m),o=document.createElement('div');o.id='rvo-mres';o.setAttribute('role','dialog');o.setAttribute('aria-label','Résultat du tournoi de '+lab);
+  const V=win?{'--m0':'#fff3c4','--m1':'#f0c25a','--m2':'#9c6a1c','--glow':'rgba(255,200,90,.75)','--acc':'#ffc24a','--bg0':'#2a1b06'}
+            :{'--m0':'#f4f7fb','--m1':'#aeb7c2','--m2':'#4d5662','--glow':'rgba(170,200,255,.35)','--acc':'#a9c4ff','--bg0':'#0e1424'};
+  for(const k in V)o.style.setProperty(k,V[k]);if(!win)o.classList.add('lost');
+  const bg=El('div','bg',null,o),cvs=El('canvas',null,null,o),inn=El('div','in',null,o);
+  const cup=El('div','cup',null,inn);cup.innerHTML=CUP_SVG;
+  El('div','k',win?'Tournoi de '+lab+' · clôturé':'Tournoi de '+lab+' · clôturé',inn);
+  El('h2',null,win?'Vainqueur':(r.rank?r.rank+(r.rank===1?'ᵉʳ':'ᵉ')+' place':'Tournoi terminé'),inn);
+  const p1=El('p',null,null,inn),p2=El('p','s2',null,inn);
+  if(win){p1.textContent='Tu remportes la Coupe de '+lab+' avec '+r.s.toLocaleString('fr-FR')+' points.';p2.textContent='Elle rejoint la tablette des trophées de ta collection.';}
+  else{p1.textContent='Ton score : '+r.s.toLocaleString('fr-FR')+' points.'+(r.w?' La coupe revient à '+r.w.n+(r.w.h?' (@'+r.w.h+')':'')+'.':'');p2.textContent='Le tournoi de '+monthLabel(r.m%100===12?(Math.floor(r.m/100)+1)*100+1:r.m+1)+' est déjà ouvert : la prochaine est pour toi.';}
+  const b=El('button',null,'Continuer',inn);b.type='button';
+  document.body.appendChild(o);
+  /* particules et rayons */
+  const x=cvs.getContext('2d'),dpr=Math.min(2,window.devicePixelRatio||1);let W=0,Hh=0;
+  const fit=()=>{W=cvs.width=innerWidth*dpr;Hh=cvs.height=innerHeight*dpr;};fit();addEventListener('resize',fit);
+  const P=[],rnd=Math.random,t0=performance.now();let run=true;
+  const spawn=(n,burst)=>{for(let i=0;i<n;i++){const a=rnd()*Math.PI*2,v=burst?(2+rnd()*7):(.2+rnd()*.8);
+    P.push({x:W/2+(burst?0:(rnd()-.5)*W*.2),y:Hh*.42+(burst?0:(rnd()-.5)*Hh*.15),vx:Math.cos(a)*v*dpr,vy:(Math.sin(a)*v-(win?0:1.2))*dpr,l:1,d:.004+rnd()*.01,s:(1+rnd()*2.2)*dpr});}};
+  const frame=now=>{if(!run)return;const t=(now-t0)/1000;x.clearRect(0,0,W,Hh);
+    if(win&&t>.5){x.save();x.translate(W/2,Hh*.42);x.rotate(t*.12);const k=Math.min(1,(t-.5)/1.2);
+      for(let i=0;i<28;i++){x.rotate(Math.PI*2/28);const g=x.createLinearGradient(0,0,0,-Math.max(W,Hh)*.8);g.addColorStop(0,'rgba(255,214,130,'+(.2*k)+')');g.addColorStop(.6,'rgba(255,214,130,'+(.05*k)+')');g.addColorStop(1,'rgba(255,214,130,0)');
+        x.fillStyle=g;x.beginPath();x.moveTo(0,0);x.lineTo(-16*dpr,-Math.max(W,Hh)*.8);x.lineTo(16*dpr,-Math.max(W,Hh)*.8);x.closePath();x.fill();}x.restore();}
+    if(win&&t>.85&&!frame.b){frame.b=1;spawn(160,true);}
+    if(!win&&t>2.2&&!frame.b){frame.b=1;o.classList.add('dust');spawn(220,false);}
+    if(win&&rnd()<.35)spawn(1,false);
+    x.globalCompositeOperation='lighter';
+    for(let i=P.length-1;i>=0;i--){const q=P[i];q.x+=q.vx;q.y+=q.vy;q.vx*=.985;q.vy=q.vy*.985+(win?.03:-.004)*dpr;q.l-=q.d;if(q.l<=0){P.splice(i,1);continue;}
+      x.fillStyle=win?'rgba(255,'+(190+rnd()*50|0)+',110,'+q.l+')':'rgba(200,215,240,'+(q.l*.8)+')';x.beginPath();x.arc(q.x,q.y,q.s,0,Math.PI*2);x.fill();}
+    x.globalCompositeOperation='source-over';requestAnimationFrame(frame);};
+  requestAnimationFrame(()=>{o.classList.add('on');setTimeout(()=>o.classList.add('go'),350);requestAnimationFrame(frame);});
+  const close=()=>{o.classList.remove('on');setTimeout(()=>{run=false;removeEventListener('resize',fit);o.remove();},700);};
+  b.onclick=close;addEventListener('keydown',function k(e){if(e.key==='Escape'||e.key==='Enter'){removeEventListener('keydown',k);close();}});
+}
+
 window.RVO={
   version:'1.0',ready:!!CFG,
   on:(t,f)=>EV.addEventListener(t,e=>f(e.detail)),
   state,ensure,signIn,signOut,onboard,setVis,link,syncNow,
   board,profileOf,friends,requestFriend,acceptFriend,removeFriend,
   periods,myScores:()=>myScores(S.pseudo||curUser()),myStats:()=>publicStats(S.pseudo||curUser()),trophies,podium,
-  slug,monthLabel,SCORE,
+  slug,monthLabel,SCORE,monthShow,   // monthShow({m:202611,won:true,s:3120}) : aperçu de l'animation de fin de mois
   _t:{mergeVal,deep,mergeBiblio,localMap,toLocal,H,shardOf,weekOf,monthOf,dayScore,periodScore,ledgerUpdate,collect,S,sync,dirty,publicStats,
     inject:fb=>{FB=fb;S.sdk='ready';},render:()=>{ACC.scr='';accRender();}}   // pour les tests uniquement
 };
