@@ -145,6 +145,11 @@ body{color:var(--ink);font-family:var(--mono);-webkit-font-smoothing:antialiased
 #qp .q-b u{position:absolute;top:-2px;width:1px;height:6px;background:rgba(255,255,255,.28);}
 #qp .q-r.ok .q-t span{color:#bfe6ff;}
 #qp .q-r.na{opacity:.55;}
+#qp.on{max-height:calc(100vh - 250px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;}
+#qp .q-r.rot .q-t span::before{content:'✦ ';color:#ffc24a;}
+#qp .q-r.bon{border-top:1px dashed rgba(255,194,74,.35);}#qp .q-r.bon .q-t span{color:#ffd98a;}
+#qp .q-g{height:4px;margin:2px 0 6px;background:rgba(255,255,255,.08);overflow:hidden;}
+#qp .q-g i{display:block;height:100%;background:linear-gradient(90deg,#4f8dff,#b06bff 60%,#ffc24a);box-shadow:0 0 10px rgba(140,140,255,.6);transition:width .6s ease;}
 #qp p{font-size:9.5px;line-height:1.55;color:var(--ink3);margin-top:10px;letter-spacing:.02em;}
 .h-bl{position:absolute;left:38px;bottom:32px;display:flex;flex-direction:column;gap:8px;max-width:320px;}
 .h-br{position:absolute;right:38px;bottom:32px;display:flex;gap:14px;}
@@ -1518,11 +1523,17 @@ const LUCK_L=.2,LUCK_M=.15,CAP_L=6,CAP_M=4.5,BASE_M=.8;   // poids de base du l�
    On peut donc réviser trois jours sans passer par ici : chaque journée garde ses quêtes.
    Les journées sont celles des cours (date UTC, comme leurs frises) ; la mesure démarre à la mise en service — seul le temps
    déjà passé ce jour-là est repris — pour que le calibrage ne soit pas noyé sous l'historique.
-   Calibrage : ≈ 50 orbes pour une journée normale (1 h 30 actives, une cinquantaine de réponses notées justes aux trois
-   quarts, ≈ 350 XP, un succès), soit 1 coffre tous les 2 jours ; une très grosse journée plafonne à 86, la semaine ajoute 25 au plus. */
+   QUÊTES DU JOUR (version 2, novembre 2026) : 2 quêtes de fond (Assiduité, Entraînement) + 4 quêtes tirées au sort
+   chaque jour dans une banque de 12, une par famille (précision, volume, mémoire, concentration, bonus), seulement parmi
+   celles que l'étudiant peut faire (pas de flashcards s'il n'en fait jamais, matière du jour prise dans celles qu'il
+   révise…) + le bonus « Journée accomplie » (4 quêtes terminées, puis les 6). Le tirage dépend du profil et de la date :
+   il est fixé dès qu'il est vu et voyage avec la synchro.
+   Calibrage : une journée normale (≈ 1 h active, ≈ 40 réponses) ≈ 100 orbes = 1 coffre ; une demi-heure ≈ 45 ;
+   une grosse journée plafonne à ≈ 130 ; la semaine ajoute jusqu'à 38. Les journées d'avant la version 2 gardent leur
+   ancien barème (QD_V1) : aucun orbe déjà gagné ne bouge. */
 const ORB_PER_CHEST=100,Q_KEEP_DAYS=16*7,Q_ACT_WIN=21;
-/* quêtes du jour : m(journée) → valeur ; tiers = [[seuil, orbes], …] (chaque palier franchi rapporte ses orbes) */
-const QD=[
+/* ancien barème (journées antérieures à la version 2) : m(journée) → valeur ; tiers = [[seuil, orbes], …] */
+const QD_V1=[
   {id:'temps',n:'Assiduité',d:'Temps de révision actif dans les cours',u:'min',m:b=>b.t/60,tiers:[[15,6],[40,8],[80,10],[135,8]]},
   {id:'quiz',n:'Entraînement',d:'Réponses aux quiz, QCM, vrai / faux',u:'réponses',m:b=>b.a,tiers:[[15,5],[40,7],[80,6]]},
   {id:'juste',n:'Justesse',d:'75 % de bonnes réponses, sur 20 réponses notées au moins',u:'%',m:b=>b.aq>=20?100*b.ok/b.aq:0,na:b=>b.aq<20,tiers:[[75,6]]},
@@ -1530,10 +1541,55 @@ const QD=[
   {id:'xp',n:'Progression',d:'Expérience gagnée dans les cours',u:'XP',m:b=>b.x,tiers:[[100,4],[300,5],[600,4]]},
   {id:'succes',n:'Hauts faits',d:'Succès débloqués',u:'succès',m:b=>b.s,tiers:[[1,4],[3,3]]},
   {id:'rappel',n:'Rappel espacé',d:'Reprendre un cours laissé de côté depuis 3 jours ou plus',u:'cours',m:b=>(b.sp||[]).length,tiers:[[1,6]]}];
+/* ── version 2 : quêtes de fond (tous les jours) ── */
+const QCORE=[
+  {id:'temps',n:'Assiduité',d:'Temps de révision actif dans les cours',u:'min',m:b=>b.t/60,tiers:[[15,10],[35,12],[60,12]]},
+  {id:'quiz',n:'Entraînement',d:'Réponses aux quiz, QCM, vrai / faux',u:'réponses',m:b=>b.a,tiers:[[10,8],[25,8],[40,6]]}];
+/* banque des quêtes tirées au sort — V : variantes (la plus douce sort le plus souvent) ; ok(H) : proposable à cet
+   étudiant (H = ses 21 derniers jours) ; mk(variante, paramètre) → quête */
+const SUBJ_N={l1_civ:'Droit civil (L1)',l1_con:'Droit constitutionnel',l1_his:'Histoire du droit',l1_aj:'Anglais juridique (L1)',l1_eco:'Économie',
+  l2_civ:'Droit civil',l2_pen:'Droit pénal',l2_adm:'Droit administratif',l2_aff:'Droit des affaires',l2_aj:'Anglais juridique',l2_fin:'Analyse financière'};
+let QCAT=null;
+function qSubjOf(id){if(!QCAT){try{QCAT=JSON.parse(localStorage.getItem('rvo_catalog')||'{}')||{};}catch(e){QCAT={};}}const c=QCAT[id];return c&&c.sj||'';}
+function qSubjT(b,sj){let t=0;for(const id in b.ct||{})if(qSubjOf(id)===sj)t+=b.ct[id];return t;}
+const QPOOL=[
+  {id:'juste',cat:'precis',V:[[70,15],[75,15],[80,20]],mk:v=>({n:'Œil d’aigle',d:v[0]+' % de bonnes réponses, sur '+v[1]+' réponses notées au moins',u:'%',m:b=>b.aq>=v[1]?100*b.ok/b.aq:0,na:b=>b.aq<v[1],tiers:[[v[0],13]]})},
+  {id:'bonnes',cat:'precis',V:[20,25,30],mk:v=>({n:'Sans trembler',d:v+' bonnes réponses',u:'justes',m:b=>b.ok,tiers:[[v,13]]})},
+  {id:'xp',cat:'volume',V:[150,250,350],mk:v=>({n:'Progression',d:'Expérience gagnée dans les cours',u:'XP',m:b=>b.x,tiers:[[v,13]]})},
+  {id:'endur',cat:'volume',V:[50,60,70],mk:v=>({n:'Endurance',d:v+' réponses dans la journée',u:'réponses',m:b=>b.a,tiers:[[v,13]]})},
+  {id:'tour',cat:'volume',V:[2,2,3],mk:v=>({n:'Touche-à-tout',d:v+' cours différents travaillés aujourd’hui',u:'cours',m:b=>(b.c||[]).length,tiers:[[v,13]]})},
+  {id:'cartes',cat:'memoire',V:[10,15,20],ok:H=>H.f,mk:v=>({n:'Mémoire vive',d:'Flashcards retournées',u:'cartes',m:b=>b.f,tiers:[[v,13]]})},
+  {id:'rappel',cat:'memoire',V:[1,1,1],ok:H=>H.old,mk:()=>({n:'Rappel espacé',d:'Reprendre un cours laissé de côté depuis 3 jours ou plus',u:'cours',m:b=>(b.sp||[]).length,tiers:[[1,14]]})},
+  {id:'focus',cat:'focus',V:[20,25,30],mk:v=>({n:'Concentration',d:v+' min sur un même cours',u:'min',m:b=>{let x=0;for(const k in b.ct||{})x=Math.max(x,b.ct[k]);return x/60;},tiers:[[v,13]]})},
+  {id:'matiere',cat:'focus',V:[10,15,20],ok:H=>H.subj.length>0,param:(H,r)=>H.subj[Math.floor(r()*H.subj.length)],
+   mk:(v,p)=>({n:'Matière du jour',d:(SUBJ_N[p]||'Matière du jour')+' : '+v+' min de révision',u:'min',m:b=>qSubjT(b,p)/60,tiers:[[v,13]]})},
+  {id:'haut',cat:'extra',V:[1,1,2],ok:H=>H.s,mk:v=>({n:'Haut fait',d:v>1?v+' succès débloqués':'Débloquer un succès',u:'succès',m:b=>b.s,tiers:[[v,12]]})},
+  {id:'serie',cat:'extra',V:[15,15,20],ok:H=>H.yday,mk:v=>({n:'Sur la lancée',d:'Hier était actif : '+v+' min aujourd’hui pour garder le rythme',u:'min',m:b=>b.t/60,tiers:[[v,12]]})},
+  {id:'combo',cat:'extra',V:[[20,20],[25,25],[30,30]],mk:v=>({n:'Révision complète',d:v[0]+' min et '+v[1]+' réponses',u:'%',m:b=>100*Math.min(b.t/60/v[0],b.a/v[1]),tiers:[[100,12]]})}];
+const QBON={id:'jour',n:'Journée accomplie',d:'Quêtes du jour terminées (4, puis les 6)',u:'quêtes',tiers:[[4,12],[6,8]]};
 /* quêtes de la semaine (lundi → dimanche) : un jour est « actif » à partir de 15 min ou 15 réponses */
 const QW=[
-  {id:'regul',n:'Régularité',d:'Jours actifs dans la semaine (15 min ou 15 réponses)',u:'jours',m:w=>w.act,tiers:[[3,6],[5,8],[7,6]]},
-  {id:'tour',n:'Tour des cours',d:'Cours différents travaillés dans la semaine',u:'cours',m:w=>w.c,tiers:[[3,5]]}];
+  {id:'regul',n:'Régularité',d:'Jours actifs dans la semaine (15 min ou 15 réponses)',u:'jours',m:w=>w.act,tiers:[[3,8],[5,10],[7,8]]},
+  {id:'tour',n:'Tour des cours',d:'Cours différents travaillés dans la semaine',u:'cours',m:w=>w.c,tiers:[[3,6],[5,6]]}];
+/* tirage du jour : graine = profil + date ; une quête par famille, dans un ordre mélangé */
+function qH32(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function qHist(day){
+  const q=ST.q,H={f:false,s:false,old:false,yday:false,subj:[]},lo=qAdd(day,-21),sj={};
+  for(const d in q.days){if(d<lo||d>=day)continue;const b=q.days[d];if(b.f>0)H.f=true;if(b.s>0)H.s=true;(b.c||[]).forEach(id=>{const k=qSubjOf(id);if(k&&SUBJ_N[k])sj[k]=1;});}
+  const yb=q.days[qAdd(day,-1)];H.yday=!!(yb&&(yb.t>=900||yb.a>=15));
+  for(const id in q.seen||{})if(qDiff(q.seen[id],day)>=3)H.old=true;
+  H.subj=Object.keys(sj).sort();return H;
+}
+function qPlan(day){
+  const q=ST.q;if(!q.plan||typeof q.plan!=='object')q.plan={};if(Array.isArray(q.plan[day]))return q.plan[day];
+  const r=mulberry(qH32((USER||'·')+'|'+day)),H=qHist(day),cats=['precis','volume','memoire','focus','extra'],out=[];
+  for(let i=cats.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[cats[i],cats[j]]=[cats[j],cats[i]];}
+  const pick=(opts)=>{const Q=opts[Math.floor(r()*opts.length)],x=r(),vi=x<.45?0:x<.8?1:2;out.push({id:Q.id,vi,p:Q.param?Q.param(H,r):undefined});};
+  for(const c of cats){if(out.length>=4)break;const o=QPOOL.filter(Q=>Q.cat===c&&(!Q.ok||Q.ok(H)));if(o.length)pick(o);}
+  while(out.length<4){const o=QPOOL.filter(Q=>(!Q.ok||Q.ok(H))&&!out.some(x=>x.id===Q.id));if(!o.length)break;pick(o);}
+  q.plan[day]=out;return out;
+}
+function qQuests(day){return QCORE.concat(qPlan(day).map(o=>{const P=QPOOL.find(x=>x.id===o.id);if(!P)return null;const Q=P.mk(P.V[o.vi]!==undefined?P.V[o.vi]:P.V[0],o.p);Q.id=o.id;Q.rot=true;return Q;}).filter(Boolean));}
 const QK=['t','a','aq','ok','f','x','s'];
 const qDay=ts=>new Date(ts).toISOString().slice(0,10);
 const qAdd=(d,n)=>qDay(Date.parse(d+'T00:00:00Z')+n*86400000);
@@ -1581,6 +1637,7 @@ function qState(){
   if(!ST.q||typeof ST.q!=='object')ST.q={};const q=ST.q;
   if(!q.days||typeof q.days!=='object')q.days={};if(!q.seen||typeof q.seen!=='object')q.seen={};
   q.bank=+q.bank||0;q.bonus=+q.bonus||0;if(q.op0==null)q.op0=ST.opened|0;if(q.shown==null)q.shown=0;
+  if(!q.v2)q.v2=qDay(Date.now());   // première journée au barème de la version 2
   if(ST.bonus){q.bonus+=(ST.bonus|0)*ORB_PER_CHEST;ST.bonus=0;}   // ancien bonus en coffres (outil de test) → converti en orbes
   return q;
 }
@@ -1588,7 +1645,7 @@ function qState(){
 function qUpdate(){
   const q=qState(),cur=qCollect(),today=qDay(Date.now()),lo=qAdd(today,-Q_ACT_WIN);
   const snapOf=o=>{const a={};for(const d in o.act)if(d>=lo&&d<=today)a[d]=o.act[d];return {t:qR2(o.t),a:o.a,aq:o.aq,ok:o.ok,f:o.f,x:o.x,s:o.s,act:a};};
-  const B=d=>q.days[d]||(q.days[d]={t:0,a:0,aq:0,ok:0,f:0,x:0,s:0,c:[],sp:[]});
+  const B=d=>q.days[d]||(q.days[d]={t:0,a:0,aq:0,ok:0,f:0,x:0,s:0,c:[],sp:[],ct:{}});
   if(!q.snap){   // mise en service : on part d'ici, en reprenant seulement le temps déjà passé aujourd'hui
     q.snap={};q.since=today;
     for(const id in cur){const o=cur[id];q.snap[id]=snapOf(o);
@@ -1605,7 +1662,7 @@ function qUpdate(){
     const W={},pa=p.act||{};let tot=0;
     for(const d in o.act){if(d<from||d<lo||d>today)continue;const n=(o.act[d]||0)-(pa[d]||0);if(n>0){W[d]=n;tot+=n;}}
     if(!tot){let d=o.lt?qDay(o.lt):today;if(d<from||d>today)d=today;W[d]=1;tot=1;}
-    for(const d in W){const w=W[d]/tot,b=B(d);for(const k of QK)b[k]=qR2(b[k]+D[k]*w);
+    for(const d in W){const w=W[d]/tot,b=B(d);for(const k of QK)b[k]=qR2(b[k]+D[k]*w);if(!b.ct||typeof b.ct!=='object')b.ct={};if(D.t*w>0)b.ct[id]=qR2((b.ct[id]||0)+D.t*w);
       const tw=D.t*w,aw=D.a*w;
       if((tw>=120||aw>=5||D.x*w>=20)&&b.c.indexOf(id)<0)b.c.push(id);
       if(tw>=300||aw>=10){const s=q.seen[id];if(s&&qDiff(s,d)>=3&&b.sp.indexOf(id)<0)b.sp.push(id);if(!s||d>s)q.seen[id]=d;}}}
@@ -1613,13 +1670,20 @@ function qUpdate(){
   q.last=today;
   /* archivage : au-delà de Q_KEEP_DAYS, les semaines entières passent dans la réserve (q.bank) */
   const cut=qWeek(qAdd(today,-Q_KEEP_DAYS)),old={};for(const d in q.days){const w=qWeek(d);if(w<cut)old[w]=1;}
-  for(const w in old){q.bank+=qWeekEval(w).tot;for(const d in q.days)if(qWeek(d)===w)delete q.days[d];}
+  for(const w in old){q.bank+=qWeekEval(w).tot;for(const d in q.days)if(qWeek(d)===w){delete q.days[d];if(q.plan)delete q.plan[d];}}
+  if(q.plan)for(const d in q.plan)if(d<qAdd(today,-Q_KEEP_DAYS))delete q.plan[d];
 }
 const Q0={t:0,a:0,aq:0,ok:0,f:0,x:0,s:0,c:[],sp:[]};
-function qDayEval(b){b=b||Q0;const L=QD.map(Q=>{const v=Q.m(b);return {Q,v,g:qGain(v,Q.tiers),na:!!(Q.na&&Q.na(b))};});return {L,tot:L.reduce((a,x)=>a+x.g,0)};}
+function qDayEval(b,day){
+  b=b||Q0;const q=ST.q||{},ev=Q=>{const v=Q.m(b);return {Q,v,g:qGain(v,Q.tiers),na:!!(Q.na&&Q.na(b))};};
+  if(day&&q.v2&&day<q.v2){const L=QD_V1.map(ev);return {L,tot:L.reduce((a,x)=>a+x.g,0)};}   // journée d'avant la version 2 : ancien barème
+  const L=qQuests(day||qDay(Date.now())).map(ev),done=L.filter(x=>!x.na&&x.g>=qMax(x.Q.tiers)).length;
+  L.push({Q:QBON,v:done,g:qGain(done,QBON.tiers),bon:true});
+  return {L,tot:L.reduce((a,x)=>a+x.g,0),done};
+}
 function qWeekEval(w){
   const q=ST.q||{days:{}},A={act:0,c:0},cs={};let tot=0;
-  for(let i=0;i<7;i++){const b=q.days[qAdd(w,i)];if(!b)continue;tot+=qDayEval(b).tot;if(b.t>=900||b.a>=15)A.act++;(b.c||[]).forEach(id=>cs[id]=1);}
+  for(let i=0;i<7;i++){const d=qAdd(w,i),b=q.days[d];if(!b)continue;tot+=qDayEval(b,d).tot;if(b.t>=900||b.a>=15)A.act++;(b.c||[]).forEach(id=>cs[id]=1);}
   A.c=Object.keys(cs).length;const L=QW.map(Q=>{const v=Q.m(A);return {Q,v,g:qGain(v,Q.tiers)};});L.forEach(x=>tot+=x.g);
   return {tot,L,A};
 }
@@ -1632,16 +1696,17 @@ function qRow(x){
   const Q=x.Q,T=Q.tiers,next=T.find(t=>x.v<t[0]-1e-6),top=T[T.length-1][0],v=Math.floor(x.v+1e-6),pct=Q.u==='%';
   const val=x.na?'—':(next?v+' / '+next[0]:v+(pct?'':' / '+top))+(pct?' %':' '+Q.u)+(next?'':' ✓');
   let ticks='';if(T.length>1)for(let i=0;i<T.length-1;i++)ticks+='<u style="left:'+(T[i][0]/top*100).toFixed(1)+'%"></u>';
-  return '<div class="q-r'+(next?'':' ok')+(x.na?' na':'')+'"><div class="q-t"><span>'+Q.n+'</span><b><i class="orb"></i>'+x.g+' / '+qMax(T)+'</b></div>'+
+  return '<div class="q-r'+(next?'':' ok')+(x.na?' na':'')+(Q.rot?' rot':'')+(x.bon?' bon':'')+'"><div class="q-t"><span>'+Q.n+'</span><b><i class="orb"></i>'+x.g+' / '+qMax(T)+'</b></div>'+
     '<div class="q-s"><span>'+Q.d+'</span><span>'+val+'</span></div><div class="q-b"><i style="width:'+(x.na?0:Math.min(100,x.v/top*100)).toFixed(1)+'%"></i>'+ticks+'</div></div>';
 }
 function qPanel(){
   const el=$('qp');if(!el||!ST.q)return;
-  const today=qDay(Date.now()),E=qDayEval(ST.q.days[today]),W=qWeekEval(qWeek(today)),wk=W.L.reduce((a,x)=>a+x.g,0);
+  const today=qDay(Date.now()),E=qDayEval(ST.q.days[today],today),W=qWeekEval(qWeek(today)),wk=W.L.reduce((a,x)=>a+x.g,0);
   let reset='';try{reset=new Date(Date.parse(qAdd(today,1)+'T00:00:00Z')).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}catch(e){}
-  el.innerHTML='<div class="q-h"><span>Aujourd’hui</span><em><i class="orb"></i>'+E.tot+' orbes'+(reset?' · renouvelées à '+reset:'')+'</em></div>'+E.L.map(qRow).join('')+
+  el.innerHTML='<div class="q-h"><span>Aujourd’hui</span><em><i class="orb"></i>'+E.tot+' / '+ORB_PER_CHEST+' pour un coffre'+(reset?' · nouvelles quêtes à '+reset:'')+'</em></div>'+
+    '<div class="q-g"><i style="width:'+Math.min(100,E.tot/ORB_PER_CHEST*100).toFixed(1)+'%"></i></div>'+E.L.map(qRow).join('')+
     '<div class="q-h"><span>Cette semaine</span><em><i class="orb"></i>+'+wk+' · jusqu’à dimanche</em></div>'+W.L.map(qRow).join('')+
-    '<p>Mesuré dans tes cours, tous formats confondus : temps actif, quiz et vrai / faux, flashcards, XP, succès. '+ORB_PER_CHEST+' orbes = 1 coffre. '+
+    '<p>Deux quêtes de fond chaque jour, quatre autres qui changent tous les jours (✦). Tout est mesuré dans tes cours : temps actif, quiz et vrai / faux, flashcards, XP, succès. '+ORB_PER_CHEST+' orbes = 1 coffre. '+
     'Total : '+ORBS+' orbes'+(TEST?' (mode test : les coffres restent illimités)':'')+'.</p>';
 }
 function qToast(){
