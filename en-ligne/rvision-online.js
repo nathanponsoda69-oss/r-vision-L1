@@ -247,7 +247,7 @@ async function signIn(){
 async function signOut(){if(!FB)return;try{await sync('sortie');}catch(e){}await FB.auth.signOut(FB.au);}
 async function onUser(u){
   if(!u){Object.assign(S,{user:null,uid:null,pseudo:'',meta:null,prof:null,onboarded:false,needLink:null});LS.del('rvo_auth');emit();return;}
-  LS.set('rvo_auth','1');
+  LS.set('rvo_auth','1');const c0=curUser();
   S.user={name:u.displayName||'',email:u.email||''};S.uid=u.uid;S.err='';emit();
   const ms=await FB.fs.getDoc(D('users',u.uid,'sync','meta'));S.meta=ms.exists()?ms.data():null;
   const ps=await FB.fs.getDoc(D('profiles',u.uid));S.prof=ps.exists()?ps.data():null;S.onboarded=!!S.prof;
@@ -255,8 +255,10 @@ async function onUser(u){
   linkCheck();emit();
   if(S.pseudo)await sync('connexion');
   if(S.onboarded){await publish(true).catch(e=>fail('publication',e));settle().catch(e=>fail('tournoi',e));}
-  emit();
+  profEvt(c0);emit();
 }
+/* le profil actif de l'appareil a changé (connexion sur un nouvel appareil, inscription) : la page le recharge */
+function profEvt(c0){if(curUser()!==c0)window.dispatchEvent(new CustomEvent('rvision:synced',{detail:{keys:['*'],profile:true}}));}
 /* le compte suit un profil (S.pseudo). Profil actif différent sur cet appareil → on le signale, sans rien imposer */
 function linkCheck(){
   const c=curUser();S.needLink=null;
@@ -282,7 +284,7 @@ async function onboard(o){
   const h=slug(o.handle),vis=o.vis==='friends'?'friends':'public';
   if(!HANDLE_RE.test(h))throw new Error('Pseudo en ligne : 3 à 20 caractères (lettres, chiffres, _).');
   let p=S.pseudo||curUser()||String(o.pseudo||'').trim().slice(0,20);
-  if(!p)throw new Error('Choisis d’abord un prénom ou pseudo.');
+  if(!p)throw new Error('Choisis d’abord un prénom ou pseudo.');const c0=curUser();
   const {fs}=FB,hr=D('handles',h),hs=await fs.getDoc(hr);
   if(hs.exists()&&hs.data().uid!==S.uid)throw new Error('@'+h+' est déjà pris — essaie une variante.');
   if(!hs.exists())await fs.setDoc(hr,{uid:S.uid,t:Date.now()});
@@ -290,7 +292,7 @@ async function onboard(o){
   ensureProfile(p);if(!curUser())LS.set('rvision_current_user',p);
   if(!S.pseudo){S.pseudo=p;await fs.setDoc(D('users',S.uid,'sync','meta'),{p,c:Date.now(),u:Date.now()},{merge:true});S.meta=Object.assign({},S.meta||{},{p});}
   S.prof=Object.assign({},S.prof||{},{n:p,h,vis});S.onboarded=true;linkCheck();emit();
-  await sync('inscription');await publish(true);settle().catch(()=>{});emit();
+  await sync('inscription');await publish(true);settle().catch(()=>{});profEvt(c0);emit();
 }
 async function setVis(vis){
   if(!S.onboarded)return;vis=vis==='friends'?'friends':'public';S.prof.vis=vis;emit();
@@ -463,7 +465,7 @@ const podium=m=>J(LS.get('rvo_podium_'+m),null);
 const EV=new EventTarget();
 let emitQ=0;
 function emit(){if(emitQ)return;emitQ=requestAnimationFrame?requestAnimationFrame(fire):setTimeout(fire,16);}
-function fire(){emitQ=0;const st=state();EV.dispatchEvent(new CustomEvent('state',{detail:st}));window.dispatchEvent(new CustomEvent('rvision:online',{detail:st}));footer(st);}
+function fire(){emitQ=0;const st=state();try{accRender();}catch(e){}EV.dispatchEvent(new CustomEvent('state',{detail:st}));window.dispatchEvent(new CustomEvent('rvision:online',{detail:st}));footer(st);}
 function emitT(t,d){EV.dispatchEvent(new CustomEvent(t,{detail:d}));}
 function state(){return {cfg:S.cfg,sdk:S.sdk,err:S.err,user:S.user,uid:S.uid,pseudo:S.pseudo,local:curUser(),handle:S.prof&&S.prof.h||'',vis:S.prof&&S.prof.vis||'',
   onboarded:S.onboarded,needLink:S.needLink,sync:Object.assign({},S.sync),trophies:trophies()};}
@@ -491,6 +493,117 @@ function start(){
   document.addEventListener('visibilitychange',()=>{if(document.hidden){if(S.uid&&dirty())sync('sortie');}else background();});
   addEventListener('storage',e=>{if(e.key==='rvision_current_user'){S.needLink=null;linkCheck();emit();}});
 }
+
+/* ─────────────── 15 · compte dans la fenêtre de profil « Qui révise ? » (L1, L2) ───────────────
+   Un bloc « Compte en ligne » s'ajoute de lui-même à la fenêtre de profil des accueils : connexion Google en un clic
+   (y compris à la toute première visite, pour retrouver sa progression sur un nouvel appareil), inscription express,
+   état de la synchro. Aucune ligne des pages n'est modifiée : le module repère la fenêtre et s'y greffe. */
+const ACC={el:null,scr:'',modal:false,prop:null};   // prop : la proposition qui suit la création d'un profil
+const GLOGO='<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+function accCss(){
+  if(document.getElementById('rvo-acc-css'))return;const st=document.createElement('style');st.id='rvo-acc-css';
+  st.textContent='#pm .pm-box{max-height:calc(100vh - 24px);overflow-y:auto;scrollbar-width:thin;}'
+   +'.rvo-acc .rvo-t{font-size:11px;line-height:1.6;color:rgba(246,241,234,.62);margin:0 0 12px;}'
+   +'.rvo-acc .rvo-g{width:100%;}.rvo-acc .rvo-g svg{width:17px;height:17px;flex:none;background:#fff;border-radius:50%;padding:2px;}'
+   +'.rvo-acc .rvo-row{display:flex;gap:10px 16px;flex-wrap:wrap;align-items:center;justify-content:space-between;}'
+   +'.rvo-acc .rvo-st{font-size:11px;letter-spacing:.04em;color:rgba(246,241,234,.78);line-height:1.6;}.rvo-acc .rvo-st b{color:var(--pa,#ffc58a);font-weight:700;}'
+   +'.rvo-acc .rvo-a,.rvo-prop .rvo-a{font:inherit;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--pa,#ffc58a);text-decoration:none;background:none;border:0;padding:4px 0;cursor:pointer;}'
+   +'.rvo-acc .rvo-a.dim,.rvo-prop .rvo-a.dim{color:rgba(246,241,234,.5);}.rvo-acc .rvo-a:hover,.rvo-prop .rvo-a:hover{color:#fff;}'
+   +'.rvo-acc .rvo-e{font-size:11px;color:#ff9a8a;margin:8px 0 0;}.rvo-acc .rvo-e:empty{display:none;}'
+   +'.rvo-acc .rvo-lb{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(246,241,234,.45);margin:12px 0 2px;}'
+   +'.rvo-acc .rvo-at{display:flex;align-items:center;gap:6px;}.rvo-acc .rvo-at span{color:var(--pa,#ffc58a);font-weight:700;}.rvo-acc .rvo-at .pm-in,.rvo-acc .rvo-f>.pm-in{width:100%;}'
+   +'.rvo-acc .rvo-vis{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0 12px;}'
+   +'.rvo-acc .rvo-vis button{font:inherit;text-align:left;color:rgba(246,241,234,.7);background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.1);border-radius:0;padding:8px 10px;cursor:pointer;}'
+   +'.rvo-acc .rvo-vis b{display:block;font-size:11px;color:#fff;letter-spacing:.06em;}.rvo-acc .rvo-vis small{display:block;font-size:9.5px;opacity:.65;line-height:1.4;margin-top:2px;}'
+   +'.rvo-acc .rvo-vis button.on{border-color:var(--pa,#ffc58a);background:rgba(255,197,138,.08);}'
+   +'.rvo-acc .rvo-f .pm-go{width:100%;}'
+   +'.rvo-prop{position:fixed;left:50%;bottom:24px;z-index:80;width:min(430px,calc(100vw - 24px));max-height:calc(100vh - 48px);overflow-y:auto;padding:20px 24px 18px;'
+   +'background:linear-gradient(180deg,rgba(18,15,13,.9),rgba(11,9,8,.95));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.1);'
+   +'color:#f6f1ea;opacity:0;transform:translate(-50%,16px);transition:opacity .45s ease,transform .6s cubic-bezier(.2,.8,.2,1);pointer-events:none;}'
+   +'.rvo-prop.on{opacity:1;transform:translate(-50%,0);pointer-events:auto;}'
+   +'.rvo-prop .pm-c{position:absolute;width:14px;height:14px;border:0 solid #fff;opacity:.9;}'
+   +'.rvo-prop .tl{top:-1px;left:-1px;border-top-width:1px;border-left-width:1px;}.rvo-prop .tr{top:-1px;right:-1px;border-top-width:1px;border-right-width:1px;}'
+   +'.rvo-prop .bl{bottom:-1px;left:-1px;border-bottom-width:1px;border-left-width:1px;}.rvo-prop .br{bottom:-1px;right:-1px;border-bottom-width:1px;border-right-width:1px;}'
+   +'.rvo-prop .rvo-ph{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:rgba(246,241,234,.5);}'
+   +'.rvo-prop .rvo-pt{font-family:var(--logo,inherit);font-weight:800;font-size:19px;line-height:1.2;margin:10px 0 10px;}'
+   +'@media (prefers-reduced-motion:reduce){.rvo-prop{transition:none;}}';
+  document.head.appendChild(st);
+}
+function El(t,c,x,p){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;if(p)p.appendChild(e);return e;}
+function accScreen(){return S.sdk==='error'?'err':!S.uid&&(S.sdk==='loading'||(S.sdk==='idle'&&LS.get('rvo_auth')==='1'))?'load':!S.uid?'in':S.needLink?'link':!S.onboarded?'ob':'main';}
+function accRender(){accInto(ACC);if(ACC.prop)accInto(ACC.prop);}
+function accInto(C){
+  const el=C.el;if(!el||!document.body.contains(el))return;const scr=accScreen();
+  if(scr===C.scr){if(scr==='main')accStatus(el.querySelector('.rvo-st'));return;}   // même écran : on ne casse pas une saisie en cours
+  C.scr=scr;el.textContent='';if(C===ACC)El('p','pm-sep','Compte en ligne',el);
+  const err=()=>{const e=El('p','rvo-e',S.err||'',null);return e;};
+  if(scr==='err'){El('p','rvo-t','Le service en ligne ne répond pas pour l’instant.',el);const b=El('button','rvo-a','Réessayer',el);b.type='button';b.onclick=()=>{sdkP=null;S.sdk='idle';ensure();};return;}
+  if(scr==='load'){El('p','rvo-t','Ouverture de ton compte…',el);return;}
+  if(scr==='in'){
+    El('p','rvo-t','Connecte-toi pour retrouver ta progression sur tous tes appareils, entrer au classement et ajouter des amis. Déjà inscrit ailleurs ? Ton profil revient en un clic.',el);
+    const b=El('button','pm-go rvo-g',null,el);b.type='button';b.innerHTML=GLOGO+'<span>Se connecter avec Google</span>';
+    const e=err();el.appendChild(e);
+    b.onclick=async()=>{if(C===ACC)ACC.modal=true;b.disabled=true;e.textContent='';try{await signIn();}catch(x){e.textContent=S.err||String(x&&x.message||x);}b.disabled=false;};
+    return;}
+  if(scr==='link'){const L=S.needLink;
+    El('p','rvo-t','Ton compte Google suit le profil « '+L.account+' ». Sur cet appareil, le profil actif est « '+L.local+' ».',el);
+    const r=El('div','rvo-row',null,el),a=El('button','rvo-a','Passer sur « '+L.account+' »',r),m=El('button','rvo-a dim','Verser « '+L.local+' » dedans',r);a.type=m.type='button';
+    a.onclick=()=>link('use');m.onclick=()=>link('merge');return;}
+  if(scr==='ob'){
+    const f=El('form','rvo-f',null,el);f.autocomplete='off';
+    El('p','rvo-t','Dernière étape : ton pseudo en ligne et qui peut voir ton avancement.',f);
+    const local=S.pseudo||curUser();let pin=null;
+    if(!local){El('label','rvo-lb','Prénom ou pseudo (ton profil R·Vision)',f);pin=El('input','pm-in',null,f);pin.maxLength=20;pin.placeholder='Max…';}
+    El('label','rvo-lb','Pseudo en ligne — unique, sert à t’ajouter en ami',f);
+    const at=El('div','rvo-at',null,f);El('span',null,'@',at);const hin=El('input','pm-in',null,at);hin.maxLength=20;hin.placeholder='max';hin.value=slug(local||'');
+    if(pin)pin.addEventListener('input',()=>{hin.value=slug(pin.value);});
+    const vs=El('div','rvo-vis',null,f);let vis='public';const vb=[];
+    [['public','Public','Classement général et tournoi du mois'],['friends','Amis seulement','Seuls tes amis te voient']].forEach(([k,t,d])=>{
+      const b=El('button',k==='public'?'on':'',null,vs);b.type='button';El('b',null,t,b);El('small',null,d,b);vb.push(b);b.onclick=()=>{vis=k;vb.forEach(x=>x.classList.toggle('on',x===b));};});
+    const go=El('button','pm-go',null,f);go.type='submit';go.innerHTML='<span>Valider</span><b aria-hidden="true">→</b>';const e=El('p','rvo-e',null,f);
+    f.addEventListener('submit',async ev=>{ev.preventDefault();e.textContent='';go.disabled=true;
+      try{await onboard({handle:hin.value,vis,pseudo:pin?pin.value:''});}catch(x){e.textContent=x&&x.message||String(x);go.disabled=false;}});
+    return;}
+  /* connecté */
+  const r=El('div','rvo-row',null,el);accStatus(El('p','rvo-st',null,r));
+  const ac=El('div','rvo-row',null,el),cl=El('a','rvo-a','Classement et amis →',ac),out=El('button','rvo-a dim','Se déconnecter',ac);
+  cl.href=new URL('../bibliotheque.html?salle=classement',import.meta.url).href;out.type='button';out.onclick=()=>{signOut();};
+  if(C===ACC&&ACC.modal&&curUser()){ACC.modal=false;setTimeout(()=>{const x=document.querySelector('#pm.on .pm-x');if(x)x.click();},1400);}   // connexion lancée d'ici : la fenêtre se referme sur le bon profil
+  if(C===ACC.prop)setTimeout(propClose,2600);   // proposition aboutie : elle s'efface d'elle-même
+}
+/* proposition affichée juste après la création d'un nouveau profil (si l'on n'est pas connecté) */
+function propOpen(name){
+  if(ACC.prop||S.uid)return;accCss();ensure();
+  const w=El('aside','rvo-prop',null,document.body);w.setAttribute('role','dialog');w.setAttribute('aria-label','Sauvegarder ton profil en ligne');
+  ['tl','tr','bl','br'].forEach(k=>El('i','pm-c '+k,null,w));
+  const h=El('div','rvo-ph',null,w);El('span',null,'Profil « '+name+' » créé',h);const x=El('button','rvo-a dim','Plus tard',h);x.type='button';
+  El('p','rvo-pt','Sauvegarde-le avec ton compte Google',w);
+  const body=El('div','rvo-acc',null,w);ACC.prop={el:body,scr:'',w};
+  x.onclick=propClose;
+  requestAnimationFrame(()=>w.classList.add('on'));accInto(ACC.prop);
+}
+function propClose(){const P=ACC.prop;if(!P)return;ACC.prop=null;P.w.classList.remove('on');setTimeout(()=>P.w.remove(),500);}
+function accStatus(p){if(!p)return;p.textContent='';El('span',null,'Connecté · ',p);El('b',null,'@'+((S.prof&&S.prof.h)||''),p);
+  El('span',null,' · '+(S.sync.busy?'synchronisation…':S.sync.err?S.sync.err:'synchronisé '+agoTxt(S.sync.last)),p);}
+function agoTxt(ms){if(!ms)return 'à l’instant';const s=(Date.now()-ms)/1000;return s<60?'à l’instant':s<3600?'il y a '+Math.round(s/60)+' min':s<86400?'il y a '+Math.round(s/3600)+' h':'il y a '+Math.round(s/86400)+' j';}
+function accMount(){
+  const m=document.getElementById('pm'),box=m&&m.querySelector('.pm-box');if(!box)return false;
+  if(!ACC.el||!box.contains(ACC.el)){accCss();ACC.el=document.createElement('div');ACC.el.className='rvo-acc';box.insertBefore(ACC.el,box.querySelector('.pm-ft'));ACC.scr='';
+    new MutationObserver(()=>{if(m.classList.contains('on')){ensure();accRender();}}).observe(m,{attributes:true,attributeFilter:['class']});   // fenêtre ouverte : Firebase se prépare, le clic ouvrira la connexion sans délai
+    if(m.classList.contains('on'))ensure();propHook(m);}
+  accRender();return true;
+}
+function propHook(m){
+  const f=m.querySelector('.pm-f');if(!f||f.dataset.rvo)return;f.dataset.rvo='1';
+  f.addEventListener('submit',()=>{const v=((f.querySelector('.pm-in')||{}).value||'').trim();
+    if(!v||users().includes(v)||S.uid)return;   // profil existant ou déjà connecté : rien à proposer
+    setTimeout(()=>{if(curUser()===v&&!S.uid)propOpen(v);},700);},true);
+}
+function accWatch(){
+  if(accMount())return;
+  const ob=new MutationObserver(()=>{if(accMount())ob.disconnect();});ob.observe(document.body,{childList:true});
+}
+
 window.RVO={
   version:'1.0',ready:!!CFG,
   on:(t,f)=>EV.addEventListener(t,e=>f(e.detail)),
@@ -499,10 +612,11 @@ window.RVO={
   periods,myScores:()=>myScores(S.pseudo||curUser()),myStats:()=>publicStats(S.pseudo||curUser()),trophies,podium,
   slug,monthLabel,SCORE,
   _t:{mergeVal,deep,mergeBiblio,localMap,toLocal,H,shardOf,weekOf,monthOf,dayScore,periodScore,ledgerUpdate,collect,S,sync,dirty,publicStats,
-    inject:fb=>{FB=fb;S.sdk='ready';}}   // pour les tests uniquement
+    inject:fb=>{FB=fb;S.sdk='ready';},render:()=>{ACC.scr='';accRender();}}   // pour les tests uniquement
 };
 /* démarrage après la scène : l'accueil 3D garde toute la bande passante au chargement */
 if(CFG){
+  if(document.body)accWatch();else addEventListener('DOMContentLoaded',accWatch,{once:true});
   const go=()=>setTimeout(()=>{(window.requestIdleCallback||(f=>setTimeout(f,1)))(start,{timeout:4000});},/[?&]salle=classement/.test(location.search)?0:3500);
   if(document.readyState==='complete')go();else addEventListener('load',go,{once:true});
 }
