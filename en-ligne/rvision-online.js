@@ -549,7 +549,7 @@ function accInto(C){
   if(scr==='err'){El('p','rvo-t','Le service en ligne ne répond pas pour l’instant.',el);const b=El('button','rvo-a','Réessayer',el);b.type='button';b.onclick=()=>{sdkP=null;S.sdk='idle';ensure();};return;}
   if(scr==='load'){El('p','rvo-t','Ouverture de ton compte…',el);return;}
   if(scr==='in'){
-    El('p','rvo-t','Connecte-toi pour retrouver ta progression sur tous tes appareils, entrer au classement et ajouter des amis. Déjà inscrit ailleurs ? Ton profil revient en un clic.',el);
+    El('p','rvo-t','Connecte-toi pour retrouver ta progression sur tous tes appareils et participer au tournoi du mois. Déjà inscrit ailleurs ? Ton profil revient en un clic.',el);
     const b=El('button','pm-go rvo-g',null,el);b.type='button';b.innerHTML=GLOGO+'<span>Se connecter avec Google</span>';
     const e=err();el.appendChild(e);
     b.onclick=async()=>{if(C===ACC)ACC.modal=true;b.disabled=true;e.textContent='';try{await signIn();}catch(x){e.textContent=S.err||String(x&&x.message||x);}b.disabled=false;};
@@ -560,14 +560,14 @@ function accInto(C){
     a.onclick=()=>link('use');m.onclick=()=>link('merge');return;}
   if(scr==='ob'){
     const f=El('form','rvo-f',null,el);f.autocomplete='off';
-    El('p','rvo-t','Dernière étape : ton pseudo en ligne et qui peut voir ton avancement.',f);
+    El('p','rvo-t','Dernière étape : ton nom au classement.',f);
     const local=S.pseudo||curUser();let pin=null;
     if(!local){El('label','rvo-lb','Prénom ou pseudo (ton profil R·Vision)',f);pin=El('input','pm-in',null,f);pin.maxLength=20;pin.placeholder='Max…';}
-    El('label','rvo-lb','Pseudo en ligne — unique, sert à t’ajouter en ami',f);
+    El('label','rvo-lb','Ton nom au classement',f);
     const at=El('div','rvo-at',null,f);El('span',null,'@',at);const hin=El('input','pm-in',null,at);hin.maxLength=20;hin.placeholder='max';hin.value=slug(local||'');
     if(pin)pin.addEventListener('input',()=>{hin.value=slug(pin.value);});
     const vs=El('div','rvo-vis',null,f);let vis='public';const vb=[];
-    [['public','Public','Classement général et tournoi du mois'],['friends','Amis seulement','Seuls tes amis te voient']].forEach(([k,t,d])=>{
+    [['public','Je participe','Mon nom apparaît au classement'],['friends','Masqué','Je révise sans apparaître']].forEach(([k,t,d])=>{
       const b=El('button',k==='public'?'on':'',null,vs);b.type='button';El('b',null,t,b);El('small',null,d,b);vb.push(b);b.onclick=()=>{vis=k;vb.forEach(x=>x.classList.toggle('on',x===b));};});
     const go=El('button','pm-go',null,f);go.type='submit';go.innerHTML='<span>Valider</span><b aria-hidden="true">→</b>';const e=El('p','rvo-e',null,f);
     f.addEventListener('submit',async ev=>{ev.preventDefault();e.textContent='';go.disabled=true;
@@ -575,7 +575,7 @@ function accInto(C){
     return;}
   /* connecté */
   const r=El('div','rvo-row',null,el);accStatus(El('p','rvo-st',null,r));
-  const ac=El('div','rvo-row',null,el),cl=El('a','rvo-a','Classement et amis →',ac),out=El('button','rvo-a dim','Se déconnecter',ac);
+  const ac=El('div','rvo-row',null,el),cl=El('a','rvo-a','Classement du mois →',ac),out=El('button','rvo-a dim','Se déconnecter',ac);
   cl.href=new URL('../bibliotheque.html?salle=classement',import.meta.url).href;out.type='button';out.onclick=()=>{signOut();};
   if(C===ACC&&ACC.modal&&curUser()){ACC.modal=false;setTimeout(()=>{const x=document.querySelector('#pm.on .pm-x');if(x)x.click();},1400);}   // connexion lancée d'ici : la fenêtre se referme sur le bon profil
   if(C===ACC.prop)setTimeout(propClose,2600);   // proposition aboutie : elle s'efface d'elle-même
