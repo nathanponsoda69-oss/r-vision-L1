@@ -32,9 +32,12 @@ COMMENT ÇA MARCHE
 OBTENIR UN PORTRAIT
   · Palier Rare, mêlé aux 6 objets rares : quand un coffre tombe sur « Rare », il y a 60 chances sur 66 que ce soit
     un portrait. Un portrait en double compte comme un doublon : la chance de légendaire augmente.
-  · Porte secrète : garantie au plus tard au 200ᵉ coffre. À partir du 151ᵉ coffre, un objet manquant peut être avancé
-    (chance = objets manquants / coffres restants). Simulation de 20 000 parties : la porte s'ouvre en général entre
-    170 et 200 coffres (médiane ≈ 189), jamais après 200. Réglage : DOOR_BY et DOOR_FROM dans bibliotheque.html.
+  · Garantie au 200ᵉ coffre : la porte secrète est ouverte ET les 60 portraits sont obtenus.
+    – portraits : à chaque coffre, chance « portraits manquants / coffres restants » d'en recevoir un nouveau ;
+    – objets de la collection : même règle à partir du 151ᵉ coffre ;
+    – si les manquants égalent les coffres restants, chaque coffre donne l'un d'eux.
+    Simulation (20 000 parties) : porte entre 176 et 199 coffres pour 80 % des joueurs (médiane 191), ≈ 38 portraits
+    au 100ᵉ coffre, 60 / 60 au 200ᵉ dans 100 % des cas. Réglage : DOOR_BY et DOOR_FROM dans bibliotheque.html.
 
 LE PORTER
   · Fenêtre de profil (clic sur ton nom dans la barre) → clic sur le rond de TON profil (petit crayon) → galerie.

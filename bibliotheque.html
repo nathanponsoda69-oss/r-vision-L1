@@ -2040,13 +2040,20 @@ function itAvatar(av){
 }
 function ownedMyth(){let n=0;for(let i=20;i<25;i++)if(ST.owned[ITEMS[i].id])n++;return n;}
 function weights(){const w=RAR.map(r=>r.w);w[3]=Math.min(CAP_L,RAR[3].w+LUCK_L*ST.luck);w[4]=ST.door?Math.min(CAP_M,BASE_M+LUCK_M*ST.luck):0;return w;}
-/* porte secrète garantie au plus tard au 200ᵉ coffre : à partir du 151ᵉ, un objet manquant de la collection peut être
-   avancé, avec une chance « manquants / coffres restants » (≈ 170 à 200 coffres selon la chance, jamais plus de 200) */
+/* garanties au 200ᵉ coffre : la porte secrète (20 objets) ET les 60 portraits.
+   · portraits : à chaque coffre, chance « portraits manquants / coffres restants » d'en recevoir un nouveau ;
+   · objets de la collection : même règle à partir du 151ᵉ coffre (porte en général entre 170 et 200) ;
+   · si les manquants égalent les coffres restants, le coffre donne forcément l'un d'eux. */
 const DOOR_BY=200,DOOR_FROM=150;
 function roll(force){
-  if(force===undefined&&!ST.door){const n=(ST.opened|0)+1,miss=[];for(let i=0;i<20;i++)if(!ST.owned[ITEMS[i].id])miss.push(i);
-    if(miss.length&&n>DOOR_FROM&&Math.random()<miss.length/Math.max(1,DOOR_BY-n+1)){
-      const k=miss[(Math.random()*miss.length)|0],it=ITEMS[k],ri=it.r;ST.owned[it.id]=1;ST.opened=n;if(ri>=3)ST.luck=0;save();return {k,it,ri,dup:false};}}
+  if(force===undefined){const n=(ST.opened|0)+1,rem=DOOR_BY-n+1,mB=[],mA=[];
+    if(!ST.door)for(let i=0;i<20;i++)if(!ST.owned[ITEMS[i].id])mB.push(i);
+    for(const a of AVS)if(!ST.owned[a.id])mA.push(a);
+    if(rem>0&&mB.length+mA.length){const all=mB.length+mA.length>=rem;
+      const fb=mB.length>0&&(all?Math.random()<mB.length/(mB.length+mA.length):(n>DOOR_FROM&&Math.random()<mB.length/rem));
+      const fa=!fb&&mA.length>0&&(all||Math.random()<mA.length/rem);
+      if(fb){const k=mB[(Math.random()*mB.length)|0],it=ITEMS[k],ri=it.r;ST.owned[it.id]=1;ST.opened=n;if(ri>=3)ST.luck=0;save();return {k,it,ri,dup:false};}
+      if(fa){const av=mA[(Math.random()*mA.length)|0];ST.owned[av.id]=1;ST.opened=n;save();return {k:-1,av,it:{id:av.id,n:av.n,b:()=>itAvatar(av)},ri:1,dup:false};}}}
   const w=weights(),tot=w.reduce((a,b)=>a+b,0);let x=Math.random()*tot,ri=0;for(;ri<4;ri++){if(x<w[ri])break;x-=w[ri];}
   if(force!==undefined&&force>=0&&force<=4)ri=force;
   const pool=ITEMS.map((it,k)=>k).filter(k=>ITEMS[k].r===ri);
@@ -2138,7 +2145,7 @@ function hud(){
   const w=weights(),tot=w.reduce((a,c)=>a+c,0);let h='';
   RAR.forEach((r,i)=>{if(i===4&&!ST.door)return;h+='<div><span><i style="background:'+r.css+';box-shadow:0 0 8px '+r.css+'"></i>'+r.n+'</span><b>'+(w[i]/tot*100).toFixed(1).replace('.',',')+' %</b></div>';});
   h+='<p>Chaque doublon augmente tes chances de légendaire'+(ST.door?' et de mythique':'')+'. Doublons accumulés : '+(ST.luck|0)+'. Le compteur retombe à zéro quand un nouvel objet légendaire'+(ST.door?' ou mythique':'')+' sort.'+(ST.door?'':' Les mythiques n’apparaissent qu’une fois les 20 objets réunis.')+'</p>';
-  if(!ST.door)h+='<p>La porte secrète s’ouvre au plus tard au '+DOOR_BY+'ᵉ coffre (coffres ouverts : '+(ST.opened|0)+').</p>';
+  h+='<p>Au plus tard au '+DOOR_BY+'ᵉ coffre : porte secrète ouverte et '+AVS.length+' portraits obtenus (coffres ouverts : '+(ST.opened|0)+').</p>';
   if(AVS.length)h+='<p>Palier Rare : '+AVS.length+' portraits de profil s’y mêlent aux 6 objets rares ('+ownedAv()+' / '+AVS.length+' obtenus).</p>';
   $('oddsp').innerHTML=h;
 }
