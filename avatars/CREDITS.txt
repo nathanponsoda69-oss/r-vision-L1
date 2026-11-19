@@ -1,0 +1,5 @@
+R·Vision — portraits de profil (version pixel art, novembre 2026)
+
+Les 60 portraits sont des créations originales pour R·Vision : grille de 18 × 18 pixels,
+agrandie × 16 (288 × 288) sans lissage, au format WebP sans perte.
+Ils ne reprennent aucun personnage existant. Tu peux les utiliser, les modifier et en ajouter librement.

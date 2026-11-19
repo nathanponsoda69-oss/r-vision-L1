@@ -9617,12 +9617,20 @@ function buildProfile(onChange){
   const $=s=>m.querySelector(s);
   const st={open:false};
   const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  function label(){const u=profCurrent();chip.innerHTML=u?`<i>${esc(u.charAt(0).toUpperCase())}</i><span class="pn">${esc(u)}</span>`:'<i>?</i><span class="pn">Connexion</span>';chip.title=u?'Profil actif — changer de profil':'Choisir un profil';}
+  function label(){const u=profCurrent();chip.innerHTML=u?`<i>${esc(u.charAt(0).toUpperCase())}</i><span class="pn">${esc(u)}</span>`:'<i>?</i><span class="pn">Connexion</span>';chip.title=u?'Profil actif — changer de profil':'Choisir un profil';if(u&&window.RVAV)RVAV.paint(chip.querySelector('i'),u);}
   function render(){
     const us=profUsers(),cur=profCurrent();
     $('.pm-list').innerHTML=us.length?us.map(u=>`<button type="button" class="pm-u${u===cur?' on':''}" data-u="${esc(u)}"><i>${esc(u.charAt(0).toUpperCase())}</i><span class="pm-n"><b>${esc(u)}</b><span>L1 · ${profXP(u,L1_XP_IDS).toLocaleString('fr-FR')} XP</span></span><em aria-hidden="true">→</em></button>`).join('')
       :'<p class="pm-none">Aucun profil sur cet appareil pour l\'instant — crée le tien ci-dessous.</p>';
     m.querySelectorAll('.pm-u').forEach(b=>b.addEventListener('click',()=>choose(b.dataset.u)));
+    avRows();
+  }
+  /* portraits (avatars.js) : chaque rond montre le portrait porté ; celui du profil actif ouvre la galerie */
+  function avRows(){const A=window.RVAV;if(!A)return;const cur=profCurrent();
+    m.querySelectorAll('.pm-u').forEach(b=>{const i=b.querySelector('i'),u=b.dataset.u;A.paint(i,u);if(u!==cur)return;
+      i.classList.add('pm-av');i.tabIndex=0;i.setAttribute('role','button');i.title='Changer de portrait';i.setAttribute('aria-label','Changer de portrait');
+      const go=e=>{e.preventDefault();e.stopPropagation();A.openPicker(cur);};
+      i.addEventListener('click',go);i.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')go(e);});});
   }
   function open(){render();st.open=true;m.classList.add('on');m.setAttribute('aria-hidden','false');setTimeout(()=>{try{$('.pm-in').focus({preventScroll:true});}catch(e){}},250);}
   function close(){st.open=false;m.classList.remove('on');m.setAttribute('aria-hidden','true');}
@@ -9635,6 +9643,7 @@ function buildProfile(onChange){
   m.addEventListener('click',e=>{if(e.target===m)close();});
   window.addEventListener('keydown',e=>{if(e.key==='Escape'&&st.open)close();});
   chip.addEventListener('click',open);
+  window.addEventListener('rvision:avatar',()=>{label();if(st.open)render();});
   label();
   return {open,close,st,label};
 }

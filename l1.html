@@ -18,11 +18,12 @@ window.RV_TEXDIR=D;window.RV_TEXV=V;window.RV_PREFETCH=["f_bark_rough", "f_bark_
 window.RVTQ=[];window.RVT=function(k,b){RVTQ.push([k,b]);if(window.RVTcb)window.RVTcb(k,b);};
 function get(k,p){var u=D+k+'.webp'+V;fetch(u,{priority:p}).then(function(r){if(!r.ok)throw r.status;return r.blob();}).then(function(b){RVT(k,b);},function(){RVT(k,u);});}
 C.forEach(function(k){get(k,'high');});L.forEach(function(k){get(k,'low');});})();</script>
+<script src="avatars.js?v=4"></script>
 <script type="importmap">
 {"imports":{"three":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/geometries/RoundedBoxGeometry.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/postprocessing/EffectComposer.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/postprocessing/OutputPass.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/postprocessing/Pass.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/postprocessing/RenderPass.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/postprocessing/ShaderPass.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/postprocessing/UnrealBloomPass.js":"./l1/vendor/three.js?v=6324f3ea3f","three/addons/utils/BufferGeometryUtils.js":"./l1/vendor/three.js?v=6324f3ea3f"}}
 </script>
 <link rel="modulepreload" href="./l1/vendor/three.js?v=6324f3ea3f">
-<link rel="modulepreload" href="l1/app.js?v=aca30552c0">
+<link rel="modulepreload" href="l1/app.js?v=628e9cd743">
 <style>
 :root{--haze:#c3b2a1;--ink:#f7efe6;--ink2:rgba(247,239,230,.72);--ink3:rgba(247,239,230,.45);--mono:'JetBrains Mono',ui-monospace,monospace;--logo:'Unbounded','JetBrains Mono',sans-serif;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -708,7 +709,7 @@ a.lvl:hover{color:#fff;}
 </div>
 <!-- code de la scène : l1/app.js (la forêt : l1/foret.js, chargée par app.js ; les textures : l1/tex et l1/tex-sd).
      Après une modification de textures, changer le ?v= correspondant (amorce en haut de page) pour vider le cache. -->
-<script type="module" src="l1/app.js?v=aca30552c0"></script>
+<script type="module" src="l1/app.js?v=628e9cd743"></script>
 <script>/* cache hors ligne (l1-sw.js) : visites suivantes quasi instantanées */
 if('serviceWorker' in navigator&&(location.protocol==='https:'||/^(localhost|127\.0\.0\.1)$/.test(location.hostname))&&!/[?&]capture/.test(location.search))addEventListener('load',function(){navigator.serviceWorker.register('l1-sw.js').catch(function(){});});</script>
 <!-- mode en ligne : compte Google, synchronisation, classements, amis, tournoi (rien ne se charge tant que en-ligne/config.js est vide) -->

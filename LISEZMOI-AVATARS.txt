@@ -1,0 +1,58 @@
+R·Vision — PORTRAITS DE PROFIL (novembre 2026)
+60 avatars à gagner dans les coffres · galerie dans la fenêtre de profil · affichés dans la barre, la liste des profils et le classement
+
+══════════════════════════════════════════════════════════════════════════════
+FICHIERS À DÉPOSER SUR GITHUB (à la racine du dépôt, en remplaçant les anciens)
+══════════════════════════════════════════════════════════════════════════════
+  avatars.js                  NOUVEAU — le catalogue des 30 portraits, la galerie, les fonctions communes
+  avatars/                    NOUVEAU — 60 portraits en pixel art (.webp, 14 Ko au total) + CREDITS.txt
+                              Créations originales R·Vision (grille 18 × 18) : aucun droit à citer.
+                              Si tu avais déjà déposé une version précédente (tableaux ou Rabier) : supprime d'abord
+                              les anciens fichiers du dossier avatars/ ; les portraits déjà gagnés avec elle sont perdus.
+  bibliotheque.html           tirage des portraits au palier Rare, médaillon d'or dans le coffre, bouton « Porter »,
+                              compteur « Portraits xx / 30 » sous le titre (clic = galerie), portraits au classement
+  l1.html + l1/app.js         rond de la barre et fenêtre de profil (l1/app.js va dans le dossier l1/)
+  l2.html                     les mêmes ajouts
+  en-ligne/rvision-online.js  le portrait part avec la fiche publique et les classements
+  firestore.rules             autorise le nouveau champ « a » (le portrait) → À REPUBLIER, voir plus bas
+
+Rien d'autre ne change (cours, textures, forêt, salles de la L2…).
+
+══════════════════════════════════════════════════════════════════════════════
+RÈGLES FIRESTORE (2 minutes)
+══════════════════════════════════════════════════════════════════════════════
+console.firebase.google.com → ton projet → Firestore Database → onglet « Règles » → tout effacer →
+coller le contenu de firestore.rules → « Publier ».
+Tant que ce n'est pas fait, rien ne casse : le site renvoie la fiche sans le portrait (essai suivant 6 h plus tard),
+et les autres étudiants voient l'initiale à la place de ton avatar.
+
+══════════════════════════════════════════════════════════════════════════════
+COMMENT ÇA MARCHE
+══════════════════════════════════════════════════════════════════════════════
+OBTENIR UN PORTRAIT
+  · Palier Rare, mêlé aux 6 objets rares : quand un coffre tombe sur « Rare », il y a 60 chances sur 66 que ce soit
+    un portrait. Un portrait en double compte comme un doublon : la chance de légendaire augmente.
+  · Conséquence (simulation de 20 000 parties) : la porte secrète demande ≈ 615 coffres au lieu de ≈ 110,
+    les 60 portraits ≈ 1 140 coffres. C'était ton choix ; pour revenir en arrière, une seule ligne à changer dans
+    bibliotheque.html, fonction roll() (repère : « portraits (avatars.js) : palier Rare »).
+
+LE PORTER
+  · Fenêtre de profil (clic sur ton nom dans la barre) → clic sur le rond de TON profil (petit crayon) → galerie.
+  · Galerie : onglets Tous / Obtenus / À trouver, aperçu en grand, légende, crédit de l'œuvre,
+    « Porter ce portrait » (ou double-clic), « Revenir à l'initiale ». Les nouveaux portraits portent l'étiquette
+    « Nouveau » jusqu'à la visite suivante. Flèches ← → pour parcourir, Échap pour fermer.
+  · Dans la bibliothèque : bouton « Porter ce portrait » dès la sortie du coffre, et « Portraits xx / 30 » sous le titre.
+
+OÙ IL APPARAÎT
+  · Rond de la barre (L1, L2), liste « Qui révise ? », lignes du tableau d'honneur (toile et grande vue),
+    fiche d'un étudiant, ta carte dans le Registre.
+
+DONNÉES (synchronisées avec le reste du profil)
+  rvision_<profil>_biblio        .owned[av_…] = exemplaires tirés
+  rvision_<profil>_avatar        portrait porté
+  rvision_<profil>_avatar_seen   portraits déjà vus dans la galerie (étiquettes « Nouveau »)
+
+AJOUTER UN PORTRAIT PLUS TARD
+  1. une image carrée avatars/av_<nom>.webp (pixel art agrandi sans lissage, 288 × 288) ;
+  2. une ligne dans la liste d'avatars.js (entre LIST-BEGIN et LIST-END) ;
+  3. changer VER en haut d'avatars.js et le ?v= des balises <script src="avatars.js"> si les navigateurs gardent l'ancien.

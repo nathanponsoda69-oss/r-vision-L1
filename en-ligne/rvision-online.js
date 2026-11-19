@@ -61,6 +61,8 @@ function localMap(p){
   return out;
 }
 const toLocal=(ck,p)=>ck.charAt(0)==='@'?'rvision_'+p+'_'+ck.slice(1):ck.slice(1);
+const AV_RE=/^av_[a-z_]{1,24}$/;
+function avOf(p){const a=p?LS.get('rvision_'+p+'_avatar')||'':'';if(!AV_RE.test(a))return '';const R=window.RVAV;return R&&R.get?R.get(p):a;}
 function ensureProfile(p){if(!p)return;const us=users();if(!us.includes(p)){us.push(p);LS.set('rvision_users',JSON.stringify(us));}}
 
 /* ─────────────── 03 · empreintes et fusion ─────────────── */
@@ -370,18 +372,30 @@ async function publish(force){
   if(!S.onboarded||!S.uid||!FB)return;
   if(!force&&Date.now()-pubT<45000)return;pubT=Date.now();
   const p=S.pseudo,sc=myScores(p),st=publicStats(p),tr=trophies(),pr=S.prof;
+  const av=avOf(p),useAv=av&&!(+LS.get('rvo_noav')>Date.now()-6*36e5);
   const doc={n:p.slice(0,24),h:pr.h,vis:pr.vis,w:{id:sc.week.id,s:sc.week.s,t:sc.week.t,p:sc.week.p,r:sc.week.r,d:sc.week.d},
     m:{id:sc.month.id,s:sc.month.s,t:sc.month.t,p:sc.month.p,r:sc.month.r,d:sc.month.d},st,tr:tr.slice(-24),u:Date.now()};
-  const sig=H(JSON.stringify(Object.assign({},doc,{u:0}))),k='rvo_pub_'+S.uid;
+  const sig=H(JSON.stringify(Object.assign({},doc,{u:0,a:useAv?av:''}))),k='rvo_pub_'+S.uid;
   if(!force&&LS.get(k)===sig)return;
-  const {fs}=FB,b=fs.writeBatch(FB.db);
-  b.set(D('profiles',S.uid),doc);
-  if(pr.vis==='public'){
-    const e=x=>({n:doc.n,h:doc.h,s:x.s,t:x.t,p:x.p,r:x.r,d:x.d,u:doc.u});
-    b.set(D('weeks',String(sc.week.id),'e',S.uid),e(sc.week));b.set(D('months',String(sc.month.id),'e',S.uid),e(sc.month));}
-  await b.commit();S.prof=doc;LS.set(k,sig);BOARD.c={};emit();
+  const {fs}=FB;
+  /* portrait (avatars.js) : champ « a » ; si les règles Firestore n'ont pas encore été republiées, on renvoie sans lui */
+  const put=withAv=>{const b=fs.writeBatch(FB.db),d=Object.assign({},doc);if(withAv)d.a=av;
+    b.set(D('profiles',S.uid),d);
+    if(pr.vis==='public'){
+      const e=x=>{const o={n:doc.n,h:doc.h,s:x.s,t:x.t,p:x.p,r:x.r,d:x.d,u:doc.u};if(withAv)o.a=av;return o;};
+      b.set(D('weeks',String(sc.week.id),'e',S.uid),e(sc.week));b.set(D('months',String(sc.month.id),'e',S.uid),e(sc.month));}
+    return b.commit().then(()=>d);};
+  let sent;
+  try{sent=await put(useAv);}
+  catch(e){if(!useAv||!/permission/i.test((e&&(e.code||e.message))||''))throw e;
+    LS.set('rvo_noav',String(Date.now()));console.warn('[R·Vision en ligne] portrait refusé par les règles Firestore (à republier) — envoi sans portrait');sent=await put(false);}
+  S.prof=sent;LS.set(k,sig);BOARD.c={};emit();
 }
 
+let avT=0;
+addEventListener('rvision:avatar',e=>{if(!S.onboarded||!S.uid||!FB||(e.detail&&e.detail.user&&e.detail.user!==S.pseudo))return;
+  if((S.prof&&S.prof.a||'')===avOf(S.pseudo)||+LS.get('rvo_noav')>Date.now()-6*36e5)return;
+  clearTimeout(avT);avT=setTimeout(()=>{publish(true).catch(er=>fail('publication',er));},1500);});   // nouveau portrait : la fiche publique suit
 /* ─────────────── 11 · classements ─────────────── */
 const BOARD={c:{}};
 async function board(kind,id){
@@ -391,8 +405,8 @@ async function board(kind,id){
   let rows=[],me=null,rank=null;
   if(kind==='friends'){
     const F=await friends(),sc=S.pseudo?myScores(S.pseudo):null;
-    for(const f of F.friends){if(!f.prof)continue;const w=f.prof.w&&f.prof.w.id===P.week.id?f.prof.w:{s:0,t:0,p:0,r:0,d:0};rows.push({uid:f.uid,n:f.prof.n,h:f.prof.h,s:w.s,t:w.t,p:w.p,r:w.r,d:w.d});}
-    if(S.onboarded&&sc)rows.push({uid:S.uid,n:S.pseudo,h:S.prof.h,s:sc.week.s,t:sc.week.t,p:sc.week.p,r:sc.week.r,d:sc.week.d});
+    for(const f of F.friends){if(!f.prof)continue;const w=f.prof.w&&f.prof.w.id===P.week.id?f.prof.w:{s:0,t:0,p:0,r:0,d:0};rows.push({uid:f.uid,n:f.prof.n,h:f.prof.h,a:f.prof.a||'',s:w.s,t:w.t,p:w.p,r:w.r,d:w.d});}
+    if(S.onboarded&&sc)rows.push({uid:S.uid,n:S.pseudo,h:S.prof.h,a:avOf(S.pseudo),s:sc.week.s,t:sc.week.t,p:sc.week.p,r:sc.week.r,d:sc.week.d});
     rows.sort((a,b)=>b.s-a.s);
   }else{
     const {fs}=FB,col=Col(kind==='month'?'months':'weeks',String(pid),'e');
@@ -402,9 +416,9 @@ async function board(kind,id){
       const sc=myScores(S.pseudo),x=kind==='month'?sc.month:sc.week;
       if((kind==='month'?P.month.id:P.week.id)===pid){
         try{const c=await fs.getCount(fs.query(col,fs.where('s','>',x.s)));rank=c.data().count+1;}catch(e){}
-        me={uid:S.uid,n:S.pseudo,h:S.prof.h,s:x.s,t:x.t,p:x.p,r:x.r,d:x.d,rank};}}
+        me={uid:S.uid,n:S.pseudo,h:S.prof.h,a:avOf(S.pseudo),s:x.s,t:x.t,p:x.p,r:x.r,d:x.d,rank};}}
   }
-  rows.forEach((r,i)=>{r.rank=i+1;r.me=r.uid===S.uid;});
+  rows.forEach((r,i)=>{r.rank=i+1;r.me=r.uid===S.uid;if(r.me)r.a=avOf(S.pseudo);});
   const v={kind,id:pid,rows,me,at:Date.now()};BOARD.c[ck]={t:Date.now(),v};return v;
 }
 async function profileOf(uid){await sdk();const d=await FB.fs.getDoc(D('profiles',uid));return d.exists()?Object.assign({uid},d.data()):null;}

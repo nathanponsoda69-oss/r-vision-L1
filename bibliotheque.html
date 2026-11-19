@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Unbounded:wght@700;800&family=Cinzel:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<script src="avatars.js?v=4"></script>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}
 </script>
@@ -113,6 +114,10 @@ body{color:var(--ink);font-family:var(--mono);-webkit-font-smoothing:antialiased
 #hud a,#hud button{pointer-events:auto;font-family:var(--mono);}
 .mono{font-size:11px;line-height:1.5;letter-spacing:.04em;color:var(--ink);text-shadow:0 1px 12px rgba(0,0,0,.6);}
 .dim{color:var(--ink2);}
+#k-av{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;letter-spacing:inherit;text-transform:inherit;border-bottom:1px dotted rgba(255,255,255,.3);pointer-events:auto;}#k-av:hover{color:#fff;border-color:#fff;}
+img.oav{width:24px;height:24px;border-radius:50%;object-fit:cover;image-rendering:pixelated;vertical-align:middle;margin-right:9px;box-shadow:0 0 0 1px rgba(230,194,122,.75);flex:none;}
+.op-h img.oav{width:34px;height:34px;align-self:center;margin-right:2px;}
+.op-id i.av{padding:0;overflow:hidden;}.op-id i.av img{width:100%;height:100%;object-fit:cover;border-radius:50%;image-rendering:pixelated;display:block;}
 .h-tl{position:absolute;top:32px;left:38px;display:flex;flex-direction:column;gap:9px;}
 .logo{font-family:var(--logo);font-weight:800;font-size:28px;letter-spacing:-.01em;color:#fff;text-decoration:none;line-height:1;text-shadow:0 2px 24px rgba(0,0,0,.5);}
 .logo span{opacity:.7;}
@@ -440,7 +445,7 @@ body{color:var(--ink);font-family:var(--mono);-webkit-font-smoothing:antialiased
   <header class="h-tl">
     <a class="logo" href="l2.html" aria-label="R·Vision — retour à l'accueil">R<span>·</span>VISION</a>
     <h1 class="ttl">BIBLIOTHÈQUE</h1>
-    <p class="mono dim" id="k-coll">////// Collection <b id="k-own">00</b> / 20<span id="k-myth"></span></p>
+    <p class="mono dim" id="k-coll">////// Collection <b id="k-own">00</b> / 20<span id="k-myth"></span><span id="k-avw"> · <button type="button" id="k-av" title="Galerie des portraits — choisir ton avatar">Portraits <b>00</b> / 60</button></span></p>
   </header>
   <section class="h-tr">
     <b id="k-chest" hidden>0</b>
@@ -472,7 +477,7 @@ body{color:var(--ink);font-family:var(--mono);-webkit-font-smoothing:antialiased
     <div class="d-r" id="d-r"></div>
     <div class="d-n" id="d-n"></div>
     <div class="d-s" id="d-s"></div>
-    <div class="d-b"><button class="btn" type="button" id="d-ok">Continuer</button><button class="btn" type="button" id="d-again">Ouvrir un autre</button></div>
+    <div class="d-b"><button class="btn" type="button" id="d-wear" style="display:none">Porter ce portrait</button><button class="btn" type="button" id="d-ok">Continuer</button><button class="btn" type="button" id="d-again">Ouvrir un autre</button></div>
   </div>
   <!-- salle du classement (mode en ligne : en-ligne/rvision-online.js) -->
   <div id="onl" aria-label="Classement en ligne">
@@ -2016,12 +2021,34 @@ addEventListener('storage',e=>{const k=e.key;if(k===KEY)return;if(!k||k.indexOf(
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&started)qLive();});
 /* ═══ fin du module des quêtes — QUEST-END ═══ */
 function ownedBase(){let n=0;for(let i=0;i<20;i++)if(ST.owned[ITEMS[i].id])n++;return n;}
+const AVS=(window.RVAV&&RVAV.LIST)||[];
+function ownedAv(){let n=0;for(const a of AVS)if(ST.owned[a.id])n++;return n;}
+/* ── portrait tiré d'un coffre : médaillon d'or, l'œuvre sur les deux faces, bélière en haut ── */
+function itAvatar(av){
+  const g=G(),tex=new THREE.TextureLoader().load(RVAV.url(av.id));tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=8;tex.magFilter=THREE.NearestFilter;
+  const gold=new THREE.MeshStandardMaterial({color:0xd8a648,metalness:1,roughness:.28});
+  const face=new THREE.MeshStandardMaterial({map:tex,emissive:0xffffff,emissiveMap:tex,emissiveIntensity:.42,roughness:.5,metalness:0});
+  const disc=new THREE.Mesh(new THREE.CylinderGeometry(.4,.4,.03,72,1,true),gold);disc.rotation.x=PI/2;
+  const fg=new THREE.CircleGeometry(.4,72),f1=new THREE.Mesh(fg,face),f2=new THREE.Mesh(fg,face);f1.position.z=.0151;f2.position.z=-.0151;f2.rotation.y=PI;
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(.415,.032,18,96),gold),rim2=new THREE.Mesh(new THREE.TorusGeometry(.375,.008,10,96),gold);rim2.position.z=.017;
+  const rim3=rim2.clone();rim3.position.z=-.017;
+  const loop=new THREE.Mesh(new THREE.TorusGeometry(.06,.014,12,40),gold);loop.position.y=.49;
+  const bead=new THREE.Mesh(new THREE.SphereGeometry(.03,16,12),gold);bead.position.y=.44;
+  g.add(disc,f1,f2,rim,rim2,rim3,loop,bead);
+  g.userData.tick=t=>{face.emissiveIntensity=.38+.08*Math.sin(t*1.7);};
+  return g;
+}
 function ownedMyth(){let n=0;for(let i=20;i<25;i++)if(ST.owned[ITEMS[i].id])n++;return n;}
 function weights(){const w=RAR.map(r=>r.w);w[3]=Math.min(CAP_L,RAR[3].w+LUCK_L*ST.luck);w[4]=ST.door?Math.min(CAP_M,BASE_M+LUCK_M*ST.luck):0;return w;}
 function roll(force){
   const w=weights(),tot=w.reduce((a,b)=>a+b,0);let x=Math.random()*tot,ri=0;for(;ri<4;ri++){if(x<w[ri])break;x-=w[ri];}
   if(force!==undefined&&force>=0&&force<=4)ri=force;
-  const pool=ITEMS.map((it,k)=>k).filter(k=>ITEMS[k].r===ri),k=pool[(Math.random()*pool.length)|0],it=ITEMS[k],dup=!!ST.owned[it.id];
+  const pool=ITEMS.map((it,k)=>k).filter(k=>ITEMS[k].r===ri);
+  /* portraits (avatars.js) : palier Rare, tirés au même titre que les six objets rares */
+  if(ri===1&&AVS.length){const j=(Math.random()*(pool.length+AVS.length))|0;
+    if(j>=pool.length){const av=AVS[j-pool.length],dup=!!ST.owned[av.id];ST.owned[av.id]=(ST.owned[av.id]||0)+1;ST.opened=(ST.opened|0)+1;
+      if(dup)ST.luck=(ST.luck|0)+1;save();return {k:-1,av,it:{id:av.id,n:av.n,b:()=>itAvatar(av)},ri,dup};}}
+  const k=pool[(Math.random()*pool.length)|0],it=ITEMS[k],dup=!!ST.owned[it.id];
   ST.owned[it.id]=(ST.owned[it.id]||0)+1;ST.opened=(ST.opened|0)+1;
   if(dup)ST.luck=(ST.luck|0)+1;else if(ri>=3)ST.luck=0;
   save();return {k,it,ri,dup};
@@ -2096,6 +2123,7 @@ function hud(){
   const n=chests();
   $('k-own').textContent=String(ownedBase()).padStart(2,'0');
   $('k-myth').textContent=ST.door?' · Mythiques '+ownedMyth()+' / 5':'';
+  if(AVS.length){$('k-av').innerHTML='Portraits <b>'+String(ownedAv()).padStart(2,'0')+'</b> / '+AVS.length;}else $('k-avw').hidden=true;
   $('k-chest').textContent=TEST?'∞':n;$('n-chest').textContent=TEST?'∞':n;
   $('k-next').textContent=orbNext();ORBW.set(orbNext()/ORB_PER_CHEST);
   qPanel();
@@ -2104,13 +2132,16 @@ function hud(){
   const w=weights(),tot=w.reduce((a,c)=>a+c,0);let h='';
   RAR.forEach((r,i)=>{if(i===4&&!ST.door)return;h+='<div><span><i style="background:'+r.css+';box-shadow:0 0 8px '+r.css+'"></i>'+r.n+'</span><b>'+(w[i]/tot*100).toFixed(1).replace('.',',')+' %</b></div>';});
   h+='<p>Chaque doublon augmente tes chances de légendaire'+(ST.door?' et de mythique':'')+'. Doublons accumulés : '+(ST.luck|0)+'. Le compteur retombe à zéro quand un nouvel objet légendaire'+(ST.door?' ou mythique':'')+' sort.'+(ST.door?'':' Les mythiques n’apparaissent qu’une fois les 20 objets réunis.')+'</p>';
+  if(AVS.length)h+='<p>Palier Rare : '+AVS.length+' portraits de profil s’y mêlent aux 6 objets rares ('+ownedAv()+' / '+AVS.length+' obtenus).</p>';
   $('oddsp').innerHTML=h;
 }
 $('odds').addEventListener('click',()=>{const p=$('oddsp'),on=!p.classList.contains('on');p.classList.toggle('on',on);$('odds').setAttribute('aria-expanded',on);if(on){$('qp').classList.remove('on');$('qbtn').setAttribute('aria-expanded',false);}});
 $('qbtn').addEventListener('click',()=>{const p=$('qp'),on=!p.classList.contains('on');if(on)qPanel();p.classList.toggle('on',on);$('qbtn').setAttribute('aria-expanded',on);if(on){$('oddsp').classList.remove('on');$('odds').setAttribute('aria-expanded',false);}});
 document.querySelectorAll('#nav button').forEach(b=>b.addEventListener('click',()=>{if(SEQ.run||DOOR.run)return;setView(b.dataset.v);}));
 $('c-x').addEventListener('click',()=>setView(CAM.back));
-$('d-ok').addEventListener('click',()=>dismiss(false));$('d-again').addEventListener('click',()=>dismiss(true));
+$('d-ok').addEventListener('click',()=>dismiss(false));
+$('d-wear').addEventListener('click',()=>{const R=SEQ.res;if(!R||!R.av||!window.RVAV)return;if(RVAV.set(USER,R.av.id)){$('d-wear').textContent='Portrait porté ✓';$('d-wear').disabled=true;}});
+$('k-av').addEventListener('click',()=>{if(window.RVAV&&USER)RVAV.openPicker(USER);else tip('Choisis d’abord un profil sur l’accueil L1 ou L2',3200);});$('d-again').addEventListener('click',()=>dismiss(true));
 if(TEST)document.querySelectorAll('#test [data-ri]').forEach(b=>b.addEventListener('click',()=>openChest(+b.dataset.ri)));
 addEventListener('keydown',e=>{if(e.target&&e.target.closest&&e.target.closest('input,textarea'))return;
   if(e.key==='Escape'){if(onlEsc())return;if(SEQ.wait)dismiss(false);else if(CAM.focus)setView(CAM.back);else if($('card').classList.contains('on')&&CAM.room===2){closeCard();setView('salle');}else if(CAM.room===2&&CAM.view!=='salle')setView('salle');else setView('nef');}
@@ -2224,7 +2255,8 @@ function seqTick(dt,t){
     bloom.strength=.62+(e>0?Math.max(0,1-e*1.1)*[0,.15,.38,.75,1.05][ri]:0);
     if(e>P.rise*.72+.3&&!SEQ.shown){SEQ.shown=true;SEQ.wait=true;const Rr=RAR[ri];
       $('drop').style.setProperty('--rc',Rr.css);$('d-r').textContent=Rr.n;$('d-n').textContent=R.it.n;
-      $('d-s').textContent=R.dup?'Doublon — ta chance augmente ('+(ST.luck|0)+')':'Nouvel objet — '+(ri===4?ownedMyth()+' / 5 mythiques':ownedBase()+' / 20');
+      $('d-s').textContent=R.dup?(R.av?'Portrait en double':'Doublon')+' — ta chance augmente ('+(ST.luck|0)+')':R.av?'Nouveau portrait — '+ownedAv()+' / '+AVS.length:'Nouvel objet — '+(ri===4?ownedMyth()+' / 5 mythiques':ownedBase()+' / 20');
+      const wb=$('d-wear');wb.style.display=R.av&&!R.dup&&!TEST?'':'none';wb.disabled=false;wb.textContent='Porter ce portrait';
       $('d-again').style.display=chests()>0?'':'none';$('drop').classList.add('on');}
   }else{
     SEQ.closing+=dt;const k=SEQ.closing,f=Math.max(0,1-k/.5);CAM.push*=f;CAM.lift=1-smooth(k/.8);
@@ -2234,9 +2266,9 @@ function seqTick(dt,t){
     C.pillar.material.opacity*=f;C.fan.material.opacity*=f;C.rune.material.opacity*=f;C.helix.material.uniforms.uA.value*=f;C.rain.material.uniforms.uA.value*=f;C.c.position.y=.46;
     if(k>.95){if(SEQ.obj)disposeObj(SEQ.obj);if(SEQ.aura)disposeObj(SEQ.aura);SEQ.obj=SEQ.aura=null;SEQ.run=false;C.open=0;
       C.pillar.visible=C.fan.visible=C.rune.visible=C.helix.visible=C.rain.visible=false;for(const rg of C.rings)rg.visible=false;C.seam.material.color.setRGB(0,0,0);C.seamGlow.material.opacity=0;
-      const slot=SYS.slots[R.k];if(!R.dup){placeItem(slot,true);slot.pulse=1;}hud();
+      const slot=R.av?null:SYS.slots[R.k];if(slot&&!R.dup){placeItem(slot,true);slot.pulse=1;}hud();
       if(!ST.door&&ownedBase()>=20)openDoor();else if(SEQ.again)openChest();
-      else if(!R.dup&&(slot.niche||ST.door)){setView(slot.niche?'vitrine':'crypte');focusSlot(slot);}}
+      else if(slot&&!R.dup&&(slot.niche||ST.door)){setView(slot.niche?'vitrine':'crypte');focusSlot(slot);}}
   }
   C.lid.rotation.x=-C.open*1.95;
 }
@@ -2274,6 +2306,7 @@ const nf=n=>Math.round(n||0).toLocaleString('fr-FR');
 const MOISL=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 const monthLbl=m=>MOISL[(m%100)-1]+' '+Math.floor(m/100);
 const prevM=m=>m%100===1?(Math.floor(m/100)-1)*100+12:m-1;
+function avImg(a,el,first){const R=window.RVAV;if(!a||!R||!R.byId[a])return;const i=document.createElement('img');i.className='oav';i.src=R.url(a);i.alt='';i.decoding='async';if(first&&el.firstChild)el.insertBefore(i,el.firstChild);else el.appendChild(i);}
 function ago(ms){if(!ms)return 'pas encore';const s=(Date.now()-ms)/1000;return s<60?'à l’instant':s<3600?'il y a '+Math.round(s/60)+' min':s<86400?'il y a '+Math.round(s/3600)+' h':'il y a '+Math.round(s/86400)+' j';}
 
 /* ── le tableau d'honneur (toile 2048 × 1536) : la toile d'origine, en colonnes, pour le top 10 du mois ── */
@@ -2324,8 +2357,10 @@ function bdDraw(){
         rg.addColorStop(0,mc[0]);rg.addColorStop(.55,mc[1]);rg.addColorStop(1,mc[2]);c.fillStyle=rg;c.beginPath();c.arc(X.rk,y+RH/2,33,0,TAU);c.fill();
         c.fillStyle='#1a1206';c.font='800 32px Unbounded, sans-serif';c.textAlign='center';c.fillText(String(r.rank),X.rk,y+RH/2+12);}
       else{c.fillStyle='rgba(244,238,252,.62)';c.font='700 40px "JetBrains Mono", monospace';c.textAlign='center';c.fillText(r.rank?String(r.rank):'—',X.rk,cy);}
-      c.textAlign='left';c.font='700 46px "JetBrains Mono", monospace';c.fillStyle='#fff';const nw=fitText(c,r.n,X.nm,cy,690);
-      if(r.h&&nw<640){c.font='500 30px "JetBrains Mono", monospace';c.fillStyle='rgba(244,238,252,.42)';fitText(c,'@'+r.h,X.nm+nw+18,cy,1080-(X.nm+nw+18));}
+      const ri=r.a&&window.RVAV?RVAV.img(r.a,()=>bdDraw()):null,nx=ri?X.nm+74:X.nm;   // portrait porté
+      if(ri){const ay=y+RH/2;c.save();c.beginPath();c.arc(X.nm+28,ay,28,0,TAU);c.clip();c.imageSmoothingEnabled=false;c.drawImage(ri,X.nm,ay-28,56,56);c.restore();c.strokeStyle='rgba(242,198,92,.85)';c.lineWidth=2.5;c.beginPath();c.arc(X.nm+28,ay,28,0,TAU);c.stroke();}
+      c.textAlign='left';c.font='700 46px "JetBrains Mono", monospace';c.fillStyle='#fff';const nw=fitText(c,r.n,nx,cy,690-(nx-X.nm));
+      if(r.h&&nx+nw<X.nm+640){c.font='500 30px "JetBrains Mono", monospace';c.fillStyle='rgba(244,238,252,.42)';fitText(c,'@'+r.h,nx+nw+18,cy,1080-(nx+nw+18));}
       c.textAlign='right';c.font='500 38px "JetBrains Mono", monospace';c.fillStyle='rgba(244,238,252,.78)';
       c.fillText(fmtMin(r.t),X.t,cy);c.fillText('+'+nf(r.p),X.p,cy);c.fillText((r.d||0)+' j',X.r,cy);
       c.font='800 50px Unbounded, sans-serif';c.fillStyle=r.rank&&r.rank<=3?gg:'#fff';c.fillText(nf(r.s),X.s,cy+2);
@@ -2373,7 +2408,7 @@ function bigRender(){
 function rowEl(r,ol,k,top){const li=E('li',null,null,ol);li.style.setProperty('--d',(.12+k*.045).toFixed(2)+'s');
   const b=Bt('','ob-r'+(r.me?' me':''),()=>cardOpen(r),li),md=r.rank&&r.rank<=3;b.style.setProperty('--w',Math.min(1,r.s/top).toFixed(3));
   E('span','ob-rk'+(md?' md m'+r.rank:''),r.rank?String(r.rank):'—',b);
-  const n=E('span','ob-n',r.n,b);if(r.h)E('small',null,'@'+r.h,n);
+  const n=E('span','ob-n',r.n,b);avImg(r.a,n,true);if(r.h)E('small',null,'@'+r.h,n);
   E('span','ob-c',fmtMin(r.t),b);E('span','ob-c','+'+nf(r.p),b);E('span','ob-c',(r.d||0)+' j',b);E('span','ob-sc'+(md?' gd':''),nf(r.s),b);
   b.setAttribute('aria-label',(r.rank?r.rank+'ᵉ : ':'')+r.n+', '+nf(r.s)+' points');}
 function joinBtn(st,par){if(!st||!st.cfg||st.sdk==='error'||st.onboarded)return;
@@ -2385,7 +2420,7 @@ function onlEsc(){if(ONL.open){panel('');return true;}if(ONL.big){bigClose();ret
 /* ── fiche d'un étudiant : son mois, son rythme, ses cours ── */
 async function cardOpen(r){
   const R=RV(),el=$('ocard');if(!R||!el)return;el.textContent='';panel('ocard');
-  const h=E('div','op-h',null,el);E('b',null,r.n||'',h);E('em',null,r.h?'@'+r.h:'',h);Bt('Fermer ✕','op-x',()=>panel(''),h);
+  const h=E('div','op-h',null,el);avImg(r.a,h);E('b',null,r.n||'',h);E('em',null,r.h?'@'+r.h:'',h);Bt('Fermer ✕','op-x',()=>panel(''),h);
   const body=E('div',null,null,el);E('p','op-m','Lecture de la fiche…',body);
   const st=R.state(),mine=!!(r.uid&&st.uid===r.uid);let p=null;
   try{if(mine){const sc=R.myScores();p={n:st.pseudo,h:st.handle,m:sc.month,st:R.myStats(),tr:R.trophies()};}else p=await R.profileOf(r.uid);}
@@ -2443,7 +2478,7 @@ function regRender(){
   /* écran principal */
   if(st.needLink){const k=E('div','op-w',null,el);E('p',null,'Ton compte suit le profil « '+st.needLink.account+' ». Sur cet appareil, le profil actif est « '+st.needLink.local+' ».',k);
     const r=E('div','op-row',null,k);Bt('Passer sur « '+st.needLink.account+' »','ob',()=>{R.link('use');},r);Bt('Verser « '+st.needLink.local+' » dedans','ob',()=>{R.link('merge');},r);}
-  const id=E('div','op-id',null,el);E('i',null,(st.pseudo||'?').charAt(0).toUpperCase(),id);const nm=E('div',null,null,id);E('b',null,st.pseudo,nm);E('small',null,'@'+st.handle,nm);
+  const id=E('div','op-id',null,el),ic=E('i',null,(st.pseudo||'?').charAt(0).toUpperCase(),id);if(window.RVAV)RVAV.paint(ic,st.pseudo);const nm=E('div',null,null,id);E('b',null,st.pseudo,nm);E('small',null,'@'+st.handle,nm);
   E('p','op-k','Ce mois-ci',el);E('div','op-m3 op-me',null,el);
   E('p','op-k','Tournoi du mois',el);const vr=E('div','op-vis sm',null,el);
   [['public','Je participe'],['friends','Masqué']].forEach(([k,t])=>{const b=Bt(t,st.vis===k?'on':'',async()=>{if(R.state().vis===k)return;vr.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
@@ -2534,6 +2569,7 @@ function onlHud(){
     !st.onboarded?'Termine ton inscription dans « Mon compte »':st.sync.err?st.sync.err:'';   // la synchro est automatique : on n'en parle qu'en cas d'erreur
   document.querySelectorAll('#onl .tabs button').forEach(b=>b.classList.toggle('on',b.dataset.s===CAM.view));
 }
+addEventListener('rvision:avatar',()=>{try{const a=RVAV.get(USER);if(BD.data){(BD.data.rows||[]).forEach(r=>{if(r.me)r.a=a;});if(BD.data.me)BD.data.me.a=a;bdDraw();if(ONL.big)bigRender();}hud();}catch(e){}});
 function onlWire(){
   const R=RV();if(!R){setTimeout(onlWire,400);return;}
   R.on('state',st=>{onlHud();if(ONL.open==='reg')regRender();const k=(st.uid||'')+'|'+st.onboarded+'|'+st.vis;if(k!==ONL.sk){const was=ONL.sk;ONL.sk=k;if(was&&CAM.room===2){bdLoad(true);podiumLoad();}}});

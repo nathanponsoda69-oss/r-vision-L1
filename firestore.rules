@@ -8,6 +8,7 @@ rules_version = '2';
 //   weeks/{semaine}/e/{uid}     classement de la semaine               : lisible par tous ; chacun n'écrit que sa ligne,
 //   months/{mois}/e/{uid}       tournoi du mois                          pendant la période, avec un score plausible
 //   friendships/{uidA_uidB}     demandes d'amis et amitiés             : visibles et modifiables par les deux concernés
+//   (nov. 2026) champ facultatif « a » sur la fiche et les classements : l'identifiant du portrait porté (av_…)
 //
 // Limite assumée : sans serveur payant, c'est le navigateur qui calcule le score. Les règles bornent chaque valeur
 // (score d'une journée ≤ 470, d'une semaine ≤ 3 300, d'un mois ≤ 14 600, score = temps + progression + régularité),
@@ -39,7 +40,8 @@ service cloud.firestore {
     }
     function entryOk(max) {
       let d = request.resource.data;
-      return d.keys().hasOnly(['n', 'h', 's', 't', 'p', 'r', 'd', 'u'])
+      return d.keys().hasOnly(['n', 'h', 's', 't', 'p', 'r', 'd', 'u', 'a'])
+        && (!('a' in d) || (d.a is string && d.a.matches('^av_[a-z_]{1,24}$')))
         && d.n is string && d.n.size() <= 24
         && d.h is string && d.h.size() <= 20
         && d.s is int && d.s >= 0 && d.s <= max
@@ -58,7 +60,8 @@ service cloud.firestore {
     match /profiles/{uid} {
       allow get: if resource == null || resource.data.vis == 'public' || isMe(uid) || isFriend(uid);
       allow create, update: if isMe(uid)
-        && request.resource.data.keys().hasOnly(['n', 'h', 'vis', 'w', 'm', 'st', 'tr', 'u'])
+        && request.resource.data.keys().hasOnly(['n', 'h', 'vis', 'w', 'm', 'st', 'tr', 'u', 'a'])
+        && (!('a' in request.resource.data) || (request.resource.data.a is string && request.resource.data.a.matches('^av_[a-z_]{1,24}$')))
         && request.resource.data.vis in ['public', 'friends']
         && request.resource.data.n is string && request.resource.data.n.size() <= 24
         && request.resource.data.h is string
