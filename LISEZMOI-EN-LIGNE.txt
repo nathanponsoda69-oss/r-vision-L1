@@ -1,15 +1,16 @@
 R·Vision — MODE EN LIGNE (novembre 2026)
-Compte Google · synchronisation gratuite entre appareils · classement de la semaine · tournoi du mois · amis
+Compte Google · synchronisation gratuite entre appareils · tournoi du mois (les dix meilleurs)
 
 ══════════════════════════════════════════════════════════════════════════════
 FICHIERS
 ══════════════════════════════════════════════════════════════════════════════
-  bibliotheque.html          + la salle du Classement (bouton « Classement » en bas, ou bibliotheque.html?salle=classement)
+  bibliotheque.html          + la salle du Classement (bouton « Classement » en bas, ou bibliotheque.html?salle=classement) :
+                             un parchemin encadré d'or (top 10 du mois) ; un clic l'agrandit, net, par-dessus la salle
                              + les coupes gagnées sous les cloches de la tablette des trophées (collection)
   l1.html, l1/app.js         + une ligne de script, l'entrée « Classement en ligne » dans le Menu, le rafraîchissement après synchro
   l2.html                    + les mêmes ajouts
   en-ligne/config.js         ← LA SEULE CHOSE À REMPLIR (étape 3)
-  en-ligne/rvision-online.js le module : compte, synchro, scores, classements, amis, tournoi
+  en-ligne/rvision-online.js le module : compte, synchro, scores, classement du mois, tournoi
   en-ligne/vendor/           Firebase 13.3.0 (app, auth, firestore-lite), embarqué comme three.js pour la L1
   firestore.rules            les règles de sécurité, à coller dans la console (étape 2)
 
@@ -47,7 +48,7 @@ Les intitulés de la console Firebase peuvent varier un peu d'une version à l'a
    Rien d'autre ne change (textures, l1-sw.js, l2/canyon.js… restent tels quels).
 
 5. ESSAYER
-   bibliotheque.html → bouton « Classement » → [ Registre ] (ou le pupitre à droite de la salle)
+   bibliotheque.html → bouton « Classement » → [ Mon compte ] (ou le pupitre à droite de la salle)
    → « Se connecter avec Google » → choisir son pseudo en ligne (@max) et sa visibilité → Valider.
    Sur un autre appareil : même compte Google → la progression arrive (et le profil est recréé à l'identique).
 
@@ -61,7 +62,7 @@ SYNCHRONISATION
     hors ligne, on fusionne (maximum des compteurs, union des succès, fusion jour par jour des frises). La
     bibliothèque est fusionnée d'un bloc : les objets des deux côtés sont gardés, sans coffre ni orbe en double.
   · Quand : à l'ouverture d'un accueil, toutes les 2 minutes s'il y a du nouveau, en quittant la page, après une
-    ouverture de coffre, et sur [ Synchroniser ] dans le Registre.
+    ouverture de coffre. La synchro est silencieuse : elle ne s'affiche qu'en cas d'erreur (bouton « Réessayer » dans Mon compte).
   · Garde-fous : un effacement massif sur un appareil (stockage vidé par le navigateur…) n'est jamais recopié dans le
     cloud — l'appareil est restauré. Un profil supprimé exprès sur un appareil n'est ni effacé du cloud, ni recréé.
   · Firebase n'est téléchargé qu'APRÈS la scène 3D, et seulement si l'on s'est déjà connecté sur l'appareil :
@@ -75,12 +76,12 @@ SCORE (le « score mixte » retenu : temps + progression + régularité), par jo
   Réglages : constante SCORE en haut de la section 05 de en-ligne/rvision-online.js
   (ATTENTION : les bornes de firestore.rules — 3 300 par semaine, 14 600 par mois — doivent suivre si on les augmente).
 
-VISIBILITÉ (au choix de chacun, modifiable dans le Registre)
-  · Public : classement général de la semaine, tournoi du mois, fiche visible de tous.
-  · Amis seulement : n'apparaît que dans l'onglet Amis de ses amis, fiche visible d'eux seuls, ne concourt pas au tournoi.
+PARTICIPATION (au choix de chacun, modifiable dans Mon compte)
+  · Je participe : nom au classement du mois (les dix meilleurs) et au tournoi, fiche visible de tous.
+  · Masqué : révise sans apparaître au classement ni concourir au tournoi (valeur technique « friends », inchangée).
   · Les autres ne voient jamais le nom ni l'adresse Google : uniquement le pseudo et le @pseudo en ligne.
 
-AMIS : par @pseudo, demande puis acceptation (Registre). Onglet « Amis » du tableau d'honneur.
+AMIS : retirés de l'interface (novembre 2026). Les fonctions restent dans le module et les règles, sans effet visible.
 
 TOURNOI DU MOIS : classement mensuel des profils publics. Il reste ouvert jusqu'au 2 du mois suivant (pour les
 révisions arrivées en retard), puis il est figé. Le premier reçoit la Coupe du mois : elle s'ajoute à sa collection
@@ -98,4 +99,4 @@ LIMITES À CONNAÎTRE
   · Une révision faite sur un site de cours part au cloud la prochaine fois qu'un accueil est ouvert sur cet appareil.
   · Les règles n'ont pas pu être exécutées ici (pas d'émulateur Firebase disponible). Pour les éprouver : console →
     Firestore → Règles → « Terrain de jeu des règles » (Rules Playground), ou simplement l'essai de l'étape 5 :
-    toute règle trop stricte s'affiche dans le Registre (« Accès refusé par le serveur… »).
+    toute règle trop stricte s'affiche dans Mon compte (« Accès refusé par le serveur… »).
