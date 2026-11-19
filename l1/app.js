@@ -10096,7 +10096,7 @@ function menuBuild(){
   bt('Accueil','Retour au début du parcours',()=>menuGo(0));
   bt('Statistiques','Progression, activité, analyse',()=>menuGo(P_STATS));
   lk('Bibliothèque','Coffres et collection d’objets','bibliotheque.html');
-  lk('Classement en ligne','Tournoi du mois, amis, synchronisation','bibliotheque.html?salle=classement');
+  lk('Classement en ligne','Tournoi du mois · les dix meilleurs','bibliotheque.html?salle=classement');
   lk('Licence 2','Changer de niveau','l2.html');
   const o=menuEl('div','mm-o',null,a);
   const grp=(title,key,vals)=>{menuEl('p',null,title,o);const d=menuEl('div',null,null,o);
