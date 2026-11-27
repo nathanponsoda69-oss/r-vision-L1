@@ -605,7 +605,7 @@ function panels(){const els=document.querySelectorAll('#wallui .wp'),W=innerWidt
   STELE.forEach((st,i)=>{const el=els[i];if(!el||el.style.visibility==='hidden')return;const w=parseFloat(el.style.width),h=parseFloat(el.style.height);if(!w||!h)return;const pts=[];
     for(const c of st.c){TV.copy(c);st.g.localToWorld(TV);if(TV2.copy(TV).applyMatrix4(camera.matrixWorldInverse).z>-camera.near*1.5){el.style.visibility='hidden';return;}TV.project(camera);pts.push((TV.x*.5+.5)*W,(-TV.y*.5+.5)*H);}
     el.style.transform=quad(pts,w,h);});}
-const TIPS=['Entrer · donjon de lave — Droit des affaires','Entrer · donjon de lave — Analyse financière'];
+const TIPS=['Entrer · donjon de lave — Droit des affaires','Entrer · donjon de lave — Comptabilité des sociétés'];
 function setOver(o,e){if(o===OVER&&o<0)return;OVER=o;API.canvas.style.cursor=o>=0?'pointer':'';canvas.style.cursor=o>=0?'pointer':'';tipEl.style.opacity=o>=0?'1':'0';
   if(o>=0){tipEl.textContent=TIPS[o];if(e){tipEl.style.left=e.clientX+'px';tipEl.style.top=e.clientY+'px';}}}
 {let hovT=0;addEventListener('pointermove',e=>{CAM.mx=e.clientX/innerWidth*2-1;CAM.my=-(e.clientY/innerHeight*2-1);if(!wasOn||!HITS.length)return;const n=performance.now();if(n-hovT<70)return;hovT=n;

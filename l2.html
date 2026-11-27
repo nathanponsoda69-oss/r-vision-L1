@@ -4395,7 +4395,8 @@ const COURSES_L2=[
   {id:"pen_cp",key:"pen_cp",subject:"l2_pen",name:"Droit pénal · Cas pratiques (méthode S1 à S4)",url:"penal_L2_cas_pratiques_v1.html",maxXp:3000,maxSuc:39},
   {id:"aff_1",key:"aff_1",subject:"l2_aff",name:"Droit des affaires · Partie 1",url:"af1_droit_des_affaires_partie1_v5.html",maxXp:4000,maxSuc:63},
   {id:"aff_2",key:"aff_2",subject:"l2_aff",name:"Droit des affaires · Partie 2",url:"af2_droit_des_affaires_partie2_v5.html",maxXp:4000,maxSuc:62},
-  {id:"aff_3",key:"aff_3",subject:"l2_aff",name:"Droit des affaires · Partie 3",url:"af3_droit_des_affaires_partie3_v5.html",maxXp:4000,maxSuc:62}
+  {id:"aff_3",key:"aff_3",subject:"l2_aff",name:"Droit des affaires · Partie 3",url:"af3_droit_des_affaires_partie3_v5.html",maxXp:4000,maxSuc:62},
+  {id:"cpt_soc",key:"cpt_soc",subject:"l2_fin",name:"Comptabilité des sociétés · Capital, IS, résultat",url:"compta_societes_L2_v1.html",maxXp:4000,maxSuc:40}
 ];
 window.RV_CATALOG_L2=COURSES_L2;   // lu par le mode en ligne (en-ligne/rvision-online.js) pour le score et les fiches
 
@@ -4410,8 +4411,8 @@ const SUBJ_INFO={
     reperes:['Stare decisis','Consideration · Offer & acceptance','Tort of negligence']},
   l2_aff:{resume:"Droit des affaires : actes de commerce et statut du commerçant, fonds de commerce et bail commercial, introduction au droit des sociétés et aux contrats d'affaires.",
     reperes:['Art. L. 110-1 C. com.','Art. L. 141-5 et s. C. com.','Art. 1832 C. civ.']},
-  l2_fin:{resume:"Analyse financière : lecture des comptes annuels, soldes intermédiaires de gestion, capacité d'autofinancement, fonds de roulement et BFR, ratios de rentabilité et de structure, tableau de flux.",
-    reperes:['SIG · EBE · CAF','FRNG · BFR · Trésorerie nette','ROE · ROA · levier']},
+  l2_fin:{resume:"Comptabilité des sociétés : constitution du capital (promesse, appel, libération, versements anticipés, actionnaires retardataires et défaillants, frais de constitution), puis calcul et comptabilisation de l'IS et affectation du résultat (réserves, dividendes, report à nouveau).",
+    reperes:['4562 · 109 · 1011-1013','IS 15 % / 25 % · acomptes','Réserve légale · superdividende']},
 };
 
 function readL2Course(c,prefix){
@@ -8247,7 +8248,7 @@ const L2_DEMO_NOTIONS={
   l2_adm:['Critères du service public','Police administrative générale','Acte administratif unilatéral','Contrats administratifs — critères','Principe de légalité','Responsabilité pour faute','Responsabilité sans faute','Référés administratifs','Répartition des compétences (Blanco)'],
   l2_aj:['Stare decisis and binding precedent','Ratio decidendi vs obiter dicta','Offer and acceptance','Consideration','Tort of negligence — duty of care','Court hierarchy (UK / US)','Statutory interpretation','Equity and trusts'],
   l2_aff:['Actes de commerce par nature','Statut du commerçant','Fonds de commerce — éléments','Bail commercial — renouvellement','Contrat de société (art. 1832)','Personnalité morale des sociétés','Responsabilité des dirigeants'],
-  l2_fin:['Soldes intermédiaires de gestion','Excédent brut d\'exploitation','Capacité d\'autofinancement','Fonds de roulement net global','Besoin en fonds de roulement','Trésorerie nette','Ratios de rentabilité (ROE, ROA)','Effet de levier financier'],
+  l2_fin:['Promesse et appel du capital','Compte 109 et capital non appelé','Libération et notaire (4671)','Frais de constitution','Versements anticipés (4564)','Actionnaires défaillants (4566)','Acomptes et solde d\'IS','Affectation du résultat'],
 };
 function shortSubj(n){return n.split(' ').map(w=>w.length>3?w.charAt(0)+w.slice(1).toLowerCase():w.toLowerCase()).join(' ');}
 function insightSourceL2(data,subjects){
@@ -8423,7 +8424,7 @@ const SUBJECTS=[
 const FIN_PHASES=[{id:'0',name:'BRUT'},{id:'I',name:'TROUBLE'},{id:'II',name:'TRANSLUCIDE'},{id:'III',name:'FISSURES'},{id:'IV',name:'LIBÉRÉ'}];
 const FIN_SUBJECTS=[
   {key:'l2_aff',idx:5,name:'DROIT DES AFFAIRES',build:()=>buildAffaires(),demo:0.38,courses:5,done:2,phaseKey:'AMBRE',phases:FIN_PHASES},
-  {key:'l2_fin',idx:6,name:'ANALYSE FINANCIÈRE',build:()=>buildChart(),demo:0.92,courses:5,done:4,phaseKey:'AMBRE',phases:FIN_PHASES},
+  {key:'l2_fin',idx:6,name:'COMPTABILITÉ DES SOCIÉTÉS',build:()=>buildChart(),demo:0.92,courses:5,done:4,phaseKey:'AMBRE',phases:FIN_PHASES},
 ];
 const ALL_SUBJ=SUBJECTS.concat(FIN_SUBJECTS);
 /* portail : une étape de plus — à SUBJECTS.length+1 les pierres flottent, éparpillées ; elles
@@ -9196,7 +9197,7 @@ function buildHudExtras(){
   ar.addEventListener('click',()=>{SC.t=Math.min(PMAX,Math.round(SC.t)+1);SC.last=performance.now()-1e4;});
   hud.appendChild(al);hud.appendChild(ar);
   const car=document.createElement('div');car.id='fcar';
-  const short=['AFFAIRES','FINANCE'];
+  const short=['AFFAIRES','COMPTABILITÉ'];
   car.innerHTML=FIN_SUBJECTS.map((s,i)=>`<button type="button" data-i="${i}"><span class="cl">${s.name}</span><span class="cs">${short[i]||s.name}</span></button>`).join('')+`<button type="button" data-i="${FIN_SUBJECTS.length}"><span class="cl">STATISTIQUES</span><span class="cs">STATS</span></button>`;
   car.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{SC.t=P_FIN+(+b.dataset.i);SC.last=performance.now()-1e4;}));
   hud.appendChild(car);SYS.car=[...car.children];

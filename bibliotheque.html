@@ -1848,7 +1848,7 @@ const QCORE=[
 /* banque des quêtes tirées au sort — V : variantes (la plus douce sort le plus souvent) ; ok(H) : proposable à cet
    étudiant (H = ses 21 derniers jours) ; mk(variante, paramètre) → quête */
 const SUBJ_N={l1_civ:'Droit civil (L1)',l1_con:'Droit constitutionnel',l1_his:'Histoire du droit',l1_aj:'Anglais juridique (L1)',l1_eco:'Économie',
-  l2_civ:'Droit civil',l2_pen:'Droit pénal',l2_adm:'Droit administratif',l2_aff:'Droit des affaires',l2_aj:'Anglais juridique',l2_fin:'Analyse financière'};
+  l2_civ:'Droit civil',l2_pen:'Droit pénal',l2_adm:'Droit administratif',l2_aff:'Droit des affaires',l2_aj:'Anglais juridique',l2_fin:'Comptabilité des sociétés'};
 let QCAT=null;
 function qSubjOf(id){if(!QCAT){try{QCAT=JSON.parse(localStorage.getItem('rvo_catalog')||'{}')||{};}catch(e){QCAT={};}}const c=QCAT[id];return c&&c.sj||'';}
 function qSubjT(b,sj){let t=0;for(const id in b.ct||{})if(qSubjOf(id)===sj)t+=b.ct[id];return t;}
